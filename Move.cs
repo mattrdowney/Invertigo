@@ -11,7 +11,7 @@
  S5: Logic based on dot product of normals and move_dir, closer to zero is better
  S6: (Optional) create priority system for different block types
 */
-
+/*
 using UnityEngine;
 using System.Collections;
 
@@ -72,7 +72,7 @@ public class Move : MonoBehaviour
 				Rust (pos);
 				break;
 		}
-		*/
+		*//*
 		
 		oldClosePos = closePos;
 		oldOtherPos = otherPos;
@@ -93,8 +93,8 @@ public class Move : MonoBehaviour
 		
 		bool both = true;
 		
-		if(Mathf.Abs(x) > sqrtHalf + e.Height) both = !both; // sqrt(2)/2 + 1/2
-		if(Mathf.Abs(y) > sqrtHalf + e.Width ) both = !both;
+		//if(Mathf.Abs(x) > sqrtHalf + e.Height) both = !both; // sqrt(2)/2 + 1/2
+		//if(Mathf.Abs(y) > sqrtHalf + e.Width ) both = !both;
 		
 		if(both)
 		{
@@ -109,8 +109,8 @@ public class Move : MonoBehaviour
 		
 		bool both = true;
 		
-		if(Mathf.Abs(x) > sqrtHalf + e.Height) both = !both; // sqrt(2)/2 + 1/2
-		if(Mathf.Abs(y) > sqrtHalf + e.Height) both = !both;
+		//if(Mathf.Abs(x) > sqrtHalf + e.Height) both = !both; // sqrt(2)/2 + 1/2
+		//if(Mathf.Abs(y) > sqrtHalf + e.Height) both = !both;
 		
 		//Vector Reject and Allow movement/jump iff floor
 		
@@ -174,3 +174,4 @@ public class Move : MonoBehaviour
 		}
 	}
 }
+*/

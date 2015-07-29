@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿/*
+using UnityEngine;
 using System.Collections;
 
 public class FindClosest : MonoBehaviour
@@ -68,3 +69,4 @@ public class FindClosest : MonoBehaviour
 		return Vector3.Dot(temp,temp);
 	}
 }
+*/
