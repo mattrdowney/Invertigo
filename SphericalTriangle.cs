@@ -3,7 +3,7 @@ using System.Collections;
 
 using UnityEditor; //TODO: get rid of this in production builds
 
-public class SphericalTriangle : Shape
+public class SphericalTriangle : Shape //originally this code did not derive from monobehavior, added extra data (for ease of use and quicker code execution), and used unserializable planes which are themselves pointers to structs of structs (Plane -> Vector3 -> float)
 {
 	public Plane arcPlane;
 	public Plane bisector;

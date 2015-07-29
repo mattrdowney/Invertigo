@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class Triangulator
+public class Triangulator //Author: runevision, O(n^2), might need to be optimized to O(nlgn)
 {
 	private List<Vector2> m_points = new List<Vector2>();
 	
