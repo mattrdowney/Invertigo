@@ -7,8 +7,7 @@ public class CharacterMotor : Component
 
 	Shape segment;
 
-	float t;
 
-	int index;
-	int end;
+
+	float t;
 }

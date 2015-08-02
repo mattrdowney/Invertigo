@@ -4,11 +4,10 @@ using System.Collections;
 public class Block : Component
 {
 	BlockMotor motor;
-	Shape[] path;
 
 	public float Collide(BoxCollider box, Vector3 pos)
 	{
-
+		if(BlockMotor) pos = BlockMotor.rotation*pos; 
 	}
 	
 	public Vector3 Evaluate(float t)

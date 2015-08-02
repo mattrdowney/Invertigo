@@ -3,6 +3,8 @@ using System.Collections;
 
 public class BlockMotor : MonoBehaviour {
 
+	public Quaternion rotation;
+
 	// Use this for initialization
 	void Start () {
 	
