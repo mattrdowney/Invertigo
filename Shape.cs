@@ -10,4 +10,6 @@ abstract public class Shape /*TODO: get rid of this in production builds*/ : Mon
 	abstract public Vector3 Evaluate(float t);
 
 	abstract public float Intersect(ref Vector3 oldPos, ref Vector3 newPos);
+
+	abstract public void AddCollider(BoxCollider coll);
 }

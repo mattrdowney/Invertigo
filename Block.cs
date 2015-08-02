@@ -1,11 +1,29 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public abstract class Block : Component
+public class Block : Component
 {
-	ArrayList<Shape> path;
+	BlockMotor motor;
+	Shape[] path;
 
-	public abstract float Collide(Vector2 pos, Vector2 vel, Vector2 grav, Vector2 normal);
+	public float Collide(BoxCollider box, Vector3 pos)
+	{
+
+	}
 	
-	public abstract Vector2 Evaluate(float t);
+	public Vector3 Evaluate(float t)
+	{
+
+	}
+
+	public void Optimize()
+	{
+		for(int i = 0; i < path.Length; ++i)
+		{
+			//colls = new BoxCollider[n];?
+			//path[i].GetInstanceID(); //rearrange box colliders in block so that they are sorted 0 to n-1
+		}
+
+		//Recalculate the box collider extents
+	}
 }

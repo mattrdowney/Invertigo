@@ -5,6 +5,8 @@ using UnityEditor; //TODO: get rid of this in production builds
 
 public class SphericalTriangle : Shape //originally this code did not derive from monobehavior, added extra data (for ease of use and quicker code execution), and used unserializable planes which are themselves pointers to structs of structs (Plane -> Vector3 -> float)
 {
+	private BoxCollider coll;
+
 	public Vector3 pathNormal;
 	public float   pathDist;
 
@@ -54,6 +56,13 @@ public class SphericalTriangle : Shape //originally this code did not derive fro
 		angle = (angle > 0 ? angle : (2*Mathf.PI + angle));
 
 		return angle > arcCutoffAngle ? -1 : angle*arcRadius;
+	}
+
+	override public void AddCollider(BoxCollider coll)
+	{
+		if(this.coll) Destroy(this.coll);
+
+
 	}
 
 	private void OnDrawGizmos() //TODO: get rid of this in production builds
