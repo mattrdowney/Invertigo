@@ -3,11 +3,14 @@ using System.Collections;
 
 public class Block : Component
 {
-	BlockMotor motor;
+	BlockMotor			motor;
+	BlockBehavior		type;
 
 	public float Collide(BoxCollider box, Vector3 pos)
 	{
-		if(BlockMotor) pos = BlockMotor.rotation*pos; 
+		if(BlockMotor) pos = motor.rotation*pos;
+
+
 	}
 	
 	public Vector3 Evaluate(float t)

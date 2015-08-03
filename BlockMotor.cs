@@ -1,9 +1,9 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
-public class BlockMotor : MonoBehaviour {
-
-	public Quaternion rotation;
+public class BlockMotor : MonoBehaviour
+{
+	Quaternion				rotation;
 
 	// Use this for initialization
 	void Start () {
