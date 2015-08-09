@@ -3,11 +3,11 @@ using System.Collections;
 
 public class CharacterMotor : Component
 {
-	Block					surface;
+	Block							surface;
 
-	SphericalRectangle		segment;
+	SphericalIsoscelesTrapezoid		segment;
 
 
 
-	float					t;
+	float							t;
 }

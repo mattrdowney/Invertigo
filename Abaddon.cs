@@ -5,8 +5,8 @@ using UnityEditor;
 
 public class Abaddon : MonoBehaviour 
 {
-	public float			width = 32.0f;
-	public float			height = 32.0f;
+	public float					width = 32.0f;
+	public float					height = 32.0f;
 	
 	void Start () 
 	{

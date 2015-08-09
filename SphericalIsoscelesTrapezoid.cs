@@ -1,29 +1,29 @@
 using UnityEngine;
 using System.Collections;
 
-public class SphericalRectangle /*TODO: get rid of this in production builds*/ : MonoBehaviour //will become Component
+public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production builds*/ : MonoBehaviour //will become Component
 {
-	Block					parent;
+	Block							parent;
 
-	SphericalRectangle		next;
-	SphericalRectangle		prev;
+	SphericalIsoscelesTrapezoid		next;
+	SphericalIsoscelesTrapezoid		prev;
 
-	Vector3					comPathNormal; //I wish I could make these const, but I suppose that would make in-editor tools for manipulating the rectangle useless (Now that I think about it, though, the values can probably be set in the editor despite being const)
-	float					comPathDist;
+	Vector3							comPathNormal; //I wish I could make these const, but I suppose that would make in-editor tools for manipulating the rectangle useless (Now that I think about it, though, the values can probably be set in the editor despite being const)
+	float							comPathDist;
 
-	Vector3					footPathNormal;
-	float					footPathDist;
+	Vector3							footPathNormal;
+	float							footPathDist;
 
-	Vector3					arcLeft;
-	Vector3					arcUp;
-	Vector3					arcRight;
+	Vector3							arcLeft;
+	Vector3							arcUp;
+	Vector3							arcRight;
 	
-	float					arcRadius;
-	float					arcCutoffAngle;
+	float							arcRadius;
+	float							arcCutoffAngle;
 	
-	public void Initialize(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, float eccentricity /*1,2,3?*/) //v1 -> v2 is the com path, v2 -> v3 is right (?), v3 -> foot path, v4 -> v1 is left (?), eccentricity is the bend in the angle
+	public void Initialize(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Vector3 cutNormal) //v1 -> v2 is the com path, v2 -> v3 is right (?), v3 -> foot path, v4 -> v1 is left (?), eccentricity is the bend in the angle
 	{
-
+		//assert(Mathf.Approximately(Vector3.Dot(v1 - v2, cutNormal), 0) && Mathf.Approximately(Vector3.Dot(v3 - v4, cutNormal), 0));
 	}
 	
 	public bool Contains(ref Vector3 pos) //FIXME: might contain error in or statement regarding >/<
@@ -35,7 +35,7 @@ public class SphericalRectangle /*TODO: get rid of this in production builds*/ :
 		return false;
 	}
 	
-	public Vector3 Evaluate(CharacterMotor motor) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
+	public Vector3 Evaluate(CharacterMotor charMotor) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
 	{
 		//if(t > arcCutoffAngle*arcRadius) return next.Evaluate(t - this.arcCutoffAngle*this.arcRadius);
 		//if(t < 0)						 return prev.Evaluate(t + prev.arcCutoffAngle*prev.arcRadius);
