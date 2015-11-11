@@ -6071,23 +6071,22 @@ Error message and password prompt
 
 Abaddon is a science fiction puzzle platformer with action elements. The gameplay takes place on the inside of a spaceship that is transporting ten million prisoners to [[Neo Australia]]. The ship contains no security guards and is monitored solely by computer AI. The game culminates in the ship hurling towards a nearby star, whereupon the [[Protagonist]] of the story saves the day.</pre>
 </div>
-<div created="20151022031603191" modified="20151109004648811" title="Art">
+<div created="20151022031603191" modified="20151111132702799" title="Art">
 <pre>The art style of [[Abaddon]] will be scalable vector graphics (.svg format) projected onto a sphere with recolored outline graphics to indicate health and ammo.
 
 The game will use a blood thermometer effect (human healthbar) to make the player bleed upwards from their feet while taking damage.
 
 Additionally, the player's gun has a ammobar that is colored red, orange, yellow, green, blue, indigo, or violet depending on the number of clips they have. Red =&gt; none, Violet =&gt; six
 
-SVGs for [[Spherical Geometry]] will be [[cubic bezier curves|http://devmag.org.za/2011/04/05/bzier-curves-a-tutorial/]] with points defined as such:
+SVGs for [[Spherical Geometry]] will be [[quadratic bezier curves|http://devmag.org.za/2011/04/05/bzier-curves-a-tutorial/]] with points defined as such:
 
 p0 &lt;- starting position
-p1 &lt;- intersection of gradient of p0 and p1.5
-p1.5 &lt;- point of maximum linear error between p0 and p3 (unused)
-p2 &lt;- intersection of gradient of p0 and p1.5
-p3 &lt;- ending position 
+c1 &lt;- intersection of gradient of p0 and gradient of p2
+p2 &lt;- ending position 
 
 note on gradient: gradients, whenever possible, should be the average of their left and right limit so that the final bezier curve is smooth.
 
+This leaves the question of curve subdivision. When should you subdivide further than three control points? The answer to that question lies in when the maximum linear error of the curve exceeds a particular threshold. If the absolute error exceeds 5%, then make the control point an intermediate point and calculate two new control points. (e.g. p0 c1 p2 c3 p4) (recursively defined.)
 where positions are calculated via their UV coordinates:
 
 x = centerX + r*aX*cos(theta) + r*bX*sin(theta)
@@ -6101,7 +6100,9 @@ thus:
 
 u = .5 + atan2(centerY + r*aY*cos(theta) + r*bY*sin(theta),
                        centerX + r*aX*cos(theta) + r*bX*sin(theta))
-v = .5 - asin(centerZ + r*aZ*cos(theta) + r*bZ*sin(theta))</pre>
+v = .5 - asin(centerZ + r*aZ*cos(theta) + r*bZ*sin(theta))
+
+math == art, btw</pre>
 </div>
 <div created="20151022041921745" modified="20151022042230260" title="Block Types">
 <pre>Plastic—regular platforming terrain, no special properties.
