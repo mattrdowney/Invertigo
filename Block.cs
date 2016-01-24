@@ -3,18 +3,10 @@ using System.Collections;
 
 public class Block : Component
 {
-	BlockMotor							motor;
-	BlockBehavior						type;
+	BlockMotor						motor;
 
-	public float Collide(SphericalIsoscelesTrapezoid trap, CharacterMotor charMotor)
+	public Vector3 Evaluate(CharacterMotor charMotor)
 	{
-		if(BlockMotor) pos = motor.rotation*pos;
-
-
-	}
-	
-	public Vector3 Evaluate(float t)
-	{
-
+		return Vector3.zero;
 	}
 }

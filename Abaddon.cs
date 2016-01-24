@@ -18,9 +18,8 @@ public class Abaddon : MonoBehaviour
 
 	}
 	
-	//void OnDrawGizmos()
-	//{
-		/*
+	/*void OnDrawGizmos()
+	{
 		Vector3 pos = Camera.current.transform.position;
 		
 		for (float y = pos.y - 800.0f; y < pos.y + 800.0f; y+= height)
@@ -34,12 +33,11 @@ public class Abaddon : MonoBehaviour
 			Gizmos.DrawLine(new Vector3(Mathf.Floor(x/width) * width, -1000000.0f, 0.0f),
 			                new Vector3(Mathf.Floor(x/width) * width, 1000000.0f, 0.0f));
 		}
-		*/
-	//}
+	}*/
 	private void OnDrawGizmos()
 	{
 		UnityEditor.Handles.color = Color.yellow;
 
-		UnityEditor.Handles.DrawWireDisc(Vector3.zero, Vector3.back, 4);
+		UnityEditor.Handles.DrawWireArc(Vector3.zero, Vector3.back, Vector3.up, 30f, 4f);
 	}
 }

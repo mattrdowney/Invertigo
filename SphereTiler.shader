@@ -11,6 +11,8 @@ Shader "Custom/SphereTiler"
 	{
 		Tags { "RenderType"="Opaque" }
 
+		Cull Front
+
 		CGPROGRAM
 		#pragma surface surf Lambert
 
