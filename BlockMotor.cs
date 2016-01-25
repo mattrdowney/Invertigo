@@ -15,14 +15,12 @@ public class BlockMotor : MonoBehaviour
 	{
 		return trans.rotation * rot; //XXX: check rhs and lhs
 	}
-
-	// Use this for initialization
+	
 	void Start ()
 	{
 		trans = this.gameObject.GetComponent<Transform>();
 	}
-	
-	// Update is called once per frame
+
 	void Update ()
 	{
 		//do some stuff

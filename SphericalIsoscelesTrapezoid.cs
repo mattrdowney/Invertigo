@@ -12,7 +12,6 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 {
 	/*TODO: make into [Serializable] const*/
 	Block 							parent;
-	Optional<BlockMotor>			motor;
 
 	SphericalIsoscelesTrapezoid		next; //compiler hates uninitialized [Serializable] const
 	SphericalIsoscelesTrapezoid		prev;
@@ -31,9 +30,22 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	public void Initialize(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Vector3 cutNormal) //v1 -> v2 is the com path, v2 -> v3 is right (?), v3 -> foot path, v4 -> v1 is left (?), eccentricity is the bend in the angle
 	{
 		//the invariant
-		//assert(Mathf.Approximately(Vector3.Dot(v1 - v2, cutNormal), 0) && Mathf.Approximately(Vector3.Dot(v3 - v4, cutNormal), 0));
+		DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(v1 - v2, cutNormal), 0) && Mathf.Approximately(Vector3.Dot(v3 - v4, cutNormal), 0), "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 
-		//parent = this.gameObject.GetComponentInParent<Block>();
+		parent = this.gameObject.GetComponentInParent<Block>();
+
+		Vector3 top = v2 - v1, right = v3 - v2, bottom = v4 - v3, left = v1 - v4;
+
+		pathNormal   = cutNormal;
+		comPathDist  = Vector3.Dot(v1 /*or v2*/, cutNormal);
+		footPathDist = comPathDist - .5 /*warning JANK*/;
+
+		arcLeft  = Vector3.Cross(pathNormal, left); //TODO: check this
+		arcUp    = Vector3.Cross(pathNormal, arcLeft); //TODO: check sign / dir
+		arcRight = Vector3.Cross(pathNormal, right); //TODO: check this
+
+		arcRadius = v1.magnitude; //or v2.magnitude
+		arcCutoffAngle = Mathf.Atan2(Vector3.Dot(arcLeft,arcRight),Vector3.Cross(arcLeft,arcRight)); //FIXME: probably JANK
 	}
 
 	/**
@@ -55,6 +67,8 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	 */
 	public Vector3 Evaluate(CharacterMotor charMotor) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
 	{
+		DebugUtility.Assert(charMotor.t.HasValue && charMotor.segment.HasValue, "SphericalIsoscelesTrapezoid: Evaluate(CharacterMotor): Assert failed");
+
 		if(charMotor.t.Value > arcCutoffAngle*arcRadius)
 		{
 			charMotor.t.Value -= this.arcCutoffAngle*this.arcRadius;

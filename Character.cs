@@ -16,4 +16,9 @@ abstract public class Character : MonoBehaviour
 	{
 		return this.transform.rotation;
 	}
+
+	public void Move()
+	{
+		motor.Move();
+	}
 }
