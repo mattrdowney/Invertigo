@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 abstract public class CharacterMotor : Component
 {
-	public CharacterState							charState;
+
+	public Character								self;
 	public Optional<SphericalIsoscelesTrapezoid>	segment;
 	public Optional<Block>							block;
 

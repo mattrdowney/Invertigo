@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent (typeof (CollisionDetector))]
+[RequireComponent (typeof (CharacterMotor))]
 abstract public class Character : MonoBehaviour
 {
 	CollisionDetector coll;

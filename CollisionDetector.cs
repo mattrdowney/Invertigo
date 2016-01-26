@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 public class CollisionDetector : Component
 {
-	CharacterMotor						charMotor; //FIXME: unwanted coupling
-	
+	Character							self;
+	CharacterMotor						charMotor;
 	List<SphericalIsoscelesTrapezoid>	colliders;
 
 	bool dirty_bit = true;
