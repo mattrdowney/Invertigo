@@ -30,6 +30,7 @@ public class CollisionDetector : Component
 				}
 			}
 			charMotor.segment = closest;
+			charMotor.block = closest.Value.gameObject.GetComponentInParent<Block>();
 			charMotor.curPosition = closest.Value.Evaluate(charMotor);
 
 			dirty_bit = false;

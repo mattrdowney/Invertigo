@@ -6,6 +6,7 @@ abstract public class CharacterMotor : Component
 {
 	public CharacterState							charState;
 	public Optional<SphericalIsoscelesTrapezoid>	segment;
+	public Optional<Block>							block;
 
 	Vector3											_curPosition;
 	Vector3											_prevPosition;

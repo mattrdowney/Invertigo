@@ -11,8 +11,6 @@ using System.Collections;
 public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production builds*/ : MonoBehaviour //will become Component
 {
 	/*TODO: make into [Serializable] const*/
-	Block 							parent;
-
 	SphericalIsoscelesTrapezoid		next; //compiler hates uninitialized [Serializable] const
 	SphericalIsoscelesTrapezoid		prev;
 
@@ -32,33 +30,36 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		//the invariant
 		DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(v1 - v2, cutNormal), 0) && Mathf.Approximately(Vector3.Dot(v3 - v4, cutNormal), 0), "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 
-		parent = this.gameObject.GetComponentInParent<Block>();
-
-		Vector3 top = v2 - v1, right = v3 - v2, bottom = v4 - v3, left = v1 - v4;
+		Vector3 top = v2 - v1, right = v2 - v3, bottom = v3 - v4, left = v1 - v4;
 
 		pathNormal   = cutNormal;
-		comPathDist  = Vector3.Dot(v1 /*or v2*/, cutNormal);
-		footPathDist = comPathDist - .5 /*warning JANK*/;
+		comPathDist  = Vector3.Dot(v1, cutNormal); //use v1 or v2
+		footPathDist = comPathDist - .001f /*FIXME JANK*/; //should be sizes[levels]
 
-		arcLeft  = Vector3.Cross(pathNormal, left); //TODO: check this
-		arcUp    = Vector3.Cross(pathNormal, arcLeft); //TODO: check sign / dir
-		arcRight = Vector3.Cross(pathNormal, right); //TODO: check this
+		arcLeft  =  Vector3.Cross(pathNormal, left);
+		arcUp    = -Vector3.Cross(pathNormal, arcLeft);
+		arcRight = -Vector3.Cross(pathNormal, right);
 
-		arcRadius = v1.magnitude; //or v2.magnitude
-		arcCutoffAngle = Mathf.Atan2(Vector3.Dot(arcLeft,arcRight),Vector3.Cross(arcLeft,arcRight)); //FIXME: probably JANK
+		Vector3 pathCenter = comPathDist*pathNormal;
+
+		arcRadius = (v1 - pathCenter).magnitude; //use v1 or v2
+
+		float angle = Vector3.Angle(v1 - pathCenter, v2 - pathCenter);
+		if(Vector3.Dot(arcUp, arcRight) < 0) angle += 180f;
+
+		arcCutoffAngle = angle;
 	}
 
 	/**
      *  Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
 	 */
-	public bool Contains(CharacterMotor charMotor) //FIXME: might contain error in || statement regarding >/<
+	public bool Contains(CharacterMotor charMotor)
 	{
 		Vector3 pos = charMotor.curPosition;
-		if(motor.HasValue) pos = motor.Value.RelativePos(pos);
 
 		float prod = Vector3.Dot(pos, pathNormal);
 
-		return (prod <= comPathDist && prod >= footPathDist) && (Vector3.Dot(pos, arcLeft) <= 0 || Vector3.Dot(pos, arcRight) <= 0);
+		return (footPathDist <= prod && prod <= comPathDist) && !(Vector3.Dot(pos, arcLeft) > 0 && Vector3.Dot(pos, arcRight) > 0); //XXX: might still be wrong
 	}
 
 	/**
@@ -67,7 +68,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	 */
 	public Vector3 Evaluate(CharacterMotor charMotor) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
 	{
-		DebugUtility.Assert(charMotor.t.HasValue && charMotor.segment.HasValue, "SphericalIsoscelesTrapezoid: Evaluate(CharacterMotor): Assert failed");
+		DebugUtility.Assert(charMotor.t.HasValue && charMotor.segment.HasValue && charMotor.block.HasValue, "SphericalIsoscelesTrapezoid: Evaluate(CharacterMotor): Assert failed");
 
 		if(charMotor.t.Value > arcCutoffAngle*arcRadius)
 		{
@@ -86,7 +87,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	public Vector3 Evaluate(float t)
 	{
 		float angle = t/arcRadius;
-		return arcRight*arcRadius*Mathf.Cos(angle) + arcUp*arcRadius*Mathf.Sin(angle) + pathNormal*comPathDist;
+		return -arcLeft*arcRadius*Mathf.Cos(angle) + arcUp*arcRadius*Mathf.Sin(angle) + pathNormal*comPathDist; //-arcLeft for "right" is intentional
 	}
 
 	/**
