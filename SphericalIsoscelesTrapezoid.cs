@@ -59,7 +59,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 		float prod = Vector3.Dot(pos, pathNormal);
 
-		return (footPathDist <= prod && prod <= comPathDist) && !(Vector3.Dot(pos, arcLeft) > 0 && Vector3.Dot(pos, arcRight) > 0); //XXX: might still be wrong
+		return (footPathDist <= prod && prod <= comPathDist) && !(Vector3.Dot(pos, arcLeft) > 0 && Vector3.Dot(pos, arcRight) > 0); //XXX: might still be wrong //FIXME: De Morgan
 	}
 
 	/**
@@ -82,6 +82,20 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		}
 		
 		return Evaluate(charMotor.t.Value);
+	}
+
+	public Vector3 EvaluateNormal(CharacterMotor charMotor) //way easier and more logical than I expected...
+	{
+		return -Vector3.Cross(charMotor.curPosition, charMotor.right);
+	}
+
+	public Vector3 FindGravity(CharacterMotor charMotor) //seriously, where is it?
+	{
+		Vector3 pos = charMotor.curPosition;
+		float xz = Mathf.Sqrt(pos.x*pos.x + pos.z*pos.z);
+		float xfactor = pos.x / (pos.x + pos.z);
+		float zfactor = 1f - xfactor;
+		return new Vector3(xfactor*pos.y, -xz, zfactor*pos.y); //gravity is pseudo-2D, so use negative inverse rules, also way too fucking easy, but FIXME: I'm too tired to do it the first time
 	}
 
 	public Vector3 Evaluate(float t)
