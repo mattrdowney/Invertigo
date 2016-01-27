@@ -7,6 +7,13 @@ public class AbaddonEditor : Editor
 {
 	Abaddon							abaddon;
 
+	void SubUpdate(SceneView sceneview)
+	{
+		//SceneView.lastActiveSceneView.LookAt(SceneView.lastActiveSceneView.pivot, Quaternion.LookRotation(Vector3.forward));
+		//SceneView.lastActiveSceneView.AlignViewToObject(transform);
+		//SceneView.lastActiveSceneView.camera.transform.position = Vector3.zero; //XXX: should be the one I want, then I just use LookAt
+	}
+
 	void GridUpdate(SceneView sceneview)
 	{
 		//GameObject zero = GameObject.Find("Zero");
@@ -43,6 +50,14 @@ public class AbaddonEditor : Editor
 				DestroyImmediate(obj);
 			}
 		}
+
+		//if(e.isKey && e.character == ' ')
+		//{
+		//	SceneView.onSceneGUIDelegate -= SubUpdate;
+		//	SceneView.onSceneGUIDelegate += SubUpdate;
+		//} else if(e.isKey && up && e.character == ' ') {
+		//	SceneView.onSceneGUIDelegate -= SubUpdate;
+		//}
 	}
 	
 	public void OnEnable()
