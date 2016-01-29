@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class Player : Character //character is now gender-neutral
+public class Player : Character
 {
 	CollisionDetector				detector;
 	CharacterMotor					charMotor;

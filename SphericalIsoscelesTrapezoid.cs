@@ -84,18 +84,18 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		return Evaluate(charMotor.t.Value);
 	}
 
-	public Vector3 EvaluateNormal(CharacterMotor charMotor) //way easier and more logical than I expected...
+	public Vector3 EvaluateNormal(CharacterMotor charMotor)
 	{
-		return -Vector3.Cross(charMotor.curPosition, charMotor.right);
+		return -Vector3.Cross(charMotor.curPosition, charMotor.right); //TODO: check
 	}
 
-	public Vector3 FindGravity(CharacterMotor charMotor) //seriously, where is it?
+	public Vector3 FindGravity(CharacterMotor charMotor)
 	{
 		Vector3 pos = charMotor.curPosition;
 		float xz = Mathf.Sqrt(pos.x*pos.x + pos.z*pos.z);
 		float xfactor = pos.x / (pos.x + pos.z);
 		float zfactor = 1f - xfactor;
-		return new Vector3(xfactor*pos.y, -xz, zfactor*pos.y); //gravity is pseudo-2D, so use negative inverse rules, also way too fucking easy, but FIXME: I'm too tired to do it the first time
+		return new Vector3(xfactor/pos.y, -1/xz, zfactor*pos.y); //TODO: check
 	}
 
 	public Vector3 Evaluate(float t)
