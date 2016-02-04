@@ -86,7 +86,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 	public Vector3 EvaluateNormal(CharacterMotor charMotor)
 	{
-		return -Vector3.Cross(charMotor.curPosition, charMotor.right); //TODO: check
+		return -Vector3.Cross(charMotor.curPosition, charMotor.right.Value); //TODO: check
 	}
 
 	public Vector3 FindGravity(CharacterMotor charMotor)
