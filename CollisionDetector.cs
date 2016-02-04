@@ -4,39 +4,34 @@ using System.Collections.Generic;
 
 public class CollisionDetector : Component
 {
-	Character							self;
-	CharacterMotor						charMotor;
 	List<SphericalIsoscelesTrapezoid>	colliders;
 
-	bool dirty_bit = true;
-
-	public void Update()
+	public Optional<SphericalIsoscelesTrapezoid> Update(Vector3 desiredPos, Vector3 curPos)
 	{
-		if(dirty_bit)
+		Optional<SphericalIsoscelesTrapezoid> closest = new Optional<SphericalIsoscelesTrapezoid>();
+		Optional<float> 					  closestDistance = new Optional<float>();
+
+		//Step 1: go through each colliding segment
+		foreach(SphericalIsoscelesTrapezoid trap in colliders)
 		{
-			Optional<SphericalIsoscelesTrapezoid> closest = new Optional<SphericalIsoscelesTrapezoid>();
-			Optional<float> 					  closestDistance = new Optional<float>();
-			
-			foreach(SphericalIsoscelesTrapezoid trap in colliders)
+			//step 2: Character Controller asks the block if a collision actually occuring in Spherical coordinates
+			if(trap.Contains(desiredPos))
 			{
-				if(trap.Contains(charMotor))
+				//step 3: if a collision is happening, a list of TTCs (time till collision) are sorted to find the closest collision.
+				Optional<float> distance = trap.Distance(desiredPos, curPos);
+				if(distance.HasValue && (!closestDistance.HasValue || distance.Value < closestDistance.Value))
 				{
-					Optional<float> distance = trap.Distance(charMotor);
-					if(distance.HasValue && (!closestDistance.HasValue || distance.Value < closestDistance.Value))
-					{
-						closestDistance = distance;
-						closest = trap;
-					}
+					closestDistance = distance;
+					closest = trap;
 				}
 			}
-			charMotor.segment = closest;
-			charMotor.block = closest.Value.gameObject.GetComponentInParent<Block>();
-			charMotor.curPosition = closest.Value.Evaluate(charMotor);
-
-			dirty_bit = false;
 		}
+
+		//step 4: the player moves in contact with the object and performs camera transitions accordingly if there was a collision.
+		return closest; //charMotor.Traverse(closest, desiredPos, curPosition);
 	}
 
+	//step 0: Character Controller adds the observed SphericalIsoscelesTriangle to a vector in OnCollisionEnter...
 	void OnCollisionEnter(Collision collisions)
 	{
 		foreach(ContactPoint col in collisions.contacts)
@@ -44,9 +39,9 @@ public class CollisionDetector : Component
 			SphericalIsoscelesTrapezoid trap = col.otherCollider.gameObject.GetComponent<SphericalIsoscelesTrapezoid>();
 			if(trap) colliders.Add(trap);
 		}
-		dirty_bit = true;
 	}
-	
+
+	// ... and removes it in OnCollisionExit
 	void OnCollisionExit(Collision collisions)
 	{
 		foreach(ContactPoint col in collisions.contacts)
@@ -54,6 +49,5 @@ public class CollisionDetector : Component
 			SphericalIsoscelesTrapezoid trap = col.otherCollider.gameObject.GetComponent<SphericalIsoscelesTrapezoid>();
 			if(trap) colliders.Remove(trap);
 		}
-		dirty_bit = true;
 	}
 }

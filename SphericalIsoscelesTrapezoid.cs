@@ -1,12 +1,6 @@
-//step 1: Character Controller adds the observed SphericalIsoscelesTriangle to a vector in OnCollisionEnter (and removes it in OnCollisionExit)
-//step 2: Character Controller asks the block if a collision actually occuring (AABB testing is just for the quick collision detection).
-//step 3: if a collision is happening, a list of TTCs (time till collision) are sorted to find the closest collision.
-//step 4: the player moves in contact with the object and performs camera transitions accordingly if there was a collision.
-//step 5: if no collisions were detected, player moves left, right, or stands still depending on input and block behavior (e.g. treadmills).
-//step 6: ...
-
 using UnityEngine;
 using System.Collections;
+using System.Linq;
 
 public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production builds*/ : MonoBehaviour //will become Component
 {
@@ -53,86 +47,96 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	/**
      *  Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
 	 */
-	public bool Contains(CharacterMotor charMotor)
+	public bool Contains(Vector3 pos)
 	{
-		Vector3 pos = charMotor.curPosition;
-
 		float prod = Vector3.Dot(pos, pathNormal);
 
-		return (footPathDist <= prod && prod <= comPathDist) && !(Vector3.Dot(pos, arcLeft) > 0 && Vector3.Dot(pos, arcRight) > 0); //XXX: might still be wrong //FIXME: De Morgan
+		bool bIsAtCorrectElevation = footPathDist <= prod && prod <= comPathDist;
+		bool bLeftContains		   = Vector3.Dot(pos, arcLeft) <= 0;
+		bool bRightContains		   = Vector3.Dot(pos, arcRight) <= 0;
+		bool bIsObtuse			   = Vector3.Dot(arcLeft, arcRight) < 0;
+		int  nOutOfThree		   = Truth(bLeftContains, bRightContains, bIsObtuse);
+
+		return bIsAtCorrectElevation && nOutOfThree >= 2; //XXX: might even now be wrong
+	}
+
+	public static int Truth(params bool[] booleans) //all credit: http://stackoverflow.com/questions/377990/elegantly-determine-if-more-than-one-boolean-is-true
+	{
+		return booleans.Count(b => b);
 	}
 
 	/**
 	 *  return the position of the player based on the circular path
 	 *  If the player would go outside of [0, arcCutoffAngle*arcRadius], the Trapezoid should transfer control of the player to (prev, next) respectively
 	 */
-	public Vector3 Evaluate(CharacterMotor charMotor) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
+	public Vector3 Evaluate(ref float t) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
 	{
-		DebugUtility.Assert(charMotor.t.HasValue && charMotor.segment.HasValue && charMotor.block.HasValue, "SphericalIsoscelesTrapezoid: Evaluate(CharacterMotor): Assert failed");
-
-		if(charMotor.t.Value > arcCutoffAngle*arcRadius)
+		if(t > arcCutoffAngle*arcRadius)
 		{
-			charMotor.t.Value -= this.arcCutoffAngle*this.arcRadius;
-			return prev.Evaluate(charMotor);
+			t -= this.arcCutoffAngle*this.arcRadius;
+			return prev.Evaluate(ref t);
 		}
-		if(charMotor.t.Value < 0)
+		if(t < 0)
 		{
-			charMotor.t.Value += prev.arcCutoffAngle*prev.arcRadius;
-			return prev.Evaluate(charMotor);
+			t += prev.arcCutoffAngle*prev.arcRadius;
+			return prev.Evaluate(ref t);
 		}
 		
-		return Evaluate(charMotor.t.Value);
-	}
-
-	public Vector3 EvaluateNormal(CharacterMotor charMotor)
-	{
-		return -Vector3.Cross(charMotor.curPosition, charMotor.right.Value); //TODO: check
-	}
-
-	public Vector3 FindGravity(CharacterMotor charMotor)
-	{
-		Vector3 pos = charMotor.curPosition;
-		float xz = Mathf.Sqrt(pos.x*pos.x + pos.z*pos.z);
-		float xfactor = pos.x / (pos.x + pos.z);
-		float zfactor = 1f - xfactor;
-		return new Vector3(xfactor/pos.y, -1/xz, zfactor*pos.y); //TODO: check
-	}
-
-	public Vector3 Evaluate(float t)
-	{
-		float angle = t/arcRadius;
+		float angle = t / arcRadius;
 		return -arcLeft*arcRadius*Mathf.Cos(angle) + arcUp*arcRadius*Mathf.Sin(angle) + pathNormal*comPathDist; //-arcLeft for "right" is intentional
+	}
+
+	public Vector3 EvaluateRight(float t)
+	{
+		float angle = t / arcRadius;
+		return arcUp*Mathf.Cos(angle) + arcLeft*Mathf.Sin(angle);
+	}
+
+	public Vector3 EvaluateNormal(Vector3 pos, Vector3 right)
+	{
+		return Vector3.Cross(right, pos);
 	}
 
 	/**
 	 *  Find the point of collision as a parameterization of a circle.
 	 */
-	public Optional<float> Intersect(CharacterMotor charMotor)
+	public Optional<float> Intersect(Vector3 to, Vector3 from) //TODO: FIXME: UNJANKIFY
 	{
-		Vector3 right  = Vector3.Cross(charMotor.prevPosition, charMotor.curPosition);
+		Vector3 right  = Vector3.Cross(from, to);
 		Vector3 secant = Vector3.Cross(pathNormal, right);
 		
-		if(Vector3.Dot(secant, charMotor.prevPosition) < 0f) secant *= -1;
+		if(Vector3.Dot(secant, from) < 0f) secant *= -1; //TODO: check
+
+		secant.Normalize();
 		
 		Vector3 intersection = pathNormal*comPathDist + secant*arcRadius;
-		
-		float x = Vector3.Dot(intersection, arcRight);
-		float y = Vector3.Dot(intersection, arcUp);
+
+		float x = Vector3.Dot(intersection, -arcLeft) / arcRadius;
+		float y = Vector3.Dot(intersection, arcUp) / arcRadius;
 		
 		float angle = Mathf.Atan2(y,x);
-		if(angle < 0) angle += 2*Mathf.PI;
 
-		if(angle <= arcCutoffAngle) return angle*arcRadius;
+		if(angle < 0)
+		{
+			angle += 2*Mathf.PI;
+		}
+
+		if(angle <= arcCutoffAngle)
+		{
+			return angle*arcRadius;
+		}
 		return new Optional<float>();
 	}
 
-	public Optional<float> Distance(CharacterMotor charMotor)
+	public Optional<float> Distance(Vector3 to, Vector3 from)
 	{
-		Optional<float> intersection = Intersect(charMotor);
+		Optional<float> intersection = Intersect(to, from);
+
 		if(intersection.HasValue)
 		{
-			Vector3 newPos = Evaluate(intersection.Value);
-			return Vector3.Distance(charMotor.prevPosition, newPos);
+			float t = intersection.Value;
+			Vector3 newPos = Evaluate(ref t);
+			return Vector3.Distance(from, newPos);
 		}
 
 		return new Optional<float>();

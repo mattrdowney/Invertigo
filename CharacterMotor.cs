@@ -4,21 +4,15 @@ using System.Collections.Generic;
 
 abstract public class CharacterMotor : Component
 {
-
-	public Character								self;
-	public Optional<SphericalIsoscelesTrapezoid>	segment;
-	public Optional<Block>							block;
-
 	Vector3											_curPosition;
 	Vector3											_prevPosition;
 
 	Vector2											_velocity;
+
 	Vector3											_south;
 	Vector3											_west;
-	Optional<Vector3>								_normal;
-	Optional<Vector3>								_right;
 
-	public Optional<float>							t;
+	Optional<GroundInfo>							ground;
 
 	Dictionary<string, float>						flags; //XXX: Strategy Pattern?
 
@@ -27,6 +21,24 @@ abstract public class CharacterMotor : Component
 	//TODO: make flags into delegater Queue<*fun()> https://social.msdn.microsoft.com/Forums/en-US/2c08a0d0-58e4-4df6-b6d3-75e785fff8a8/array-of-function-pointers?forum=csharplanguage
 
 	//ideally there should be three setters: position, velocity, and segment
+
+	public Optional<SphericalIsoscelesTrapezoid> segment
+	{
+		get
+		{
+			if(ground.HasValue) return new Optional<SphericalIsoscelesTrapezoid>();
+			return ground.Value.segment;
+		}
+	}
+
+	public Optional<Block> block
+	{
+		get
+		{
+			if(!ground.HasValue) return new Optional<Block>();
+			return ground.Value.block;
+		}
+	}
 
 	public Vector3 curPosition
 	{
@@ -38,6 +50,24 @@ abstract public class CharacterMotor : Component
 		{
 			_prevPosition = _curPosition;
 			_curPosition = value;
+
+			_south = FindSouth(_curPosition);
+			_west  = Vector3.Cross(_south, _curPosition);
+
+			if(ground.HasValue)
+			{
+				ground.Value.right  = ground.Value.segment.EvaluateRight(ground.Value.t);
+				ground.Value.normal = ground.Value.segment.EvaluateNormal(curPosition, ground.Value.right);
+			}
+		}
+	}
+
+	public Optional<float> t
+	{
+		get
+		{
+			if(!ground.HasValue) return new Optional<float>(); 
+			return ground.Value.t;
 		}
 	}
 
@@ -51,33 +81,59 @@ abstract public class CharacterMotor : Component
 	 */
 	public Vector2 velocity
 	{
-		get { return _velocity; }
-		set { _velocity = value; if(value.sqrMagnitude > 1) _velocity = value.normalized;
-			  if(_normal.HasValue) _velocity = Vector3.ProjectOnPlane(_velocity, _normal.Value); } //FIXME: better way to project velocity? set is independent of position
+		get
+		{
+			return _velocity;
+		}
+		set
+		{
+			_velocity = value;
+
+			if(value.sqrMagnitude > 1)
+			{
+				_velocity.Normalize();
+			}
+
+			if(ground.HasValue)
+			{
+				_velocity = Vector3.ProjectOnPlane(_velocity, ground.Value.normal);
+			}
+		}
 	}
 
 	public Vector3 South
 	{
-		get { return _south; }
-		set { _south = value; if(value.sqrMagnitude > 1) _south = value.normalized; } //TODO: get rid of set and put it in curPosition set
+		get
+		{
+			return _south;
+		}
 	}
 
 	public Vector3 West
 	{
-		get { return _south; }
-		set { _south = value; if(value.sqrMagnitude > 1) _south = value.normalized; } //TODO: get rid of set and put it in curPosition set
+		get
+		{
+			return _west;
+		}
 	}
 
 	public Optional<Vector3> normal
 	{
-		get { return _normal; }
-		set { _normal = value; if(value.HasValue && value.Value.sqrMagnitude > 1) _normal.Value.Normalize(); } //TODO: vector reject velocity onto normal as well, move to curPosition set
+		get
+		{
+			if(!ground.HasValue) return new Optional<Vector3>(); 
+			return ground.Value.normal;
+		}
+		//TODO: vector reject velocity onto normal as well, move to curPosition set
 	}
 
 	public Optional<Vector3> right
 	{
-		get { return _right; }
-		set { _right = value; if(value.HasValue && value.Value.sqrMagnitude > 1) _right.Value.Normalize(); } //TODO: move to curPosition set
+		get
+		{
+			if(!ground.HasValue) return new Optional<Vector3>(); 
+			return ground.Value.right;
+		}
 	}
 
 	public Vector2 input
@@ -87,4 +143,33 @@ abstract public class CharacterMotor : Component
 	}
 
 	abstract public void Move();
+
+	public Vector3 FindSouth(Vector3 pos)
+	{
+		float xz = Mathf.Sqrt(pos.x*pos.x + pos.z*pos.z);
+		float xfactor = pos.x / (pos.x + pos.z);
+		float zfactor = 1f - xfactor;
+		return new Vector3(xfactor/pos.y, -1/xz, zfactor*pos.y); //TODO: check
+	}
+
+	public void Traverse(Optional<SphericalIsoscelesTrapezoid> SIT, Vector3 desiredPos, Vector3 curPos)
+	{
+		if(SIT.HasValue)
+		{
+			ground = new GroundInfo();
+
+			ground.Value.segment = SIT.Value;
+			ground.Value.block   = SIT.Value.GetComponentInParent<Block>();
+			ground.Value.t		 = SIT.Value.Intersect(desiredPos, curPos).Value; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
+
+			curPosition = SIT.Value.Evaluate(ref ground.Value.t);
+
+			ground.Value.right	 = SIT.Value.EvaluateRight(ground.Value.t);
+			ground.Value.normal	 = SIT.Value.EvaluateNormal(curPos, ground.Value.right);
+		}
+		else
+		{
+			ground = new Optional<GroundInfo>();
+		}
+	}
 }
