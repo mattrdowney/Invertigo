@@ -69,19 +69,26 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	 *  return the position of the player based on the circular path
 	 *  If the player would go outside of [0, arcCutoffAngle*arcRadius], the Trapezoid should transfer control of the player to (prev, next) respectively
 	 */
-	public Vector3 Evaluate(ref float t) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
+	public static Vector3 Evaluate(ref float t, ref SphericalIsoscelesTrapezoid seg) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
 	{
-		if(t > arcCutoffAngle*arcRadius)
+		if(t > seg.arcCutoffAngle*seg.arcRadius)
 		{
-			t -= this.arcCutoffAngle*this.arcRadius;
-			return prev.Evaluate(ref t);
+			t -= seg.arcCutoffAngle*seg.arcRadius;
+			seg = seg.next;
+			return Evaluate(ref t, ref seg);
 		}
 		if(t < 0)
 		{
-			t += prev.arcCutoffAngle*prev.arcRadius;
-			return prev.Evaluate(ref t);
+			t += seg.prev.arcCutoffAngle*seg.prev.arcRadius;
+			seg = seg.prev;
+			return Evaluate(ref t, ref seg);
 		}
 		
+		return seg.Evaluate(t);
+	}
+
+	public Vector3 Evaluate(float t) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
+	{
 		float angle = t / arcRadius;
 		return -arcLeft*arcRadius*Mathf.Cos(angle) + arcUp*arcRadius*Mathf.Sin(angle) + pathNormal*comPathDist; //-arcLeft for "right" is intentional
 	}
@@ -135,7 +142,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		if(intersection.HasValue)
 		{
 			float t = intersection.Value;
-			Vector3 newPos = Evaluate(ref t);
+			Vector3 newPos = Evaluate(t);
 			return Vector3.Distance(from, newPos);
 		}
 

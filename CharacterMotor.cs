@@ -22,20 +22,18 @@ abstract public class CharacterMotor : Component
 
 	//ideally there should be three setters: position, velocity, and segment
 
-	public Optional<SphericalIsoscelesTrapezoid> segment
+	public SphericalIsoscelesTrapezoid segment
 	{
 		get
 		{
-			if(ground.HasValue) return new Optional<SphericalIsoscelesTrapezoid>();
 			return ground.Value.segment;
 		}
 	}
 
-	public Optional<Block> block
+	public Block block
 	{
 		get
 		{
-			if(!ground.HasValue) return new Optional<Block>();
 			return ground.Value.block;
 		}
 	}
@@ -62,12 +60,16 @@ abstract public class CharacterMotor : Component
 		}
 	}
 
-	public Optional<float> t
+	public float t
 	{
 		get
 		{
-			if(!ground.HasValue) return new Optional<float>(); 
 			return ground.Value.t;
+		}
+		set
+		{
+			ground.Value.t = value;
+			curPosition = SphericalIsoscelesTrapezoid.Evaluate(ref ground.Value.t, ref ground.Value.segment);
 		}
 	}
 
@@ -117,29 +119,46 @@ abstract public class CharacterMotor : Component
 		}
 	}
 
-	public Optional<Vector3> normal
+	public bool grounded
 	{
 		get
 		{
-			if(!ground.HasValue) return new Optional<Vector3>(); 
+			return ground.HasValue;
+		}
+	}
+
+	public Vector3 normal
+	{
+		get
+		{
 			return ground.Value.normal;
 		}
 		//TODO: vector reject velocity onto normal as well, move to curPosition set
 	}
 
-	public Optional<Vector3> right
+	public Vector3 right
 	{
 		get
 		{
-			if(!ground.HasValue) return new Optional<Vector3>(); 
 			return ground.Value.right;
 		}
 	}
 
 	public Vector2 input
 	{
-		get { return _input; }
-		set { _input = value; if(value.sqrMagnitude > 1) _input = value.normalized; }
+		get
+		{
+			return _input;
+		}
+		set
+		{
+			_input = value;
+
+			if(value.sqrMagnitude > 1)
+			{
+				_input = value.normalized;
+			}
+		}
 	}
 
 	abstract public void Move();
@@ -162,7 +181,7 @@ abstract public class CharacterMotor : Component
 			ground.Value.block   = SIT.Value.GetComponentInParent<Block>();
 			ground.Value.t		 = SIT.Value.Intersect(desiredPos, curPos).Value; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
 
-			curPosition = SIT.Value.Evaluate(ref ground.Value.t);
+			curPosition = SphericalIsoscelesTrapezoid.Evaluate(ref ground.Value.t, ref ground.Value.segment);
 
 			ground.Value.right	 = SIT.Value.EvaluateRight(ground.Value.t);
 			ground.Value.normal	 = SIT.Value.EvaluateNormal(curPos, ground.Value.right);
