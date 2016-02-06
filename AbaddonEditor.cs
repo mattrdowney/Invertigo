@@ -2,46 +2,50 @@
 using UnityEditor;
 using System.Collections;
 
-[CustomEditor (typeof(Abaddon))]
+[CustomEditor (typeof(Abaddon))] //http://code.tutsplus.com/tutorials/how-to-add-your-own-tools-to-unitys-editor--active-10047
 public class AbaddonEditor : Editor
 {
+	Transform 						forward;
+	Transform						yawTrans;
+	Transform						pitchTrans;
 	Abaddon							abaddon;
+	bool							editing;
 
-	void SubUpdate(SceneView sceneview)
+	void Editing(SceneView sceneview)
 	{
-		//SceneView.lastActiveSceneView.LookAt(SceneView.lastActiveSceneView.pivot, Quaternion.LookRotation(Vector3.forward));
-		//SceneView.lastActiveSceneView.AlignViewToObject(transform);
-		//SceneView.lastActiveSceneView.camera.transform.position = Vector3.zero; //XXX: should be the one I want, then I just use LookAt
+		SceneView.lastActiveSceneView.camera.transform.position = Vector3.zero; //XXX: should be the one I want, then I just use LookAt
+		sceneview.AlignViewToObject(forward);
+		sceneview.Repaint();
 	}
 
-	void GridUpdate(SceneView sceneview)
+	void Listen(SceneView sceneview)
 	{
-		//GameObject zero = GameObject.Find("Zero");
-		//sceneview.AlignViewToObject(zero.transform);
-		//sceneview.Repaint();
 		Event e = Event.current;
 
 		Ray r = Camera.current.ScreenPointToRay(new Vector3(e.mousePosition.x, -e.mousePosition.y + Camera.current.pixelHeight));
 		Vector3 mousePos = r.origin;
-		
-		if (e.isKey && e.character == 'a')
+
+		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.A)
 		{
-			GameObject obj;
+			Debug.Log ("Happening1");
+
 			Object prefab = PrefabUtility.GetPrefabParent(Selection.activeObject);
 			
 			if (prefab)
 			{
 				//Undo.IncrementCurrentEventIndex();
-				obj = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+				GameObject obj = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
 				PrefabUtility.RecordPrefabInstancePropertyModifications(obj);
 				Vector3 aligned = new Vector3(Mathf.Floor(mousePos.x/abaddon.width )*abaddon.width  + abaddon.width /2.0f,
 				                              Mathf.Floor(mousePos.y/abaddon.height)*abaddon.height + abaddon.height/2.0f, 0.0f);
 				obj.transform.position = aligned;
 				Undo.RegisterCreatedObjectUndo(obj, "Create " + obj.name);
 			}
+			Event.PopEvent(Event.current);
 		}
-		else if (e.isKey && e.character == 'd')
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.D)
 		{
+			Debug.Log ("Happening2");
 			//Undo.IncrementCurrentEventIndex();
 			Undo.SetCurrentGroupName("Delete object set");
 			foreach (GameObject obj in Selection.gameObjects)
@@ -49,22 +53,99 @@ public class AbaddonEditor : Editor
 				Undo.DestroyObjectImmediate(obj);
 				DestroyImmediate(obj);
 			}
+			Event.PopEvent(Event.current);
+		}
+		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space)
+		{
+			editing = !editing;
+
+			if(editing)
+			{
+				Debug.Log ("Happening3");
+				SceneView.onSceneGUIDelegate -= Editing;
+				SceneView.onSceneGUIDelegate += Editing;
+			}
+			else
+			{
+				Debug.Log ("Happening4");
+				SceneView.onSceneGUIDelegate -= Editing;
+			}
+
+			Event.PopEvent(Event.current);
 		}
 
-		//if(e.isKey && e.character == ' ')
-		//{
-		//	SceneView.onSceneGUIDelegate -= SubUpdate;
-		//	SceneView.onSceneGUIDelegate += SubUpdate;
-		//} else if(e.isKey && up && e.character == ' ') {
-		//	SceneView.onSceneGUIDelegate -= SubUpdate;
-		//}
+		if(editing)
+		{
+			if(e.type == EventType.KeyDown && e.keyCode == KeyCode.LeftArrow)
+			{
+				SceneView.onSceneGUIDelegate -= RotateLeft;
+				SceneView.onSceneGUIDelegate += RotateLeft;
+			}
+			else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.RightArrow)
+			{
+				SceneView.onSceneGUIDelegate -= RotateRight;
+				SceneView.onSceneGUIDelegate += RotateRight;
+			}
+			else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.UpArrow)
+			{
+				SceneView.onSceneGUIDelegate -= RotateUp;
+				SceneView.onSceneGUIDelegate += RotateUp;
+			}
+			else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.DownArrow)
+			{
+				SceneView.onSceneGUIDelegate -= RotateDown;
+				SceneView.onSceneGUIDelegate += RotateDown;
+			}
+			else if(e.type == EventType.KeyUp && e.keyCode == KeyCode.LeftArrow)
+			{
+				SceneView.onSceneGUIDelegate -= RotateLeft;
+			}
+			else if(e.type == EventType.KeyUp && e.keyCode == KeyCode.RightArrow)
+			{
+				SceneView.onSceneGUIDelegate -= RotateRight;
+			}
+			else if(e.type == EventType.KeyUp && e.keyCode == KeyCode.UpArrow)
+			{
+				SceneView.onSceneGUIDelegate -= RotateUp;
+			}
+			else if(e.type == EventType.KeyUp && e.keyCode == KeyCode.DownArrow)
+			{
+				SceneView.onSceneGUIDelegate -= RotateDown;
+			}
+		}
+	}
+
+	void RotateLeft(SceneView sceneview)
+	{
+		yawTrans.localRotation *= Quaternion.Euler(0f, -0.1f, 0f);
+	}
+	void RotateRight(SceneView sceneview)
+	{
+		yawTrans.localRotation *= Quaternion.Euler(0f, 0.1f, 0f);
+	}
+	void RotateUp(SceneView sceneview)
+	{
+		pitchTrans.localRotation *= Quaternion.Euler(-0.1f, 0f, 0f);
+	}
+	void RotateDown(SceneView sceneview)
+	{
+		pitchTrans.localRotation *= Quaternion.Euler(0.1f, 0f, 0f);
 	}
 	
 	public void OnEnable()
 	{
 		abaddon = target as Abaddon;
-		SceneView.onSceneGUIDelegate -= GridUpdate;
-		SceneView.onSceneGUIDelegate += GridUpdate;
+		yawTrans   = GameObject.Find("/PivotYaw").transform;
+		pitchTrans = GameObject.Find("/PivotYaw/PivotPitch").transform;
+		forward    = GameObject.Find("/PivotYaw/PivotPitch/Zero").transform;
+		editing = false;
+		SceneView.onSceneGUIDelegate -= Listen;
+		SceneView.onSceneGUIDelegate -= Editing;
+		SceneView.onSceneGUIDelegate -= RotateLeft;
+		SceneView.onSceneGUIDelegate -= RotateRight;
+		SceneView.onSceneGUIDelegate -= RotateUp;
+		SceneView.onSceneGUIDelegate -= RotateDown;
+		SceneView.onSceneGUIDelegate += Listen;
 	}
 
 	public override void OnInspectorGUI()
