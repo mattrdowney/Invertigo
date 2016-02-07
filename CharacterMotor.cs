@@ -21,15 +21,7 @@ abstract public class CharacterMotor : Component
 	//TODO: make flags into delegater Queue<*fun()> https://social.msdn.microsoft.com/Forums/en-US/2c08a0d0-58e4-4df6-b6d3-75e785fff8a8/array-of-function-pointers?forum=csharplanguage
 
 	//ideally there should be three setters: position, velocity, and segment
-
-	public SphericalIsoscelesTrapezoid segment
-	{
-		get
-		{
-			return ground.Value.segment;
-		}
-	}
-
+	
 	public Block block
 	{
 		get
@@ -57,6 +49,64 @@ abstract public class CharacterMotor : Component
 				ground.Value.right  = ground.Value.segment.EvaluateRight(ground.Value.t);
 				ground.Value.normal = ground.Value.segment.EvaluateNormal(curPosition, ground.Value.right);
 			}
+		}
+	}
+
+	public bool grounded
+	{
+		get
+		{
+			return ground.HasValue;
+		}
+	}
+
+	public Vector2 input
+	{
+		get
+		{
+			return _input;
+		}
+		set
+		{
+			_input = value;
+			
+			if(value.sqrMagnitude > 1)
+			{
+				_input = value.normalized;
+			}
+		}
+	}
+
+	public Vector3 normal
+	{
+		get
+		{
+			return ground.Value.normal;
+		}
+		//TODO: vector reject velocity onto normal as well, move to curPosition set
+	}
+	
+	public Vector3 right
+	{
+		get
+		{
+			return ground.Value.right;
+		}
+	}
+
+	public SphericalIsoscelesTrapezoid segment
+	{
+		get
+		{
+			return ground.Value.segment;
+		}
+	}
+
+	public Vector3 South
+	{
+		get
+		{
+			return _south;
 		}
 	}
 
@@ -103,14 +153,6 @@ abstract public class CharacterMotor : Component
 		}
 	}
 
-	public Vector3 South
-	{
-		get
-		{
-			return _south;
-		}
-	}
-
 	public Vector3 West
 	{
 		get
@@ -118,50 +160,6 @@ abstract public class CharacterMotor : Component
 			return _west;
 		}
 	}
-
-	public bool grounded
-	{
-		get
-		{
-			return ground.HasValue;
-		}
-	}
-
-	public Vector3 normal
-	{
-		get
-		{
-			return ground.Value.normal;
-		}
-		//TODO: vector reject velocity onto normal as well, move to curPosition set
-	}
-
-	public Vector3 right
-	{
-		get
-		{
-			return ground.Value.right;
-		}
-	}
-
-	public Vector2 input
-	{
-		get
-		{
-			return _input;
-		}
-		set
-		{
-			_input = value;
-
-			if(value.sqrMagnitude > 1)
-			{
-				_input = value.normalized;
-			}
-		}
-	}
-
-	abstract public void Move();
 
 	public Vector3 FindSouth(Vector3 pos)
 	{
