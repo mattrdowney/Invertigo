@@ -10,37 +10,37 @@ public class AbaddonEditor : Editor
 	Transform						pitchTrans;
 	Abaddon							abaddon;
 
-	SphericalIsoscelesTrapezoid		firstEdge;
+	Vector3							firstEdge;
 
-	void Listen(SceneView sceneview)
+	void Align(SceneView sceneview)
 	{
-		if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Space)
-		{
-			SceneView.onSceneGUIDelegate -= Listen;
-			SceneView.onSceneGUIDelegate += Edit;
-			DebugUtility.Print("Switching to Edit");
-		}
+		sceneview.AlignViewToObject(forward);
+		sceneview.camera.transform.position = Vector3.zero; //XXX: should be the one I want, then I just use LookAt
+		sceneview.Repaint();
 	}
 
-	void Edit(SceneView sceneview)
+	void AllowRotation()
 	{
-		Event e = Event.current;
-		
-		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space)
-		{
-			SceneView.onSceneGUIDelegate -= Edit;
-			SceneView.onSceneGUIDelegate += Listen;
-			DebugUtility.Print("Switching to Listen");
-		}
-		else if(e.type == EventType.MouseDown)
-		{
-			SceneView.onSceneGUIDelegate -= Edit;
-			SceneView.onSceneGUIDelegate += Create;
-			DebugUtility.Print("Switching to Create");
-		}
+		SceneView.onSceneGUIDelegate += WaitLeft;
+		SceneView.onSceneGUIDelegate += WaitRight;
+		SceneView.onSceneGUIDelegate += WaitUp;
+		SceneView.onSceneGUIDelegate += WaitDown;
+	}	
 
-		Rotate(sceneview);
-		Align(sceneview);
+	public void CancelState()
+	{
+		SceneView.onSceneGUIDelegate -= Listen;
+		SceneView.onSceneGUIDelegate -= Edit;
+		SceneView.onSceneGUIDelegate -= WaitLeft;
+		SceneView.onSceneGUIDelegate -= WaitRight;
+		SceneView.onSceneGUIDelegate -= WaitUp;
+		SceneView.onSceneGUIDelegate -= WaitDown;
+		SceneView.onSceneGUIDelegate -= RotateLeft;
+		SceneView.onSceneGUIDelegate -= RotateRight;
+		SceneView.onSceneGUIDelegate -= RotateUp;
+		SceneView.onSceneGUIDelegate -= RotateDown;
+		SceneView.onSceneGUIDelegate -= Create;
+		SceneView.onSceneGUIDelegate -= Escape;
 	}
 
 	void Create(SceneView sceneview)
@@ -64,10 +64,34 @@ public class AbaddonEditor : Editor
 			}
 			Event.PopEvent(Event.current);
 		}
-
-		Rotate(sceneview);
-		Align(sceneview);
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space)
+		{
+			SceneView.onSceneGUIDelegate -= Create;
+			SceneView.onSceneGUIDelegate += Edit;
+			//TODO: FINALIZE firstEdge
+			DebugUtility.Print("Switching to Edit");
+		}
 	}
+
+	void Edit(SceneView sceneview)
+	{
+		Event e = Event.current;
+		
+		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space)
+		{
+			CancelState();
+			SceneView.onSceneGUIDelegate += Listen;
+			DebugUtility.Print("Switching to Listen");
+		}
+		else if(e.type == EventType.MouseDown)
+		{
+			SceneView.onSceneGUIDelegate -= Edit;
+			SceneView.onSceneGUIDelegate += Create;
+			firstEdge = Camera.current.ScreenPointToRay(e.mousePosition).direction;
+			Debug.DrawRay(firstEdge, Vector3.up, Color.red, 10f);
+			DebugUtility.Print("Switching to Create");
+		}
+	}	
 
 	void Escape(SceneView sceneview)
 	{
@@ -78,95 +102,17 @@ public class AbaddonEditor : Editor
 		}
 	}
 
-	void Rotate(SceneView sceneview)
+	void Listen(SceneView sceneview)
 	{
-		Event e = Event.current;
-		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.A)
+		if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Space)
 		{
-			SceneView.onSceneGUIDelegate -= Edit;
-			SceneView.onSceneGUIDelegate += RotateLeft;
-			DebugUtility.Print("Switching to Left");
-		}
-		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.D)
-		{
-			SceneView.onSceneGUIDelegate -= Edit;
-			SceneView.onSceneGUIDelegate += RotateRight;
-			DebugUtility.Print("Switching to Right");
-		}
-		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.W)
-		{
-			SceneView.onSceneGUIDelegate -= Edit;
-			SceneView.onSceneGUIDelegate += RotateUp;
-			DebugUtility.Print("Switching to Up");
-		}
-		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.S)
-		{
-			SceneView.onSceneGUIDelegate -= Edit;
-			SceneView.onSceneGUIDelegate += RotateDown;
-			DebugUtility.Print("Switching to Down");
-		}
-	}
-
-	void RotateLeft(SceneView sceneview)
-	{
-		//Debug.Log("Left");
-		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.A)
-		{
-			SceneView.onSceneGUIDelegate -= RotateLeft;
+			SceneView.onSceneGUIDelegate -= Listen;
 			SceneView.onSceneGUIDelegate += Edit;
+			AllowRotation();
 			DebugUtility.Print("Switching to Edit");
 		}
-		yawTrans.localRotation *= Quaternion.Euler(0f, -0.1f, 0f);
-		Align(sceneview);
 	}
 
-	void RotateRight(SceneView sceneview)
-	{
-		//Debug.Log("Right");
-		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.D)
-		{
-			SceneView.onSceneGUIDelegate -= RotateRight;
-			SceneView.onSceneGUIDelegate += Edit;
-			DebugUtility.Print("Switching to Edit");
-		}
-		yawTrans.localRotation *= Quaternion.Euler(0f, 0.1f, 0f);
-		Align(sceneview);
-	}
-
-	void RotateUp(SceneView sceneview)
-	{
-		//Debug.Log("Up");
-		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.W)
-		{
-			SceneView.onSceneGUIDelegate -= RotateUp;
-			SceneView.onSceneGUIDelegate += Edit;
-			DebugUtility.Print("Switching to Edit");
-		}
-		pitchTrans.localRotation *= Quaternion.Euler(-0.1f, 0f, 0f);
-		Align(sceneview);
-	}
-
-	void RotateDown(SceneView sceneview)
-	{
-		//Debug.Log("Down");
-		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.S)
-		{
-			SceneView.onSceneGUIDelegate -= RotateDown;
-			SceneView.onSceneGUIDelegate += Edit;
-			DebugUtility.Print("Switching to Edit");
-		}
-		pitchTrans.localRotation *= Quaternion.Euler(0.1f, 0f, 0f);
-		Align(sceneview);
-	}
-
-	void Align(SceneView sceneview)
-	{
-		sceneview.camera.transform.position = Vector3.zero; //XXX: should be the one I want, then I just use LookAt
-		sceneview.AlignViewToObject(forward);
-		sceneview.Repaint();
-	}
-
-	
 	public void OnEnable()
 	{
 		abaddon = target as Abaddon;
@@ -178,15 +124,100 @@ public class AbaddonEditor : Editor
 		SceneView.onSceneGUIDelegate += Escape;
 	}
 
-	public void CancelState()
+	public void OnDisable()
 	{
-		SceneView.onSceneGUIDelegate -= Listen;
-		SceneView.onSceneGUIDelegate -= Edit;
-		SceneView.onSceneGUIDelegate -= RotateLeft;
-		SceneView.onSceneGUIDelegate -= RotateRight;
-		SceneView.onSceneGUIDelegate -= RotateUp;
-		SceneView.onSceneGUIDelegate -= RotateDown;
-		SceneView.onSceneGUIDelegate -= Create;
-		SceneView.onSceneGUIDelegate -= Escape;
+		CancelState();
+	}
+
+	void RotateLeft(SceneView sceneview)
+	{
+		//Debug.Log("Left");
+		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.A)
+		{
+			SceneView.onSceneGUIDelegate -= RotateLeft;
+			SceneView.onSceneGUIDelegate += WaitLeft;
+			DebugUtility.Print("Switching to Edit");
+		}
+		yawTrans.localRotation *= Quaternion.Euler(0f, -0.1f, 0f);
+		Align(sceneview);
+	}
+	
+	void RotateRight(SceneView sceneview)
+	{
+		//Debug.Log("Right");
+		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.D)
+		{
+			SceneView.onSceneGUIDelegate -= RotateRight;
+			SceneView.onSceneGUIDelegate += WaitRight;
+			DebugUtility.Print("Switching to Edit");
+		}
+		yawTrans.localRotation *= Quaternion.Euler(0f, 0.1f, 0f);
+		Align(sceneview);
+	}
+	
+	void RotateUp(SceneView sceneview)
+	{
+		//Debug.Log("Up");
+		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.W)
+		{
+			SceneView.onSceneGUIDelegate -= RotateUp;
+			SceneView.onSceneGUIDelegate += WaitUp;
+			DebugUtility.Print("Switching to Edit");
+		}
+		pitchTrans.localRotation *= Quaternion.Euler(-0.1f, 0f, 0f);
+		Align(sceneview);
+	}
+	
+	void RotateDown(SceneView sceneview)
+	{
+		//Debug.Log("Down");
+		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.S)
+		{
+			SceneView.onSceneGUIDelegate -= RotateDown;
+			SceneView.onSceneGUIDelegate += WaitDown;
+			DebugUtility.Print("Switching to Edit");
+		}
+		pitchTrans.localRotation *= Quaternion.Euler(0.1f, 0f, 0f);
+		Align(sceneview);
+	}
+
+	void WaitLeft(SceneView sceneview)
+	{
+		if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.A)
+		{
+			SceneView.onSceneGUIDelegate -= WaitLeft;
+			SceneView.onSceneGUIDelegate += RotateLeft;
+			DebugUtility.Print("Switching to Left");
+		}
+	}
+	
+	void WaitRight(SceneView sceneview)
+	{
+		if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.D)
+		{
+			SceneView.onSceneGUIDelegate -= WaitRight;
+			SceneView.onSceneGUIDelegate += RotateRight;
+			DebugUtility.Print("Switching to Right");
+		}
+	}
+	
+	void WaitUp(SceneView sceneview)
+	{
+		if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.W)
+		{
+			SceneView.onSceneGUIDelegate -= WaitUp;
+			SceneView.onSceneGUIDelegate += RotateUp;
+			DebugUtility.Print("Switching to Up");
+		}
+	}
+	
+	void WaitDown(SceneView sceneview)
+	{
+		if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.S)
+		{
+			SceneView.onSceneGUIDelegate -= WaitDown;
+			SceneView.onSceneGUIDelegate += RotateDown;
+			DebugUtility.Print("Switching to Down");
+		}
 	}
 }
