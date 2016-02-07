@@ -28,7 +28,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 		pathNormal   = cutNormal;
 		comPathDist  = Vector3.Dot(v1, cutNormal); //use v1 or v2
-		footPathDist = comPathDist - .001f /*FIXME JANK*/; //should be sizes[levels]
+		footPathDist = comPathDist - LevelData.Instance.playerRadius; /*FIXME JANK*/; //should be sizes[levels]
 
 		arcLeft  =  Vector3.Cross(pathNormal, left);
 		arcUp    = -Vector3.Cross(pathNormal, arcLeft);
@@ -153,7 +153,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	{
 		UnityEditor.Handles.color = Color.red;
 		Vector3 center = pathNormal*comPathDist;
-		Vector3 from = center + arcRight*arcRadius;
+		Vector3 from = center + -arcLeft*arcRadius;
 		UnityEditor.Handles.DrawWireArc(center, pathNormal, from, arcCutoffAngle, arcRadius);
 	}
 }
