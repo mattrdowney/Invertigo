@@ -11,6 +11,7 @@ public class AbaddonEditor : Editor
 	Abaddon							abaddon;
 
 	Vector3							firstEdge;
+	Vector3							lastEdge;
 
 	void Align(SceneView sceneview)
 	{
@@ -46,11 +47,11 @@ public class AbaddonEditor : Editor
 	void Create(SceneView sceneview)
 	{
 		Event e = Event.current;
-		Ray r = Camera.current.ScreenPointToRay(new Vector3(e.mousePosition.x, -e.mousePosition.y));
-		Vector3 mousePos = r.direction;
 		
 		if(e.type == EventType.MouseDown)
 		{	
+			Vector3 clickPoint = CursorCast(sceneview.camera, e.mousePosition);
+
 			Object prefab = PrefabUtility.GetPrefabParent(Selection.activeObject);
 			
 			if (prefab)
@@ -59,7 +60,7 @@ public class AbaddonEditor : Editor
 				GameObject obj = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
 				PrefabUtility.RecordPrefabInstancePropertyModifications(obj);
 				
-				obj.transform.position = mousePos;
+				obj.transform.position = clickPoint;
 				Undo.RegisterCreatedObjectUndo(obj, "Create " + obj.name);
 			}
 			Event.PopEvent(Event.current);
@@ -71,6 +72,11 @@ public class AbaddonEditor : Editor
 			//TODO: FINALIZE firstEdge
 			DebugUtility.Print("Switching to Edit");
 		}
+	}
+
+	Vector3 CursorCast(Camera cam, Vector2 mousePos)
+	{
+		return cam.ScreenPointToRay(new Vector3(mousePos.x, cam.pixelHeight - mousePos.y, 1)).direction;
 	}
 
 	void Edit(SceneView sceneview)
@@ -87,7 +93,11 @@ public class AbaddonEditor : Editor
 		{
 			SceneView.onSceneGUIDelegate -= Edit;
 			SceneView.onSceneGUIDelegate += Create;
-			firstEdge = Camera.current.ScreenPointToRay(e.mousePosition).direction;
+
+			Debug.Log(e.mousePosition);
+
+			firstEdge = lastEdge = CursorCast(sceneview.camera, e.mousePosition);
+			Debug.Log (firstEdge.magnitude);
 			Debug.DrawRay(firstEdge, Vector3.up, Color.red, 10f);
 			DebugUtility.Print("Switching to Create");
 		}
@@ -109,6 +119,7 @@ public class AbaddonEditor : Editor
 			SceneView.onSceneGUIDelegate -= Listen;
 			SceneView.onSceneGUIDelegate += Edit;
 			AllowRotation();
+			Align(sceneview);
 			DebugUtility.Print("Switching to Edit");
 		}
 	}
