@@ -112,6 +112,11 @@ public class AbaddonEditor : Editor
 		}
 	}
 
+	void Instantiate(Vector3 p1, Vector3 p2)
+	{
+
+	}
+
 	void Listen(SceneView sceneview)
 	{
 		if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Space)
