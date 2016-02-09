@@ -25,7 +25,7 @@ public class Player : Character
 		charMotor.input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis ("Vertical"));
 
 		//figure out position for next frame and move there
-		charMotor.Move(/*AI-Info*/);
+		//charMotor.Move(/*AI-Info*/);
 	}
 	
 	public void Move(CharacterMotor charMotor)

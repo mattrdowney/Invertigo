@@ -21,6 +21,6 @@ abstract public class Character : MonoBehaviour
 
 	public void Move()
 	{
-		motor.Move();
+		//motor.Move();
 	}
 }

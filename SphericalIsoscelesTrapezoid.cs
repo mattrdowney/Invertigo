@@ -4,6 +4,8 @@ using System.Linq;
 
 public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production builds*/ : MonoBehaviour //will become Component
 {
+	public static GameObject prefab;
+
 	/*TODO: make into [Serializable] const*/
 	SphericalIsoscelesTrapezoid		next; //compiler hates uninitialized [Serializable] const
 	SphericalIsoscelesTrapezoid		prev;
@@ -91,11 +93,20 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		return arcUp*Mathf.Cos(angle) + arcLeft*Mathf.Sin(angle);
 	}
 
+	public static GameObject Init(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Vector3 cutNormal)
+	{
+		GameObject obj = EditorUtility.InstantiatePrefab(prefab);
+
+		//obj.GetComponent<SphericalIsoscelesTrapezoid>()Inst
+
+		return obj;
+	}
+
 	public void Initialize(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Vector3 cutNormal) //v1 -> v2 is the com path, v2 -> v3 is right (?), v3 -> foot path, v4 -> v1 is left (?), eccentricity is the bend in the angle
 	{
 		//the invariant
 		DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(v1 - v2, cutNormal), 0) && Mathf.Approximately(Vector3.Dot(v3 - v4, cutNormal), 0), "SphericalIsoscelesTrapezoid: Initialize: failed assert");
-		
+
 		Vector3 top = v2 - v1, right = v2 - v3, bottom = v3 - v4, left = v1 - v4;
 		
 		pathNormal   = cutNormal;
