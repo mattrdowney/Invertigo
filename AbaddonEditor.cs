@@ -5,6 +5,8 @@ using System.Collections;
 [CustomEditor (typeof(Abaddon))] //http://code.tutsplus.com/tutorials/how-to-add-your-own-tools-to-unitys-editor--active-10047
 public class AbaddonEditor : Editor
 {
+	public static GameObject prefab;
+
 	Transform 						forward; //should be unneccessary, but w/e
 	Transform						yawTrans;
 	Transform						pitchTrans;
@@ -72,6 +74,19 @@ public class AbaddonEditor : Editor
 			//TODO: FINALIZE firstEdge
 			DebugUtility.Print("Switching to Edit");
 		}
+	}
+
+	SphericalIsoscelesTrapezoid CreateSphericalIsoscelesTrapezoid(Vector3 lhs, Vector3 rhs, Vector3 cutNormal)
+	{
+		GameObject obj = EditorUtility.InstantiatePrefab(prefab) as GameObject;
+
+		BoxCollider	collider = obj.GetComponent<BoxCollider>(); 
+		SphericalIsoscelesTrapezoid trapezoid = obj.GetComponent<SphericalIsoscelesTrapezoid>();
+
+		trapezoid.Initialize(lhs, rhs, cutNormal);
+		trapezoid.RecalculateAABB(collider);
+
+		return trapezoid; //used for next/prev
 	}
 
 	Vector3 CursorCast(Camera cam, Vector2 mousePos)
