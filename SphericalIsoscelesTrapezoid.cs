@@ -4,8 +4,6 @@ using System.Linq;
 
 public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production builds*/ : MonoBehaviour //will become Component
 {
-	public static GameObject prefab;
-
 	/*TODO: make into [Serializable] const*/
 	SphericalIsoscelesTrapezoid		next; //compiler hates uninitialized [Serializable] const
 	SphericalIsoscelesTrapezoid		prev;
@@ -17,12 +15,12 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	Vector3							arcLeft;
 	Vector3							arcUp; //CACHED: equivalent to +/-Vector3.Cross(pathNormal, arcLeft/Right)
 	Vector3							arcRight;
-	
+
 	float							arcRadius;
 	float							arcCutoffAngle;
 
 	/**
-     *  Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
+	*  Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
 	 */
 	public bool Contains(Vector3 pos)
 	{
@@ -54,17 +52,21 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	/**
 	 *  return the position of the player based on the circular path
 	 */
-	public Vector3 Evaluate(float t) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
+	public Vector3 Evaluate(float t)
 	{
 		float angle = t / arcRadius;
-		return -arcLeft*arcRadius*Mathf.Cos(angle) + arcUp*arcRadius*Mathf.Sin(angle) + pathNormal*comPathDist; //-arcLeft for "right" is intentional
+		Vector3 center = pathNormal*comPathDist;
+		Vector3 x = -arcLeft*arcRadius*Mathf.Cos(angle); //-arcLeft for "right" is intentional
+		Vector3 y =  arcUp  *arcRadius*Mathf.Sin(angle);
+		return x + y + center; 
 	}
 
 	/**
 	 *  return the position of the player based on the circular path
-	 *  If the player would go outside of [0, arcCutoffAngle*arcRadius], the Trapezoid should transfer control of the player to (prev, next) respectively
+	 *  If the player would go outside of [0, arcCutoffAngle*arcRadius],
+	 *  the Trapezoid should transfer control of the player to (prev, next) respectively
 	 */
-	public static Vector3 Evaluate(ref float t, ref SphericalIsoscelesTrapezoid seg) //evaluate and Intersect can be combined (?), just add a locked boolean and only swap blocks if the intersected entity is closer
+	public static Vector3 Evaluate(ref float t, ref SphericalIsoscelesTrapezoid seg)
 	{
 		if(t > seg.arcCutoffAngle*seg.arcRadius)
 		{
@@ -93,24 +95,35 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		return arcUp*Mathf.Cos(angle) + arcLeft*Mathf.Sin(angle);
 	}
 
-	public static GameObject Init(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Vector3 cutNormal)
+	/** Recompute the orientation of a SphericalIsoscelesTrapezoid
+	 * 
+	 *  Destroys all information other than prev, next. Replaces this information with the information for traversing
+	 *      the top of a SphericalIsoscelesTrapezoid on a unit sphere.
+	 * 
+	 * @param lhs: the left-bottom point (left implies it is the 1st point when enumerated clockwise for concave objects,
+	 * 		  bottom implies it is the position of the player's feet)
+	 * @param rhs: the right-bottom point (right implies it is the 2nd point when enumerated clockwise for concave objects,
+	 * 		  bottom implies it is the position of the player's feet)
+	 * @param cutNormal: the normal plane that intersects lhs and rhs and forms the walking path for the players center
+	 * 		  of mass, sign matters because it indicates which direction is up for calculating the center of mass.
+	 * 
+	 * @example Initialize(Vector3(0,0,1),Vector3(1,0,0), Vector3(0,1,0)) will initialize a Spherical Isosceles Trapezoid
+	 *          that is a great circle for the feet positions, a large lesser circle for the center of mass position,
+	 *          with a 90 degree arc going from forwards to right and a normal going in the positive y-direction.
+	 */
+
+	public void Initialize(Vector3 lhs, Vector3 rhs, Vector3 cutNormal)
 	{
-		GameObject obj = EditorUtility.InstantiatePrefab(prefab);
+		DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(lhs - rhs, cutNormal), 0),
+		                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 
-		//obj.GetComponent<SphericalIsoscelesTrapezoid>()Inst
+		Vector3 v3 = new Vector3(1,0,0); //FIXME:
+		Vector3 v4 = new Vector3(1,0,0); //FIXME:
 
-		return obj;
-	}
-
-	public void Initialize(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Vector3 cutNormal) //v1 -> v2 is the com path, v2 -> v3 is right (?), v3 -> foot path, v4 -> v1 is left (?), eccentricity is the bend in the angle
-	{
-		//the invariant
-		DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(v1 - v2, cutNormal), 0) && Mathf.Approximately(Vector3.Dot(v3 - v4, cutNormal), 0), "SphericalIsoscelesTrapezoid: Initialize: failed assert");
-
-		Vector3 top = v2 - v1, right = v2 - v3, bottom = v3 - v4, left = v1 - v4;
+		Vector3 top = rhs - lhs, right = rhs - v3, bottom = v3 - v4, left = lhs - v4;
 		
 		pathNormal   = cutNormal;
-		comPathDist  = Vector3.Dot(v1, cutNormal); //use v1 or v2
+		comPathDist  = Vector3.Dot(lhs, cutNormal); //use lhs or rhs
 		footPathDist = comPathDist - LevelData.Instance.playerRadius; /*FIXME JANK*/; //should be sizes[levels]
 		
 		arcLeft  =  Vector3.Cross(pathNormal, left);
@@ -119,9 +132,9 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		
 		Vector3 pathCenter = comPathDist*pathNormal;
 		
-		arcRadius = (v1 - pathCenter).magnitude; //use v1 or v2
+		arcRadius = (lhs - pathCenter).magnitude; //use lhs or rhs
 		
-		float angle = Vector3.Angle(v1 - pathCenter, v2 - pathCenter);
+		float angle = Vector3.Angle(lhs - pathCenter, rhs - pathCenter);
 		if(Vector3.Dot(arcUp, arcRight) < 0) angle += 180f;
 		
 		arcCutoffAngle = angle;
@@ -164,6 +177,19 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		Vector3 center = pathNormal*comPathDist;
 		Vector3 from = center + -arcLeft*arcRadius;
 		UnityEditor.Handles.DrawWireArc(center, pathNormal, from, -arcCutoffAngle, arcRadius); //seems to draw ccw
+	}
+
+	/** Create a AABB that perfectly contains a circular arc
+	 * 
+	 *  Blah, blah blah, really long explanation with math link
+	 * 
+	 *  Ex. 
+	 * 
+	 *  @param collider the box collider that will be altered to contain the SphericalIsoscelesTrapezoid
+	 */
+	public void RecalculateAABB(BoxCollider collider)
+	{
+
 	}
 
 	public static int Truth(params bool[] booleans) //all credit: http://stackoverflow.com/questions/377990/elegantly-determine-if-more-than-one-boolean-is-true

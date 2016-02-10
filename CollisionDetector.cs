@@ -16,7 +16,7 @@ public class CollisionDetector : Component
 		}
 	}
 
-	// ... and removes it in OnCollisionExit
+	//step 0.5: Character Controller removes the observed SphericalIsoscelesTriangle to a vector in OnCollisionEnter...
 	void OnCollisionExit(Collision collisions)
 	{
 		foreach(ContactPoint col in collisions.contacts)
