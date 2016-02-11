@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-using UnityEngine;
-
 public class LevelData : MonoBehaviour //credit to http://clearcutgames.net/home/?p=437
 {
 	public float playerRadius;
@@ -17,7 +15,7 @@ public class LevelData : MonoBehaviour //credit to http://clearcutgames.net/home
 		}
 
 		Instance = this; // Here we save our singleton instance
-
+		 
 		switch(Application.loadedLevel) //TODO: Make this into an XML loader
 		{
 			default:

@@ -1,3 +1,10 @@
+/** The primative spherical geometry component that is used to traverse a block or terrain
+ *
+ * TODO: detailed description
+ * 
+ * @file
+ */
+
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -5,8 +12,8 @@ using System.Linq;
 public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production builds*/ : MonoBehaviour //will become Component
 {
 	/*TODO: make into [Serializable] const*/
-	SphericalIsoscelesTrapezoid		next; //compiler hates uninitialized [Serializable] const
-	SphericalIsoscelesTrapezoid		prev;
+	public SphericalIsoscelesTrapezoid		next; //compiler hates uninitialized [Serializable] const
+	public SphericalIsoscelesTrapezoid		prev;
 
 	Vector3							pathNormal;
 	float							comPathDist;
@@ -100,11 +107,11 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	 *  Destroys all information other than prev, next. Replaces this information with the information for traversing
 	 *      the top of a SphericalIsoscelesTrapezoid on a unit sphere.
 	 * 
-	 * @param lhs: the left-bottom point (left implies it is the 1st point when enumerated clockwise for concave objects,
+	 * @param left_edge: the left-bottom point (left implies it is the 1st point when enumerated clockwise for concave objects,
 	 * 		  bottom implies it is the position of the player's feet)
-	 * @param rhs: the right-bottom point (right implies it is the 2nd point when enumerated clockwise for concave objects,
+	 * @param right_edge: the right-bottom point (right implies it is the 2nd point when enumerated clockwise for concave objects,
 	 * 		  bottom implies it is the position of the player's feet)
-	 * @param cutNormal: the normal plane that intersects lhs and rhs and forms the walking path for the players center
+	 * @param normal: the normal plane that intersects lhs and rhs and forms the walking path for the players center
 	 * 		  of mass, sign matters because it indicates which direction is up for calculating the center of mass.
 	 * 
 	 * @example Initialize(Vector3(0,0,1),Vector3(1,0,0), Vector3(0,1,0)) will initialize a Spherical Isosceles Trapezoid
@@ -112,18 +119,19 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	 *          with a 90 degree arc going from forwards to right and a normal going in the positive y-direction.
 	 */
 
-	public void Initialize(Vector3 lhs, Vector3 rhs, Vector3 cutNormal)
+	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
-		DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(lhs - rhs, cutNormal), 0),
+		DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
 		                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 
 		Vector3 v3 = new Vector3(1,0,0); //FIXME:
 		Vector3 v4 = new Vector3(1,0,0); //FIXME:
 
-		Vector3 top = rhs - lhs, right = rhs - v3, bottom = v3 - v4, left = lhs - v4;
+		// probably unnecessary
+		Vector3 top = right_edge - left_edge, right = right_edge - v3, bottom = v3 - v4, left = left_edge - v4;
 		
-		pathNormal   = cutNormal;
-		comPathDist  = Vector3.Dot(lhs, cutNormal); //use lhs or rhs
+		pathNormal   = normal;
+		comPathDist  = Vector3.Dot(left_edge, normal); //use lhs or rhs
 		footPathDist = comPathDist - LevelData.Instance.playerRadius; /*FIXME JANK*/; //should be sizes[levels]
 		
 		arcLeft  =  Vector3.Cross(pathNormal, left);
@@ -132,10 +140,14 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		
 		Vector3 pathCenter = comPathDist*pathNormal;
 		
-		arcRadius = (lhs - pathCenter).magnitude; //use lhs or rhs
+		arcRadius = (left_edge - pathCenter).magnitude; //use lhs or rhs
 		
-		float angle = Vector3.Angle(lhs - pathCenter, rhs - pathCenter);
-		if(Vector3.Dot(arcUp, arcRight) < 0) angle += 180f;
+		float angle = Vector3.Angle(left_edge - pathCenter, right_edge - pathCenter);
+
+		if(Vector3.Dot(arcUp, arcRight) < 0)
+		{
+			angle += 180f;
+		}
 		
 		arcCutoffAngle = angle;
 	}
@@ -181,9 +193,9 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 	/** Create a AABB that perfectly contains a circular arc
 	 * 
-	 *  Blah, blah blah, really long explanation with math link
+	 *  TODO: detailed description and math link
 	 * 
-	 *  Ex. 
+	 *  TODO: Ex. 
 	 * 
 	 *  @param collider the box collider that will be altered to contain the SphericalIsoscelesTrapezoid
 	 */
@@ -192,7 +204,11 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 	}
 
-	public static int Truth(params bool[] booleans) //all credit: http://stackoverflow.com/questions/377990/elegantly-determine-if-more-than-one-boolean-is-true
+	/** Counts the number of booleans that are true in a comma separated list of booleans
+	 * 
+	 *  credit: http://stackoverflow.com/questions/377990/elegantly-determine-if-more-than-one-boolean-is-true
+	 */
+	public static int Truth(params bool[] booleans)
 	{
 		return booleans.Count(b => b);
 	}

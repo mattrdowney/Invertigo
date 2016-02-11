@@ -6,6 +6,11 @@ public class CollisionDetector : Component
 {
 	List<SphericalIsoscelesTrapezoid>	colliders;
 
+	void Awake()
+	{
+		colliders = new List<SphericalIsoscelesTrapezoid>();
+	}
+
 	//step 0: Character Controller adds the observed SphericalIsoscelesTriangle to a vector in OnCollisionEnter...
 	void OnCollisionEnter(Collision collisions)
 	{

@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-using UnityEditor;
-
 public class Abaddon : MonoBehaviour //http://code.tutsplus.com/tutorials/how-to-add-your-own-tools-to-unitys-editor--active-10047
 {
+	public Object 		prefab;
+
 	private void OnDrawGizmos()
 	{
 		UnityEditor.Handles.color = Color.yellow;
