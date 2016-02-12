@@ -31,22 +31,6 @@ public class AbaddonEditor : Editor
 		SceneView.onSceneGUIDelegate += WaitDown;
 	}	
 
-	public void CancelState()
-	{
-		SceneView.onSceneGUIDelegate -= Listen;
-		SceneView.onSceneGUIDelegate -= Edit;
-		SceneView.onSceneGUIDelegate -= WaitLeft;
-		SceneView.onSceneGUIDelegate -= WaitRight;
-		SceneView.onSceneGUIDelegate -= WaitUp;
-		SceneView.onSceneGUIDelegate -= WaitDown;
-		SceneView.onSceneGUIDelegate -= RotateLeft;
-		SceneView.onSceneGUIDelegate -= RotateRight;
-		SceneView.onSceneGUIDelegate -= RotateUp;
-		SceneView.onSceneGUIDelegate -= RotateDown;
-		SceneView.onSceneGUIDelegate -= Create;
-		SceneView.onSceneGUIDelegate -= Escape;
-	}
-
 	void Create(SceneView scene_view)
 	{
 		Event e = Event.current;
@@ -132,15 +116,6 @@ public class AbaddonEditor : Editor
 		}
 	}	
 
-	void Escape(SceneView scene_view)
-	{
-		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.Escape)
-		{
-			CancelState();
-			Debug.Log("Canceling");
-		}
-	}
-
 	void Instantiate(Vector3 p1, Vector3 p2)
 	{
 
@@ -163,14 +138,22 @@ public class AbaddonEditor : Editor
 		yawTrans   = GameObject.Find("/PivotYaw").transform;
 		pitchTrans = GameObject.Find("/PivotYaw/PivotPitch").transform;
 		forward    = GameObject.Find("/PivotYaw/PivotPitch/Zero").transform;
-		CancelState();
 		SceneView.onSceneGUIDelegate += Listen;
-		SceneView.onSceneGUIDelegate += Escape;
 	}
 
 	public void OnDisable()
 	{
-		CancelState();
+		SceneView.onSceneGUIDelegate -= Listen;
+		SceneView.onSceneGUIDelegate -= Edit;
+		SceneView.onSceneGUIDelegate -= WaitLeft;
+		SceneView.onSceneGUIDelegate -= WaitRight;
+		SceneView.onSceneGUIDelegate -= WaitUp;
+		SceneView.onSceneGUIDelegate -= WaitDown;
+		SceneView.onSceneGUIDelegate -= RotateLeft;
+		SceneView.onSceneGUIDelegate -= RotateRight;
+		SceneView.onSceneGUIDelegate -= RotateUp;
+		SceneView.onSceneGUIDelegate -= RotateDown;
+		SceneView.onSceneGUIDelegate -= Create;
 	}
 
 	void RotateLeft(SceneView scene_view)
