@@ -123,26 +123,20 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	{
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
 		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
-
-		Vector3 v3 = new Vector3(1,0,0); //FIXME:
-		Vector3 v4 = new Vector3(1,0,0); //FIXME:
-
-		// probably unnecessary
-		Vector3 top = right_edge - left_edge, right = right_edge - v3, bottom = v3 - v4, left = left_edge - v4;
 		
 		pathNormal   = normal;
 		comPathDist  = Vector3.Dot(left_edge, normal); //use lhs or rhs
-		footPathDist = comPathDist - .01f;//LevelData.Instance.playerRadius; /*FIXME JANK*/; //should be sizes[levels]
+		footPathDist = comPathDist - .00f;//LevelData.Instance.playerRadius; /*FIXME JANK*/; //should be sizes[levels]
+
+		Vector3 center = normal*comPathDist;
+
+		arcLeft  = left_edge - center;
+		arcRight = right_edge - center;
+		arcUp    = Vector3.Cross(pathNormal, arcLeft);
 		
-		arcLeft  =  Vector3.Cross(pathNormal, left);
-		arcUp    = -Vector3.Cross(pathNormal, arcLeft);
-		arcRight = -Vector3.Cross(pathNormal, right);
+		arcRadius = (left_edge - center).magnitude; //or right_edge
 		
-		Vector3 pathCenter = comPathDist*pathNormal;
-		
-		arcRadius = (left_edge - pathCenter).magnitude; //use lhs or rhs
-		
-		float angle = Vector3.Angle(left_edge - pathCenter, right_edge - pathCenter);
+		float angle = Vector3.Angle(left_edge - center, right_edge - center);
 
 		if(Vector3.Dot(arcUp, arcRight) < 0)
 		{
@@ -187,8 +181,8 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	{
 		UnityEditor.Handles.color = Color.red;
 		Vector3 center = pathNormal*comPathDist;
-		Vector3 from = center + -arcLeft*arcRadius;
-		UnityEditor.Handles.DrawWireArc(center, pathNormal, from, -arcCutoffAngle, arcRadius); //seems to draw ccw
+		Vector3 from = center + arcLeft*arcRadius;
+		UnityEditor.Handles.DrawWireArc(center, pathNormal, from, arcCutoffAngle, arcRadius); //seems to draw ccw
 	}
 
 	/** Create a AABB that perfectly contains a circular arc

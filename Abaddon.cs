@@ -7,8 +7,8 @@ public class Abaddon : MonoBehaviour //http://code.tutsplus.com/tutorials/how-to
 
 	private void OnDrawGizmos()
 	{
-		UnityEditor.Handles.color = Color.yellow;
+		//UnityEditor.Handles.color = Color.yellow;
 
-		UnityEditor.Handles.DrawWireArc(Vector3.zero, Vector3.back, Vector3.up, 30f, 1f);
+		//UnityEditor.Handles.DrawWireArc(Vector3.zero, Vector3.back, Vector3.up, 30f, 1f);
 	}
 }
