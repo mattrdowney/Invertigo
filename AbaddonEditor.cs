@@ -5,20 +5,21 @@ using System.Collections;
 [CustomEditor (typeof(Abaddon))] //http://code.tutsplus.com/tutorials/how-to-add-your-own-tools-to-unitys-editor--active-10047
 public class AbaddonEditor : Editor
 {
-	Transform 						forward; //should be unneccessary, but w/e
-	Transform						yawTrans;
-	Transform						pitchTrans;
-	Abaddon							abaddon;
+	Transform 								forward; //should be unneccessary, but w/e
+	Transform								yawTrans;
+	Transform								pitchTrans;
+	Abaddon									abaddon;
 
-	Vector3							first_edge;
-	Vector3							last_edge;
+	Vector3									first_edge;
+	Vector3									last_edge;
 
-	SphericalIsoscelesTrapezoid		trapezoid;
+	SphericalIsoscelesTrapezoid				first_trapezoid; //FIXME: Property or Optional, null used for convenience
+	SphericalIsoscelesTrapezoid				last_trapezoid; //FIXME: Property or Optional, null used for convenience
 
 	void Align(SceneView scene_view)
 	{
 		scene_view.AlignViewToObject(forward);
-		scene_view.camera.transform.position = Vector3.zero; //XXX: should be the one I want, then I just use LookAt
+		scene_view.camera.transform.position = Vector3.zero;
 		scene_view.Repaint();
 	}
 
@@ -49,47 +50,53 @@ public class AbaddonEditor : Editor
 	void Create(SceneView scene_view)
 	{
 		Event e = Event.current;
-		
-		if(e.type == EventType.MouseDown && e.button == 0)
+
+		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space)
 		{	
 			Vector3 click_point = CursorCast(scene_view.camera, e.mousePosition);
 
+			Debug.Log(last_edge.ToString());
+			Debug.Log(click_point.ToString());
+
 			SphericalIsoscelesTrapezoid next_trapezoid = CreateSphericalIsoscelesTrapezoid(
 					last_edge, click_point, Vector3.Cross(last_edge, click_point));
-			
-			trapezoid.next = next_trapezoid;
-			next_trapezoid.prev = trapezoid;
-			
-			trapezoid = next_trapezoid;
+
+			if(last_trapezoid)
+			{
+				last_trapezoid.next = next_trapezoid;
+			}
+			else
+			{
+				first_trapezoid = next_trapezoid;
+			}
+			next_trapezoid.prev = last_trapezoid;
+
+			last_trapezoid = next_trapezoid;
 
 			last_edge = click_point;
 
-			DebugUtility.Print("Pew");
-
-			Event.PopEvent(e);
+			Debug.Log("Pew");
 		}
-		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space)
-		{
-			SceneView.onSceneGUIDelegate -= Create;
-			SceneView.onSceneGUIDelegate += Edit;
-			//TODO: FINALIZE firstEdge
-			DebugUtility.Print("Switching to Edit");
-		}
-		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.P)
+		else if(e.type == EventType.MouseDown && e.button == 0)
 		{
 			SphericalIsoscelesTrapezoid next_trapezoid = CreateSphericalIsoscelesTrapezoid(
 					last_edge, first_edge, Vector3.Cross(last_edge, first_edge));
 
-			trapezoid.next = next_trapezoid;
-			next_trapezoid.prev = trapezoid;
+			next_trapezoid.next = first_trapezoid;
+			next_trapezoid.prev = last_trapezoid;
 
-			trapezoid = next_trapezoid;
+			first_trapezoid.prev = next_trapezoid;
+			last_trapezoid.next  = next_trapezoid;
+
+			last_trapezoid = null;
+
+			next_trapezoid.name = "last";
 
 			SceneView.onSceneGUIDelegate -= Create;
 			SceneView.onSceneGUIDelegate += Edit;
 
-			DebugUtility.Print("Pew");
-			DebugUtility.Print("Switching to Edit");
+			Debug.Log("Pew");
+			Debug.Log("Switching to Edit");
 		}
 	}
 
@@ -113,23 +120,15 @@ public class AbaddonEditor : Editor
 
 	void Edit(SceneView scene_view)
 	{
-		Event e = Event.current;
-		
-		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space)
-		{
-			CancelState();
-			SceneView.onSceneGUIDelegate += Listen;
-			DebugUtility.Print("Switching to Listen");
-		}
-		else if(e.type == EventType.MouseDown && e.button == 0)
+		if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Space)
 		{
 			SceneView.onSceneGUIDelegate -= Edit;
 			SceneView.onSceneGUIDelegate += Create;
 
-			first_edge = last_edge = CursorCast(scene_view.camera, e.mousePosition);
+			first_edge = last_edge = CursorCast(scene_view.camera, Event.current.mousePosition);
 
-			Debug.DrawRay(first_edge, Vector3.up, Color.red, 10f);
-			DebugUtility.Print("Switching to Create");
+			Debug.DrawRay(first_edge, Vector3.up, Color.red);
+			Debug.Log("Switching to Create");
 		}
 	}	
 
@@ -138,7 +137,7 @@ public class AbaddonEditor : Editor
 		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.Escape)
 		{
 			CancelState();
-			DebugUtility.Print("Canceling");
+			Debug.Log("Canceling");
 		}
 	}
 
@@ -155,7 +154,6 @@ public class AbaddonEditor : Editor
 			SceneView.onSceneGUIDelegate += Edit;
 			AllowRotation();
 			Align(scene_view);
-			DebugUtility.Print("Switching to Edit");
 		}
 	}
 
@@ -177,12 +175,10 @@ public class AbaddonEditor : Editor
 
 	void RotateLeft(SceneView scene_view)
 	{
-		//Debug.Log("Left");
 		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.A)
 		{
 			SceneView.onSceneGUIDelegate -= RotateLeft;
 			SceneView.onSceneGUIDelegate += WaitLeft;
-			DebugUtility.Print("Switching to Edit");
 		}
 		yawTrans.localRotation *= Quaternion.Euler(0f, -0.1f, 0f);
 		Align(scene_view);
@@ -190,12 +186,10 @@ public class AbaddonEditor : Editor
 	
 	void RotateRight(SceneView scene_view)
 	{
-		//Debug.Log("Right");
 		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.D)
 		{
 			SceneView.onSceneGUIDelegate -= RotateRight;
 			SceneView.onSceneGUIDelegate += WaitRight;
-			DebugUtility.Print("Switching to Edit");
 		}
 		yawTrans.localRotation *= Quaternion.Euler(0f, 0.1f, 0f);
 		Align(scene_view);
@@ -203,12 +197,10 @@ public class AbaddonEditor : Editor
 	
 	void RotateUp(SceneView scene_view)
 	{
-		//Debug.Log("Up");
 		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.W)
 		{
 			SceneView.onSceneGUIDelegate -= RotateUp;
 			SceneView.onSceneGUIDelegate += WaitUp;
-			DebugUtility.Print("Switching to Edit");
 		}
 		pitchTrans.localRotation *= Quaternion.Euler(-0.1f, 0f, 0f);
 		Align(scene_view);
@@ -216,12 +208,10 @@ public class AbaddonEditor : Editor
 	
 	void RotateDown(SceneView scene_view)
 	{
-		//Debug.Log("Down");
 		if(Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.S)
 		{
 			SceneView.onSceneGUIDelegate -= RotateDown;
 			SceneView.onSceneGUIDelegate += WaitDown;
-			DebugUtility.Print("Switching to Edit");
 		}
 		pitchTrans.localRotation *= Quaternion.Euler(0.1f, 0f, 0f);
 		Align(scene_view);
@@ -233,7 +223,6 @@ public class AbaddonEditor : Editor
 		{
 			SceneView.onSceneGUIDelegate -= WaitLeft;
 			SceneView.onSceneGUIDelegate += RotateLeft;
-			DebugUtility.Print("Switching to Left");
 		}
 	}
 	
@@ -243,7 +232,6 @@ public class AbaddonEditor : Editor
 		{
 			SceneView.onSceneGUIDelegate -= WaitRight;
 			SceneView.onSceneGUIDelegate += RotateRight;
-			DebugUtility.Print("Switching to Right");
 		}
 	}
 	
@@ -253,7 +241,6 @@ public class AbaddonEditor : Editor
 		{
 			SceneView.onSceneGUIDelegate -= WaitUp;
 			SceneView.onSceneGUIDelegate += RotateUp;
-			DebugUtility.Print("Switching to Up");
 		}
 	}
 	
@@ -263,7 +250,6 @@ public class AbaddonEditor : Editor
 		{
 			SceneView.onSceneGUIDelegate -= WaitDown;
 			SceneView.onSceneGUIDelegate += RotateDown;
-			DebugUtility.Print("Switching to Down");
 		}
 	}
 }
