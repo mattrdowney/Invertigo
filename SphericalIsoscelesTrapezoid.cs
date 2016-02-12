@@ -17,10 +17,10 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 	Vector3							pathNormal;
 	float							comPathDist;
-	float							footPathDist; //SIMPLIFY: comPathDist should approximately be footPathDistance + .5 or 1 depending on player's height
+	float							footPathDist;
 
 	Vector3							arcLeft;
-	Vector3							arcUp; //CACHED: equivalent to +/-Vector3.Cross(pathNormal, arcLeft/Right)
+	Vector3							arcUp;
 	Vector3							arcRight;
 
 	float							arcRadius;
@@ -121,8 +121,8 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
-		DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
-		                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
+		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
+		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 
 		Vector3 v3 = new Vector3(1,0,0); //FIXME:
 		Vector3 v4 = new Vector3(1,0,0); //FIXME:
@@ -132,7 +132,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		
 		pathNormal   = normal;
 		comPathDist  = Vector3.Dot(left_edge, normal); //use lhs or rhs
-		footPathDist = comPathDist - LevelData.Instance.playerRadius; /*FIXME JANK*/; //should be sizes[levels]
+		footPathDist = comPathDist - .01f;//LevelData.Instance.playerRadius; /*FIXME JANK*/; //should be sizes[levels]
 		
 		arcLeft  =  Vector3.Cross(pathNormal, left);
 		arcUp    = -Vector3.Cross(pathNormal, arcLeft);
