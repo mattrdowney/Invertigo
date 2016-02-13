@@ -8,26 +8,33 @@
 using UnityEngine;
 using System.Collections;
 using System.Linq;
+//using System.Diagnostics;
 
+[System.Serializable]
 public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production builds*/ : MonoBehaviour //will become Component
 {
-	/*TODO: make into [Serializable] const*/
-	public SphericalIsoscelesTrapezoid		next; //compiler hates uninitialized [Serializable] const
-	public SphericalIsoscelesTrapezoid		prev;
+	/*TODO: make const*/
+	[SerializeField] public SphericalIsoscelesTrapezoid		next; //TODO: add k prefix
+	[SerializeField] public SphericalIsoscelesTrapezoid		prev;
 
-	Vector3							pathNormal;
-	float							comPathDist;
-	float							footPathDist;
+	[SerializeField] Vector3								pathNormal;
+	[SerializeField] float									comPathDist;
+	[SerializeField] float									footPathDist;
+	[SerializeField] float									xyDist;
 
-	Vector3							arcLeft;
-	Vector3							arcUp;
-	Vector3							arcRight;
+	[SerializeField] Vector3								arcLeft;
+	[SerializeField] Vector3								arcUp;
+	[SerializeField] Vector3								arcRight;
 
-	float							arcRadius;
-	float							arcCutoffAngle;
+	[SerializeField] float									arcRadius;
+	[SerializeField] float									arcCutoffAngle;
 
-	/**
-	*  Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
+	/* Final?: next, prev, center, normal, zDist, xyDist, arcLeft, arcUp, arcRight, arcRadius, arcCutoffAngle
+	 * 
+	 */
+
+	/** Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
+	 *  
 	 */
 	public bool Contains(Vector3 pos)
 	{
@@ -56,10 +63,10 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		return new Optional<float>();
 	}
 
-	/**
-	 *  return the position of the player based on the circular path
+	/** return the position of the player based on the circular path
+	 *  
 	 */
-	public Vector3 Evaluate(float t)
+	public Vector3 Evaluate(float t) //, float height?
 	{
 		float angle = t / arcRadius;
 		Vector3 center = pathNormal*comPathDist;
@@ -68,7 +75,8 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		return x + y + center; 
 	}
 
-	/**
+	/** return the position of the player based on the circular path
+	 * 
 	 *  return the position of the player based on the circular path
 	 *  If the player would go outside of [0, arcCutoffAngle*arcRadius],
 	 *  the Trapezoid should transfer control of the player to (prev, next) respectively
@@ -118,14 +126,13 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	 *          that is a great circle for the feet positions, a large lesser circle for the center of mass position,
 	 *          with a 90 degree arc going from forwards to right and a normal going in the positive y-direction.
 	 */
-
 	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
 		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 		
 		pathNormal   = normal;
-		comPathDist  = Vector3.Dot(left_edge, normal); //use lhs or rhs
+		comPathDist  = Vector3.Dot(left_edge, normal); //use left_edge or right_edge
 		footPathDist = comPathDist - .00f;//LevelData.Instance.playerRadius; /*FIXME JANK*/; //should be sizes[levels]
 
 		Vector3 center = normal*comPathDist;
@@ -142,12 +149,18 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		{
 			angle += 180f;
 		}
-		
+
 		arcCutoffAngle = angle;
+
+		float player_radius = 0.01f;
+		//float other_angle = 2*Mathf.PI*1;
+
+		comPathDist += Mathf.Sin(player_radius); //only possible because radius is 1
+		xyDist = -Mathf.Sin(player_radius); //TODO: XXX: FIXME?: Again, I made this in 5 minutes like normal and grav calcs, could be wrong.
 	}
 
-	/**
-	 *  Find the point of collision as a parameterization of a circle.
+	/** Find the point of collision as a parameterization of a circle.
+	 *  
 	 */
 	public Optional<float> Intersect(Vector3 to, Vector3 from) //TODO: FIXME: UNJANKIFY
 	{
@@ -176,13 +189,18 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		}
 		return new Optional<float>();
 	}
-
+	
 	private void OnDrawGizmos() //TODO: get rid of this in production builds
 	{
 		UnityEditor.Handles.color = Color.red;
 		Vector3 center = pathNormal*comPathDist;
 		Vector3 from = center + arcLeft*arcRadius;
-		UnityEditor.Handles.DrawWireArc(center, pathNormal, from, arcCutoffAngle, arcRadius); //seems to draw ccw
+		UnityEditor.Handles.DrawWireArc(center, pathNormal, from, arcCutoffAngle, arcRadius);
+
+		UnityEditor.Handles.color = Color.yellow;
+		center = pathNormal*footPathDist;
+		from = center + arcLeft*(arcRadius + xyDist);
+		UnityEditor.Handles.DrawWireArc(center, pathNormal, from, arcCutoffAngle, arcRadius);
 	}
 
 	/** Create a AABB that perfectly contains a circular arc
