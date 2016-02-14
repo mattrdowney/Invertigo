@@ -17,33 +17,29 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	[SerializeField] public SphericalIsoscelesTrapezoid		next; //TODO: add k prefix
 	[SerializeField] public SphericalIsoscelesTrapezoid		prev;
 
-	[SerializeField] Vector3								pathNormal;
-	[SerializeField] float									comPathDist;
-	[SerializeField] float									footPathDist;
-	[SerializeField] float									xyDist;
+	[SerializeField] Vector3								path_center;
+	[SerializeField] Vector3								path_normal;
 
-	[SerializeField] Vector3								arcLeft;
-	[SerializeField] Vector3								arcUp;
-	[SerializeField] Vector3								arcRight;
+	[SerializeField] Vector3								arc_left;
+	[SerializeField] Vector3								arc_right; //CONSIDER: can be dropped
 
-	[SerializeField] float									arcRadius;
-	[SerializeField] float									arcCutoffAngle;
-
-	/* Final?: next, prev, center, normal, zDist, xyDist, arcLeft, arcUp, arcRight, arcRadius, arcCutoffAngle
-	 * 
-	 */
-
+	[SerializeField] Vector3								arc_left_up;
+	[SerializeField] Vector3								arc_right_down;
+	
+	[SerializeField] float									arc_radius;
+	[SerializeField] float									arc_angle;
+	
 	/** Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
 	 *  
 	 */
-	public bool Contains(Vector3 pos)
+	public bool Contains(Vector3 pos, float radius_sine)
 	{
-		float prod = Vector3.Dot(pos, pathNormal);
+		float prod = Vector3.Dot(pos - path_center, path_normal);
 
-		bool bIsAtCorrectElevation = footPathDist <= prod && prod <= comPathDist;
-		bool bLeftContains		   = Vector3.Dot(pos, arcLeft) <= 0;
-		bool bRightContains		   = Vector3.Dot(pos, arcRight) <= 0;
-		bool bIsObtuse			   = Vector3.Dot(arcLeft, arcRight) < 0;
+		bool bIsAtCorrectElevation = 0 <= prod && prod <= radius_sine;
+		bool bLeftContains		   = Vector3.Dot(pos, arc_left_up ) >= 0;
+		bool bRightContains		   = Vector3.Dot(pos, arc_right_down) >= 0;
+		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
 		int  nOutOfThree		   = Truth(bLeftContains, bRightContains, bIsObtuse);
 
 		return bIsAtCorrectElevation && nOutOfThree >= 2; //XXX: might even now be wrong
@@ -51,12 +47,12 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 	public Optional<float> Distance(Vector3 to, Vector3 from)
 	{
-		Optional<float> intersection = Intersect(to, from);
+		Optional<float> intersection = Intersect(to, from, 0.01f);
 		
 		if(intersection.HasValue)
 		{
 			float t = intersection.Value;
-			Vector3 newPos = Evaluate(t);
+			Vector3 newPos = Evaluate(t, 0.01f);
 			return Vector3.Distance(from, newPos);
 		}
 		
@@ -66,13 +62,18 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	/** return the position of the player based on the circular path
 	 *  
 	 */
-	public Vector3 Evaluate(float t) //, float height?
+	public Vector3 Evaluate(float t, float height)
 	{
-		float angle = t / arcRadius;
-		Vector3 center = pathNormal*comPathDist;
-		Vector3 x = -arcLeft*arcRadius*Mathf.Cos(angle); //-arcLeft for "right" is intentional
-		Vector3 y =  arcUp  *arcRadius*Mathf.Sin(angle);
-		return x + y + center; 
+		float angle = t / arc_radius;
+
+		float z_height  = Mathf.Sin(height);
+		float xy_height = Mathf.Cos(height);
+
+		Vector3 x = -arc_left   *(arc_radius + xy_height)*Mathf.Cos(angle); //-arcLeft for "right" is intentional
+		Vector3 y =  arc_left_up*(arc_radius + xy_height)*Mathf.Sin(angle);
+		Vector3 z =  path_normal*z_height;
+
+		return x + y + z + path_center; 
 	}
 
 	/** return the position of the player based on the circular path
@@ -81,22 +82,22 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	 *  If the player would go outside of [0, arcCutoffAngle*arcRadius],
 	 *  the Trapezoid should transfer control of the player to (prev, next) respectively
 	 */
-	public static Vector3 Evaluate(ref float t, ref SphericalIsoscelesTrapezoid seg)
+	public static Vector3 Evaluate(ref float t, float height, ref SphericalIsoscelesTrapezoid seg)
 	{
-		if(t > seg.arcCutoffAngle*seg.arcRadius)
+		if(t > seg.arc_angle*seg.arc_radius)
 		{
-			t -= seg.arcCutoffAngle*seg.arcRadius;
+			t -= seg.arc_angle*seg.arc_radius;
 			seg = seg.next;
-			return Evaluate(ref t, ref seg);
+			return Evaluate(ref t, 0.01f, ref seg);
 		}
 		if(t < 0)
 		{
-			t += seg.prev.arcCutoffAngle*seg.prev.arcRadius;
+			t += seg.prev.arc_angle*seg.prev.arc_radius;
 			seg = seg.prev;
-			return Evaluate(ref t, ref seg);
+			return Evaluate(ref t, 0.01f, ref seg);
 		}
 		
-		return seg.Evaluate(t);
+		return seg.Evaluate(t, height);
 	}
 
 	public Vector3 EvaluateNormal(Vector3 pos, Vector3 right)
@@ -106,8 +107,8 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 	public Vector3 EvaluateRight(float t)
 	{
-		float angle = t / arcRadius;
-		return arcUp*Mathf.Cos(angle) + arcLeft*Mathf.Sin(angle);
+		float angle = t / arc_radius;
+		return arc_left_up*Mathf.Cos(angle) + arc_left*Mathf.Sin(angle);
 	}
 
 	/** Recompute the orientation of a SphericalIsoscelesTrapezoid
@@ -131,50 +132,44 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
 		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 		
-		pathNormal   = normal;
-		comPathDist  = Vector3.Dot(left_edge, normal); //use left_edge or right_edge
-		footPathDist = comPathDist - .00f;//LevelData.Instance.playerRadius; /*FIXME JANK*/; //should be sizes[levels]
+		path_normal = normal;
+		path_center = normal*Vector3.Dot(left_edge, normal);
 
-		Vector3 center = normal*comPathDist;
+		arc_left  = (left_edge  - path_center).normalized;
+		arc_right = (right_edge - path_center).normalized;
 
-		arcLeft  = left_edge - center;
-		arcRight = right_edge - center;
-		arcUp    = Vector3.Cross(pathNormal, arcLeft);
+		arc_left_up    =  Vector3.Cross(path_normal, arc_left);
+		arc_right_down = -Vector3.Cross(path_normal, arc_right);
 		
-		arcRadius = (left_edge - center).magnitude; //or right_edge
+		arc_radius = (left_edge - path_center).magnitude; //or right_edge
 		
-		float angle = Vector3.Angle(left_edge - center, right_edge - center);
+		arc_angle = Vector3.Angle(arc_left, arc_right);
 
-		if(Vector3.Dot(arcUp, arcRight) < 0)
+		if(Vector3.Dot(arc_left_up, arc_right) <= 0)
 		{
-			angle += 180f;
+			arc_angle += 180f;
 		}
-
-		arcCutoffAngle = angle;
-
-		float player_radius = 0.01f;
-		//float other_angle = 2*Mathf.PI*1;
-
-		comPathDist += Mathf.Sin(player_radius); //only possible because radius is 1
-		xyDist = -Mathf.Sin(player_radius); //TODO: XXX: FIXME?: Again, I made this in 5 minutes like normal and grav calcs, could be wrong.
 	}
 
 	/** Find the point of collision as a parameterization of a circle.
 	 *  
 	 */
-	public Optional<float> Intersect(Vector3 to, Vector3 from) //TODO: FIXME: UNJANKIFY
+	public Optional<float> Intersect(Vector3 to, Vector3 from, float height) //TODO: FIXME: UNJANKIFY
 	{
 		Vector3 right  = Vector3.Cross(from, to);
-		Vector3 secant = Vector3.Cross(pathNormal, right);
+		Vector3 secant = Vector3.Cross(path_normal, right);
 		
 		if(Vector3.Dot(secant, from) < 0f) secant *= -1; //TODO: check
 
 		secant.Normalize();
-		
-		Vector3 intersection = pathNormal*comPathDist + secant*arcRadius;
 
-		float x = Vector3.Dot(intersection, -arcLeft) / arcRadius;
-		float y = Vector3.Dot(intersection, arcUp) / arcRadius;
+		Vector3 adj_center = path_center + path_normal*(height*Mathf.Sin(height)); //TODO: - for normals towards the origin
+		float   adj_radius = arc_radius - height*Mathf.Cos(height); //TODO: + for normals pointing towards the origin 
+
+		Vector3 intersection = adj_center + secant*adj_radius;
+
+		float x = Vector3.Dot(intersection, -arc_left   ) / adj_radius;
+		float y = Vector3.Dot(intersection,  arc_left_up) / adj_radius;
 		
 		float angle = Mathf.Atan2(y,x);
 
@@ -183,24 +178,32 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 			angle += 2*Mathf.PI;
 		}
 
-		if(angle <= arcCutoffAngle)
+		if(angle <= arc_angle)
 		{
-			return angle*arcRadius;
+			return angle*arc_radius; //there needs to be a mechanism for changing speed based on radius...
 		}
 		return new Optional<float>();
 	}
 	
 	private void OnDrawGizmos() //TODO: get rid of this in production builds
 	{
+		// draw floor path
 		UnityEditor.Handles.color = Color.red;
-		Vector3 center = pathNormal*comPathDist;
-		Vector3 from = center + arcLeft*arcRadius;
-		UnityEditor.Handles.DrawWireArc(center, pathNormal, from, arcCutoffAngle, arcRadius);
+		Vector3 from = path_center + arc_left*arc_radius;
+		UnityEditor.Handles.DrawWireArc(path_center, path_normal, from, arc_angle, arc_radius);
 
+		DebugUtility.Print(from.magnitude.ToString(), 100);
+
+		//DebugUtility.Assert(Mathf.Approximately(from.magnitude ,1f), "Distance not 1");
+
+		// draw CoM path
 		UnityEditor.Handles.color = Color.yellow;
-		center = pathNormal*footPathDist;
-		from = center + arcLeft*(arcRadius + xyDist);
-		UnityEditor.Handles.DrawWireArc(center, pathNormal, from, arcCutoffAngle, arcRadius);
+		Vector3 adj_center = path_center + path_normal*(0.01f*Mathf.Sin(0.01f));
+		float   adj_radius = arc_radius - 0.01f*Mathf.Cos(0.01f);
+		Vector3 adj_from   = adj_center + arc_left*arc_radius;
+		UnityEditor.Handles.DrawWireArc(adj_center, path_normal, adj_from, arc_angle, adj_radius);
+
+		DebugUtility.Print(adj_from.magnitude.ToString(), 100);
 	}
 
 	/** Create a AABB that perfectly contains a circular arc

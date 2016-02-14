@@ -119,7 +119,7 @@ abstract public class CharacterMotor : Component
 		set
 		{
 			ground.Value.t = value;
-			curPosition = SphericalIsoscelesTrapezoid.Evaluate(ref ground.Value.t, ref ground.Value.segment);
+			curPosition = SphericalIsoscelesTrapezoid.Evaluate(ref ground.Value.t, 0.01f, ref ground.Value.segment);
 		}
 	}
 
@@ -177,9 +177,9 @@ abstract public class CharacterMotor : Component
 
 			ground.Value.segment = SIT.Value;
 			ground.Value.block   = SIT.Value.GetComponentInParent<Block>();
-			ground.Value.t		 = SIT.Value.Intersect(desiredPos, curPos).Value; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
+			ground.Value.t		 = SIT.Value.Intersect(desiredPos, curPos, 0.01f).Value; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
 
-			curPosition = SphericalIsoscelesTrapezoid.Evaluate(ref ground.Value.t, ref ground.Value.segment);
+			curPosition = SphericalIsoscelesTrapezoid.Evaluate(ref ground.Value.t, 0.01f, ref ground.Value.segment);
 
 			ground.Value.right	 = SIT.Value.EvaluateRight(ground.Value.t);
 			ground.Value.normal	 = SIT.Value.EvaluateNormal(curPos, ground.Value.right);

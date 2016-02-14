@@ -21,4 +21,10 @@ public class DebugUtility
 	{
 		UnityEngine.Debug.Log(message);
 	}
+
+	[Conditional("DEBUG")]
+	public static void Print(string message, int frames)
+	{
+		if(UnityEngine.Random.Range(0, frames) == 0) UnityEngine.Debug.Log(message);
+	}
 }

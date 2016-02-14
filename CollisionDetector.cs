@@ -40,7 +40,7 @@ public class CollisionDetector : Component
 		foreach(SphericalIsoscelesTrapezoid trap in colliders)
 		{
 			//step 2: Character Controller asks the block if a collision actually occuring in Spherical coordinates
-			if(trap.Contains(desiredPos))
+			if(trap.Contains(desiredPos, 0.01f))
 			{
 				//step 3: if a collision is happening, a list of TTCs (time till collision) are sorted to find the closest collision.
 				Optional<float> distance = trap.Distance(desiredPos, curPos);
