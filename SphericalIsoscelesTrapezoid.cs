@@ -66,8 +66,8 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	{
 		float angle = t / arc_radius;
 
-		float z_height  = Mathf.Sin(height);
-		float xy_height = Mathf.Cos(height);
+		float z_height  =          Mathf.Sin(height);
+		float xy_height = height - Mathf.Cos(height);
 
 		Vector3 x = -arc_left   *(arc_radius + xy_height)*Mathf.Cos(angle); //-arcLeft for "right" is intentional
 		Vector3 y =  arc_left_up*(arc_radius + xy_height)*Mathf.Sin(angle);
@@ -133,7 +133,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 		
 		path_normal = normal;
-		path_center = normal*Vector3.Dot(left_edge, normal);
+		path_center = normal*Vector3.Dot(left_edge, normal); //or right_edge
 
 		arc_left  = (left_edge  - path_center).normalized;
 		arc_right = (right_edge - path_center).normalized;
@@ -164,7 +164,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		secant.Normalize();
 
 		Vector3 adj_center = path_center + path_normal*(height*Mathf.Sin(height)); //TODO: - for normals towards the origin
-		float   adj_radius = arc_radius - height*Mathf.Cos(height); //TODO: + for normals pointing towards the origin 
+		float   adj_radius = arc_radius - (height - height*Mathf.Cos(height)); //TODO: + for normals pointing towards the origin 
 
 		Vector3 intersection = adj_center + secant*adj_radius;
 
@@ -192,15 +192,15 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		Vector3 from = path_center + arc_left*arc_radius;
 		UnityEditor.Handles.DrawWireArc(path_center, path_normal, from, arc_angle, arc_radius);
 
-		DebugUtility.Print(from.magnitude.ToString(), 100);
+		//DebugUtility.Print(from.magnitude.ToString(), 100);
 
 		//DebugUtility.Assert(Mathf.Approximately(from.magnitude ,1f), "Distance not 1");
 
 		// draw CoM path
 		UnityEditor.Handles.color = Color.yellow;
-		Vector3 adj_center = path_center + path_normal*(0.01f*Mathf.Sin(0.01f));
-		float   adj_radius = arc_radius - 0.01f*Mathf.Cos(0.01f);
-		Vector3 adj_from   = adj_center + arc_left*arc_radius;
+		Vector3 adj_center = path_center + path_normal*(0.1f*Mathf.Sin(0.1f));
+		float   adj_radius = arc_radius - (0.1f - 0.1f*Mathf.Cos(0.1f));
+		Vector3 adj_from   = adj_center + arc_left*adj_radius;
 		UnityEditor.Handles.DrawWireArc(adj_center, path_normal, adj_from, arc_angle, adj_radius);
 
 		DebugUtility.Print(adj_from.magnitude.ToString(), 100);
