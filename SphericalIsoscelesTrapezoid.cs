@@ -168,59 +168,6 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		}
 	}
 
-	Vector3 MaxGradient(Vector3 desired)
-	{
-		Vector3 max_gradient = Vector3.zero;
-		float max_product = Mathf.NegativeInfinity;
-
-		/** if we don't do this, calculations for an arc with angle 2*PI become ambiguous because left == right
-		 */ 
-		for(int quadrant = 0; quadrant < 4; ++quadrant)
-		{
-			float left  = arc_angle*arc_radius*( quadrant       / 4f); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
-			float right = arc_angle*arc_radius*((quadrant + 1 ) / 4f); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
-
-			Debug.Log(quadrant + ": from " + left + " to " + right);
-
-			float left_product  = Vector3.Dot(Evaluate(left) , desired); //find the correlation factor between left and the desired direction
-			float right_product = Vector3.Dot(Evaluate(right), desired);
-
-			/** this is basically a binary search
-			 * 
-			 *  1) take the left and right vectors and compute their dot products with the desired direction.
-			 *  2) take the lesser dot product and ignore that half of the remaining arc
-			 */
-			for(int iteration = 0; iteration < 8*sizeof(float); ++iteration) //because we are dealing with floats, more precision could help (or hurt?)
-			{
-				float midpoint = (left + right) / 2;
-				if(left_product < right_product) //is the right vector closer to the desired direction?
-				{
-					left = midpoint; //throw out the left half if the right vector is closer
-					left_product = Vector3.Dot(Evaluate(left), desired);
-				}
-				else
-				{
-					right = midpoint; //throw out the right half if the left vector is closer
-					right_product = Vector3.Dot(Evaluate(right), desired);
-				}
-			}
-
-			/** figure out if this quadrant contains a larger gradient
-			 */
-			if(max_product < right_product)
-			{
-				max_gradient = Evaluate(right);
-				max_product = right_product;
-			}
-			if(max_product < left_product)
-			{
-				max_gradient = Evaluate(left);
-				max_product = left_product;
-			}
-		}
-		return max_gradient;
-	}
-
 	/** Find the point of collision as a parameterization of a circle.
 	 *  
 	 */
@@ -253,6 +200,59 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 			return angle*arc_radius; //there needs to be a mechanism for changing speed based on radius...
 		}
 		return new Optional<float>();
+	}
+
+	Vector3 MaxGradient(Vector3 desired)
+	{
+		Vector3 max_gradient = Vector3.zero;
+		float max_product = Mathf.NegativeInfinity;
+		
+		/** if we don't do this, calculations for an arc with angle 2*PI become ambiguous because left == right
+		 */ 
+		for(int quadrant = 0; quadrant < 4; ++quadrant)
+		{
+			float left  = arc_angle*arc_radius*( quadrant       / 4f); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
+			float right = arc_angle*arc_radius*((quadrant + 1 ) / 4f); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
+			
+			Debug.Log(quadrant + ": from " + left + " to " + right);
+			
+			float left_product  = Vector3.Dot(Evaluate(left) , desired); //find the correlation factor between left and the desired direction
+			float right_product = Vector3.Dot(Evaluate(right), desired);
+			
+			/** this is basically a binary search
+			 * 
+			 *  1) take the left and right vectors and compute their dot products with the desired direction.
+			 *  2) take the lesser dot product and ignore that half of the remaining arc
+			 */
+			for(int iteration = 0; iteration < 8*sizeof(float); ++iteration) //because we are dealing with floats, more precision could help (or hurt?)
+			{
+				float midpoint = (left + right) / 2;
+				if(left_product < right_product) //is the right vector closer to the desired direction?
+				{
+					left = midpoint; //throw out the left half if the right vector is closer
+					left_product = Vector3.Dot(Evaluate(left), desired);
+				}
+				else
+				{
+					right = midpoint; //throw out the right half if the left vector is closer
+					right_product = Vector3.Dot(Evaluate(right), desired);
+				}
+			}
+			
+			/** figure out if this quadrant contains a larger gradient
+			 */
+			if(max_product < right_product)
+			{
+				max_gradient = Evaluate(right);
+				max_product = right_product;
+			}
+			if(max_product < left_product)
+			{
+				max_gradient = Evaluate(left);
+				max_product = left_product;
+			}
+		}
+		return max_gradient;
 	}
 	
 	private void OnDrawGizmos() //TODO: get rid of this in production builds
