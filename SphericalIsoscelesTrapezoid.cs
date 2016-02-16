@@ -63,12 +63,18 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	{
 		// draw CoM path
 		UnityEditor.Handles.color = color;
-		Vector3 adj_center = path_center + path_normal*(height*Mathf.Sin(height));
-		float   adj_radius = arc_radius - (height - height*Mathf.Cos(height));
-		Vector3 adj_from   = adj_center + arc_left*adj_radius;
-		UnityEditor.Handles.DrawWireArc(adj_center, path_normal, adj_from, arc_angle * 180 / Mathf.PI, adj_radius);
+		Vector3 adjusted_center = path_center + path_normal*(height*Mathf.Sin(height));
+		float   adjusted_radius = arc_radius - (height - height*Mathf.Cos(height));
+		Vector3 adjusted_from   = adjusted_center + arc_left*adjusted_radius;
+		UnityEditor.Handles.DrawWireArc(adjusted_center, path_normal, adjusted_from, arc_angle * 180 / Mathf.PI, adjusted_radius);
 		
 		//DebugUtility.Print(adj_from.magnitude.ToString(), 100);
+	}
+
+	void DrawRadial(float t, Color color)
+	{
+		UnityEditor.Handles.color = color;
+		UnityEditor.Handles.DrawLine(path_center, Evaluate(t)); 
 	}
 
 	/** return the position of the player based on the circular path
@@ -76,16 +82,15 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	 */
 	public Vector3 Evaluate(float t, float height)
 	{
-		float angle = t / arc_radius;
+		float angle = t / arc_radius; //FIXME: factor in height
 
-		float z_height  = height*     Mathf.Sin(height) ;
-		float xy_height = height*(1 - Mathf.Cos(height));
+		Vector3 adjusted_center = path_center + path_normal*height*     Mathf.Sin(height);
+		float   adjusted_radius = arc_radius  -             height*(1 - Mathf.Cos(height));
 
-		Vector3 x =  arc_left   *(arc_radius + xy_height)*Mathf.Cos(angle); //-arcLeft for "right" was wrong...
-		Vector3 y =  arc_left_up*(arc_radius + xy_height)*Mathf.Sin(angle);
-		Vector3 z =  path_normal*z_height;
+		Vector3 horizontal = adjusted_radius*Mathf.Cos(angle)*arc_left;
+		Vector3 vertical   = adjusted_radius*Mathf.Sin(angle)*arc_left_up;
 
-		return x + y + z + path_center; 
+		return horizontal + vertical + adjusted_center;
 	}
 
 	/** return the position of the player based on the circular path
@@ -149,14 +154,14 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
 		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 		
-		path_normal = normal;
+		path_normal = normal.normalized; //when at first you don't believe it, pry, pry again
 		path_center = normal*Vector3.Dot(left_edge, normal); //or right_edge
 
 		arc_left  = (left_edge  - path_center).normalized;
 		arc_right = (right_edge - path_center).normalized;
 
-		arc_left_up    = -Vector3.Cross(arc_left , path_normal);
-		arc_right_down =  Vector3.Cross(arc_right, path_normal);
+		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //just in case
+		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
 		
 		arc_radius = (left_edge - path_center).magnitude; //or right_edge
 		
@@ -207,15 +212,16 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		Vector3 max_gradient = Vector3.zero;
 		float max_product = Mathf.NegativeInfinity;
 
-		Debug.Log(Evaluate(0));
+		Debug.Log(Evaluate(0f));
 		Debug.Log(Evaluate(arc_angle*arc_radius));
 
 		/** if we don't calculate per quadrant, calculations for an arc with angle 2*PI become ambiguous because left == right
 		 */ 
-		for(int quadrant = 0; quadrant < 4; ++quadrant)
+		float quadrants = Mathf.Ceil(arc_angle / (Mathf.PI / 2f)); //maximum of 4, always integral, float for casting "left" and "right"
+		for(float quadrant = 0f; quadrant < quadrants; ++quadrant)
 		{
-			float left  = arc_angle*arc_radius*( quadrant       / 4f); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
-			float right = arc_angle*arc_radius*((quadrant + 1 ) / 4f); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
+			float left  = arc_angle*arc_radius*( quadrant        / quadrants); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
+			float right = arc_angle*arc_radius*((quadrant + 1f ) / quadrants); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
 			
 			float left_product  = Vector3.Dot(Evaluate(left) , desired); //find the correlation factor between left and the desired direction
 			float right_product = Vector3.Dot(Evaluate(right), desired);
@@ -227,7 +233,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 			 */
 			for(int iteration = 0; iteration < 8*sizeof(float); ++iteration) //because we are dealing with floats, more precision could help (or hurt?)
 			{
-				float midpoint = (left + right) / 2;
+				float midpoint = (left + right) / 2f;
 				if(left_product < right_product) //is the right vector closer to the desired direction?
 				{
 					left = midpoint; //throw out the left half if the right vector is closer
@@ -263,6 +269,12 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 		// draw CoM path
 		DrawArc(0.1f, Color.white);
+
+		// draw left edge
+		DrawRadial(0.0f, Color.red);
+
+		// draw right edge
+		DrawRadial(arc_angle*arc_radius, Color.blue);
 	}
 
 	/** Create a AABB that perfectly contains a circular arc
