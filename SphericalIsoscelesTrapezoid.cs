@@ -81,7 +81,7 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		float z_height  = height*     Mathf.Sin(height) ;
 		float xy_height = height*(1 - Mathf.Cos(height));
 
-		Vector3 x = -arc_left   *(arc_radius + xy_height)*Mathf.Cos(angle); //-arcLeft for "right" is intentional
+		Vector3 x =  arc_left   *(arc_radius + xy_height)*Mathf.Cos(angle); //-arcLeft for "right" was wrong...
 		Vector3 y =  arc_left_up*(arc_radius + xy_height)*Mathf.Sin(angle);
 		Vector3 z =  path_normal*z_height;
 
@@ -155,8 +155,8 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 		arc_left  = (left_edge  - path_center).normalized;
 		arc_right = (right_edge - path_center).normalized;
 
-		arc_left_up    =  Vector3.Cross(path_normal, arc_left);
-		arc_right_down = -Vector3.Cross(path_normal, arc_right);
+		arc_left_up    = -Vector3.Cross(arc_left , path_normal);
+		arc_right_down =  Vector3.Cross(arc_right, path_normal);
 		
 		arc_radius = (left_edge - path_center).magnitude; //or right_edge
 		
@@ -185,8 +185,8 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 
 		Vector3 intersection = adj_center + secant*adj_radius;
 
-		float x = Vector3.Dot(intersection, -arc_left   ) / adj_radius;
-		float y = Vector3.Dot(intersection,  arc_left_up) / adj_radius;
+		float x = Vector3.Dot(intersection, arc_left   ) / adj_radius;
+		float y = Vector3.Dot(intersection, arc_left_up) / adj_radius;
 		
 		float angle = Mathf.Atan2(y,x);
 
@@ -206,19 +206,20 @@ public class SphericalIsoscelesTrapezoid /*TODO: get rid of this in production b
 	{
 		Vector3 max_gradient = Vector3.zero;
 		float max_product = Mathf.NegativeInfinity;
-		
-		/** if we don't do this, calculations for an arc with angle 2*PI become ambiguous because left == right
+
+		Debug.Log(Evaluate(0));
+		Debug.Log(Evaluate(arc_angle*arc_radius));
+
+		/** if we don't calculate per quadrant, calculations for an arc with angle 2*PI become ambiguous because left == right
 		 */ 
 		for(int quadrant = 0; quadrant < 4; ++quadrant)
 		{
 			float left  = arc_angle*arc_radius*( quadrant       / 4f); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
 			float right = arc_angle*arc_radius*((quadrant + 1 ) / 4f); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
 			
-			Debug.Log(quadrant + ": from " + left + " to " + right);
-			
 			float left_product  = Vector3.Dot(Evaluate(left) , desired); //find the correlation factor between left and the desired direction
 			float right_product = Vector3.Dot(Evaluate(right), desired);
-			
+
 			/** this is basically a binary search
 			 * 
 			 *  1) take the left and right vectors and compute their dot products with the desired direction.
