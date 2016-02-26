@@ -29,77 +29,41 @@ public class AbaddonEditor : Editor
 		SceneView.onSceneGUIDelegate += WaitRight;
 		SceneView.onSceneGUIDelegate += WaitUp;
 		SceneView.onSceneGUIDelegate += WaitDown;
-	}	
+	}
 
 	void Create(SceneView scene_view)
 	{
 		Event e = Event.current;
 
 		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space)
-		{	
+		{
 			Vector3 click_point = CursorCast(scene_view.camera, e.mousePosition);
 
-			Debug.Log(last_edge.ToString());
-			Debug.Log(click_point.ToString());
+			SphericalIsoscelesTrapezoid trapezoid = last_trapezoid.LinkRight(click_point);
 
-			SphericalIsoscelesTrapezoid next_trapezoid = CreateSphericalIsoscelesTrapezoid(
-					last_edge, click_point, Vector3.Cross(last_edge, click_point));
+			SphericalIsoscelesTrapezoid.SpawnCorner(last_trapezoid, trapezoid);
 
-			if(last_trapezoid)
-			{
-				last_trapezoid.next = next_trapezoid;
-			}
-			else
-			{
-				first_trapezoid = next_trapezoid;
-			}
-			next_trapezoid.prev = last_trapezoid;
-
-			last_trapezoid = next_trapezoid;
-
-			last_edge = click_point;
-
-			Debug.Log("Pew");
+			last_trapezoid = trapezoid;
 		}
 		else if(e.type == EventType.MouseDown && e.button == 0)
 		{
-			SphericalIsoscelesTrapezoid next_trapezoid = CreateSphericalIsoscelesTrapezoid(
-					last_edge, first_edge, Vector3.Cross(last_edge, first_edge));
+			SphericalIsoscelesTrapezoid trapezoid = last_trapezoid.LinkRight(first_edge);
 
-			next_trapezoid.next = first_trapezoid;
-			next_trapezoid.prev = last_trapezoid;
+			SphericalIsoscelesTrapezoid.SpawnCorner(last_trapezoid, trapezoid);
+			SphericalIsoscelesTrapezoid.SpawnCorner(trapezoid, first_trapezoid);
 
-			first_trapezoid.prev = next_trapezoid;
-			last_trapezoid.next  = next_trapezoid;
-
-			last_trapezoid = null;
-
-			next_trapezoid.name = "last";
+			first_trapezoid = last_trapezoid = null;
 
 			SceneView.onSceneGUIDelegate -= Create;
 			SceneView.onSceneGUIDelegate += Edit;
 
-			Debug.Log("Pew");
 			Debug.Log("Switching to Edit");
 		}
 	}
-
-	SphericalIsoscelesTrapezoid CreateSphericalIsoscelesTrapezoid(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
-	{
-		GameObject obj = PrefabUtility.InstantiatePrefab(abaddon.prefab) as GameObject;
-
-		BoxCollider	collider = obj.GetComponent<BoxCollider>(); 
-		SphericalIsoscelesTrapezoid trapezoid = obj.GetComponent<SphericalIsoscelesTrapezoid>();
-
-		trapezoid.Initialize(left_edge, right_edge, normal);
-		trapezoid.RecalculateAABB(collider);
-
-		return trapezoid; //used for next/prev
-	}
-
+	
 	Vector3 CursorCast(Camera cam, Vector2 mousePos)
 	{
-		return cam.ScreenPointToRay(new Vector3(mousePos.x, cam.pixelHeight - mousePos.y, 1)).direction;
+		return cam.ScreenPointToRay(new Vector3(mousePos.x, cam.pixelHeight - mousePos.y, cam.nearClipPlane)).direction;
 	}
 
 	void Edit(SceneView scene_view)
@@ -110,16 +74,12 @@ public class AbaddonEditor : Editor
 			SceneView.onSceneGUIDelegate += Create;
 
 			first_edge = last_edge = CursorCast(scene_view.camera, Event.current.mousePosition);
+			first_trapezoid = last_trapezoid = SphericalIsoscelesTrapezoid.Spawn(first_edge, first_edge, first_edge);
 
-			Debug.DrawRay(first_edge, Vector3.up, Color.red);
 			Debug.Log("Switching to Create");
+			Align(scene_view);
 		}
 	}	
-
-	void Instantiate(Vector3 p1, Vector3 p2)
-	{
-
-	}
 
 	void Listen(SceneView scene_view)
 	{
