@@ -84,6 +84,8 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 */
 	public Vector3 Evaluate(float t, float height)
 	{
+		if(arc_radius == 0f) return path_center;//FIXME: remove
+
 		float angle = t / arc_radius; //FIXME: factor in height
 
 		Vector3 adjusted_center = path_center + path_normal*height*     Mathf.Sin(height); //TODO: check, this might be a hell of a lot more complicated when:
@@ -153,6 +155,10 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 */
 	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
+		Debug.Log (left_edge);
+		Debug.Log (right_edge);
+		Debug.Log (normal);
+
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
 		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 		
@@ -174,7 +180,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 			arc_angle += Mathf.PI;
 		}
 
-		next = prev = this;
+		next = this; prev = this;
 		RecalculateAABB();
 	}
 
@@ -183,10 +189,10 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		path_center =  right.Evaluate(0);
 		path_normal = -right.Evaluate(0);
 
-		arc_left  = left.arc_right;
-		arc_right = right.arc_left;
+		arc_left  = left.arc_right; //FIXME: incorrect logic
+		arc_right = right.arc_left; //FIXME: incorrect
 
-		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //just in case
+		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
 		
 		arc_radius = 0f;
@@ -248,6 +254,8 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	public SphericalIsoscelesTrapezoid LinkRight(Vector3 pos)
 	{
 		Vector3 right = this.Evaluate(arc_angle*arc_radius);
+
+		Debug.Log (right);
 
 		SphericalIsoscelesTrapezoid obj = SphericalIsoscelesTrapezoid.Spawn(right, pos, Vector3.Cross(right, pos));
 
@@ -363,6 +371,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	
 	public static SphericalIsoscelesTrapezoid Spawn()
 	{
+		//GameObject obj = (GameObject)Instantiate(Resources.Load("SphereIsoTrap")); ;
 		GameObject prefab = (GameObject) Resources.Load("SphereIsoTrap");
 		
 		#if UNITY_EDITOR
@@ -371,7 +380,9 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		GameObject obj = Instantiate(prefab) as GameObject;
 		#endif
 
-		prefab.name = guid.ToString();
+
+
+		obj.name = guid.ToString();
 
 		guid++;
 		
