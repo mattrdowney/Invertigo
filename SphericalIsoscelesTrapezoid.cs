@@ -128,7 +128,15 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 	public Vector3 EvaluateNormal(Vector3 pos, Vector3 right)
 	{
-		return Vector3.Cross(right, pos);
+		return Vector3.Cross(right, pos).normalized;
+	}
+
+	public Vector3 EvaluateNormal(float t)
+	{
+		Vector3 pos = Evaluate(t);
+		Vector3 right = EvaluateRight(t);
+
+		return EvaluateNormal(pos, right);
 	}
 
 	public Vector3 EvaluateRight(float t)
@@ -189,8 +197,8 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		path_center =  right.Evaluate(0);
 		path_normal = -right.Evaluate(0);
 
-		arc_left  = left.arc_right; //FIXME: incorrect logic
-		arc_right = right.arc_left; //FIXME: incorrect
+		arc_left  = left.EvaluateNormal(left.arc_angle*left.arc_radius); //FIXME: incorrect logic
+		arc_right = right.EvaluateNormal(0f); //FIXME: incorrect
 
 		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
