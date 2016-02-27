@@ -39,11 +39,18 @@ public class AbaddonEditor : Editor
 		{
 			Vector3 click_point = CursorCast(scene_view.camera, e.mousePosition);
 
-			SphericalIsoscelesTrapezoid trapezoid = last_trapezoid.LinkRight(click_point);
+			if(!first_trapezoid)
+			{
+				first_trapezoid = last_trapezoid = SphericalIsoscelesTrapezoid.Spawn(last_edge, click_point, Vector3.Cross (last_edge, click_point));
+			}
+			else
+			{
+				SphericalIsoscelesTrapezoid trapezoid = last_trapezoid.LinkRight(click_point);
 
-			SphericalIsoscelesTrapezoid.SpawnCorner(last_trapezoid, trapezoid);
+				SphericalIsoscelesTrapezoid.SpawnCorner(last_trapezoid, trapezoid);
 
-			last_trapezoid = trapezoid;
+				last_trapezoid = trapezoid;
+			}
 		}
 		else if(e.type == EventType.MouseDown && e.button == 0)
 		{
@@ -74,7 +81,6 @@ public class AbaddonEditor : Editor
 			SceneView.onSceneGUIDelegate += Create;
 
 			first_edge = last_edge = CursorCast(scene_view.camera, Event.current.mousePosition);
-			first_trapezoid = last_trapezoid = SphericalIsoscelesTrapezoid.Spawn(first_edge, first_edge, first_edge);
 
 			Debug.Log("Switching to Create");
 			Align(scene_view);
