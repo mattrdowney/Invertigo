@@ -27,7 +27,8 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	[SerializeField] Vector3								arc_right_down; //FIXME
 	
 	[SerializeField] public float							arc_radius; //FIXME: temp hack public
-	[SerializeField] public float							arc_angle; //FIXME:
+	[SerializeField] public float							arc_theta; //the angle to sweep around the center. FIXME:
+	[SerializeField] float									path_phi;
 
 	static int 												guid = 0;
 
@@ -53,9 +54,9 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 * 
 	 *  @example "CountBooleans(true, false, true, true);" will return 3
 	 */
-	public static int CountBooleans(params bool[] boolean_list) //allow for comma separated booleans
+	static int CountBooleans(params bool[] boolean_list) //allow for comma separated booleans using "params"
 	{
-		return boolean_list.Count(bIsTrue => bIsTrue); //count booleans that are true using Linq
+		return boolean_list.Count(bIsTrue => bIsTrue); //count booleans that are true using Linq's .Count function
 	}
 
 	public Optional<float> Distance(Vector3 to, Vector3 from)
@@ -79,7 +80,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		Vector3 adjusted_center = path_center + path_normal*(height*Mathf.Sin(height));
 		float   adjusted_radius = arc_radius - (height - height*Mathf.Cos(height));
 		Vector3 adjusted_from   = adjusted_center + arc_left*adjusted_radius;
-		UnityEditor.Handles.DrawWireArc(adjusted_center, path_normal, adjusted_from, arc_angle * 180 / Mathf.PI, adjusted_radius);
+		UnityEditor.Handles.DrawWireArc(adjusted_center, path_normal, adjusted_from, arc_theta * 180 / Mathf.PI, adjusted_radius);
 		
 		//DebugUtility.Print(adj_from.magnitude.ToString(), 100);
 	}
@@ -95,7 +96,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 */
 	public Vector3 Evaluate(float t, float height)
 	{
-		if(arc_radius == 0f) return path_center;//FIXME: remove
+		if(arc_radius == 0) return path_center;//FIXME: remove
 
 		float angle = t / arc_radius; //FIXME: factor in height
 
@@ -111,7 +112,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	/** return the position of the player based on the circular path
 	 *  
 	 */
-	public Vector3 Evaluate(float t) { return Evaluate(t, 0f); }
+	public Vector3 Evaluate(float t) { return Evaluate(t, 0); }
 
 	/** return the position of the player based on the circular path
 	 * 
@@ -121,15 +122,15 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 */
 	public static Vector3 Evaluate(ref float t, float height, ref SphericalIsoscelesTrapezoid seg)
 	{
-		if(t > seg.arc_angle*seg.arc_radius)
+		if(t > seg.arc_theta*seg.arc_radius)
 		{
-			t -= seg.arc_angle*seg.arc_radius;
+			t -= seg.arc_theta*seg.arc_radius;
 			seg = seg.next;
 			return Evaluate(ref t, 0.01f, ref seg);
 		}
 		if(t < 0)
 		{
-			t += seg.prev.arc_angle*seg.prev.arc_radius;
+			t += seg.prev.arc_theta*seg.prev.arc_radius;
 			seg = seg.prev;
 			return Evaluate(ref t, 0.01f, ref seg);
 		}
@@ -172,16 +173,12 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 *          that is a great circle for the feet positions, a large lesser circle for the center of mass position,
 	 *          with a 90 degree arc going from forwards to right and a normal going in the positive y-direction.
 	 */
-	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
+	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal) //TODO: delegate Initialize corner?
 	{
-		Debug.Log (left_edge);
-		Debug.Log (right_edge);
-		Debug.Log (normal);
-
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
 		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 		
-		path_normal = normal.normalized; //when at first you don't believe it, pry, pry again
+		path_normal = normal.normalized;
 		path_center = normal*Vector3.Dot(left_edge, normal); //or right_edge
 
 		arc_left  = (left_edge  - path_center).normalized; //FIXME: obsolete for corner triangles
@@ -192,36 +189,40 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		
 		arc_radius = (left_edge - path_center).magnitude; //or right_edge
 		
-		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
+		arc_theta = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 
 		if(Vector3.Dot(arc_left_up, arc_right) <= 0)
 		{
-			arc_angle += Mathf.PI;
+			arc_theta += Mathf.PI;
 		}
+
+		path_phi = Mathf.Acos(path_center.magnitude); //TODO: check
 
 		next = this; prev = this;
 		RecalculateAABB();
 	}
 
-	public void InitializeCorner(SphericalIsoscelesTrapezoid left, SphericalIsoscelesTrapezoid right)
+	public void InitializeCorner(SphericalIsoscelesTrapezoid left, SphericalIsoscelesTrapezoid right) //TODO: please delegate in the future
 	{
-		path_center =  right.Evaluate(0);
-		path_normal = -right.Evaluate(0);
+		path_center = right.Evaluate(0); //or left.Evaluate(radius*angle)
+		path_normal = right.Evaluate(0);
 
-		arc_left  = left.EvaluateNormal(left.arc_angle*left.arc_radius); //FIXME: incorrect logic
-		arc_right = right.EvaluateNormal(0f); //FIXME: incorrect
+		arc_left  = left.EvaluateNormal(left.arc_theta*left.arc_radius); //FIXME: incorrect logic
+		arc_right = right.EvaluateNormal(0); //FIXME: incorrect
 
 		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
 		
-		arc_radius = 0f;
+		arc_radius = 0;
 		
-		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
+		arc_theta = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 		
 		if(Vector3.Dot(arc_left_up, arc_right) <= 0)
 		{
-			arc_angle += Mathf.PI;
+			arc_theta += Mathf.PI;
 		}
+
+		path_phi = Mathf.Acos(path_center.magnitude);
 
 		this.Relink(left, right);
 		RecalculateAABB();
@@ -235,7 +236,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		Vector3 right  = Vector3.Cross(from, to);
 		Vector3 secant = Vector3.Cross(path_normal, right);
 		
-		if(Vector3.Dot(secant, from) < 0f) secant *= -1; //TODO: check
+		if(Vector3.Dot(secant, from) < 0) secant *= -1; //TODO: check
 
 		secant.Normalize();
 
@@ -254,7 +255,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 			angle += 2*Mathf.PI;
 		}
 
-		if(angle <= arc_angle)
+		if(angle <= arc_theta)
 		{
 			return angle*arc_radius; //there needs to be a mechanism for changing speed based on radius...
 		}
@@ -272,7 +273,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 	public SphericalIsoscelesTrapezoid LinkRight(Vector3 pos)
 	{
-		Vector3 right = this.Evaluate(arc_angle*arc_radius);
+		Vector3 right = this.Evaluate(arc_theta*arc_radius);
 
 		Debug.Log (right);
 
@@ -288,11 +289,11 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 		/** if we don't calculate per quadrant, calculations for an arc with angle 2*PI become ambiguous because left == right
 		 */ 
-		float quadrants = Mathf.Ceil(arc_angle / (Mathf.PI / 2f)); //maximum of 4, always integral, float for casting "left" and "right"
-		for(float quadrant = 0f; quadrant < quadrants; ++quadrant)
+		float quadrants = Mathf.Ceil(arc_theta / (Mathf.PI / 2f)); //maximum of 4, always integral, float for casting "left" and "right"
+		for(float quadrant = 0; quadrant < quadrants; ++quadrant)
 		{
-			float left  = arc_angle*arc_radius*( quadrant        / quadrants); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
-			float right = arc_angle*arc_radius*((quadrant + 1f ) / quadrants); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
+			float left  = arc_theta*arc_radius*( quadrant      / quadrants); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
+			float right = arc_theta*arc_radius*((quadrant + 1) / quadrants); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
 			
 			float left_product  = Vector3.Dot(Evaluate(left) , desired); //find the correlation factor between left and the desired direction
 			float right_product = Vector3.Dot(Evaluate(right), desired);
@@ -304,7 +305,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 			 */
 			for(int iteration = 0; iteration < 8*sizeof(float); ++iteration) //because we are dealing with floats, more precision could help (or hurt?)
 			{
-				float midpoint = (left + right) / 2f;
+				float midpoint = (left + right) / 2;
 				if(left_product < right_product) //is the right vector closer to the desired direction?
 				{
 					left = midpoint; //throw out the left half if the right vector is closer
@@ -418,5 +419,23 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		trapezoid.InitializeCorner(left, right);
 
 		return trapezoid; //used for next/prev
+	}
+
+	//(height*Mathf.Sin(height))
+	//height*(1 - Mathf.Cos(height)) 
+
+	//corner => path_phi of 0
+	//great circle => path_phi of PI/2
+
+	static float SpecialCos(float height) //Note: there are no real identities / relationships between specialcos and specialsin
+	{
+		float phi_complement = Mathf.PI / 2 - path_phi; //why not cache? idk this feels right
+		return height*(Mathf.Cos(phi_complement + height) - Mathf.Cos(phi_complement));
+	}
+	
+	static float SpecialSin(float height)
+	{
+		float phi_complement = Mathf.PI / 2 - path_phi;
+		return height*(Mathf.Sin(phi_complement + height) - Mathf.Sin(phi_complement));
 	}
 }
