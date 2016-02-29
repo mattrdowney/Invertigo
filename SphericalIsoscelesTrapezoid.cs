@@ -42,9 +42,20 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		bool bLeftContains		   = Vector3.Dot(pos, arc_left_up ) >= 0;
 		bool bRightContains		   = Vector3.Dot(pos, arc_right_down) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
-		int  nOutOfThree		   = Truth(bLeftContains, bRightContains, bIsObtuse);
+		int  nOutOfThree		   = CountBooleans(bLeftContains, bRightContains, bIsObtuse);
 
 		return bIsAtCorrectElevation && nOutOfThree >= 2; //XXX: might even now be wrong
+	}
+
+	/** Counts the number of booleans that are true in a comma separated list of booleans
+	 * 
+	 *  credit: http://stackoverflow.com/questions/377990/elegantly-determine-if-more-than-one-boolean-is-true
+	 * 
+	 *  @example "CountBooleans(true, false, true, true);" will return 3
+	 */
+	public static int CountBooleans(params bool[] boolean_list) //allow for comma separated booleans
+	{
+		return boolean_list.Count(bIsTrue => bIsTrue); //count booleans that are true using Linq
 	}
 
 	public Optional<float> Distance(Vector3 to, Vector3 from)
@@ -329,12 +340,6 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 		// draw CoM path
 		DrawArc(0.1f, Color.white);
-
-		// draw left edge
-		DrawRadial(0.0f, Color.red);
-
-		// draw right edge
-		DrawRadial(arc_angle*arc_radius, Color.blue);
 	}
 
 	/** Create a AABB that perfectly contains a circular arc
@@ -413,14 +418,5 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		trapezoid.InitializeCorner(left, right);
 
 		return trapezoid; //used for next/prev
-	}
-
-	/** Counts the number of booleans that are true in a comma separated list of booleans
-	 * 
-	 *  credit: http://stackoverflow.com/questions/377990/elegantly-determine-if-more-than-one-boolean-is-true
-	 */
-	public static int Truth(params bool[] booleans)
-	{
-		return booleans.Count(b => b);
 	}
 }
