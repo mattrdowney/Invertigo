@@ -39,7 +39,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	{
 		float prod = Vector3.Dot(pos - path_center, path_normal);
 
-		bool bIsAtCorrectElevation = 0 <= prod && prod <= radius*Mathf.Sin(radius); //TODO: radius might have changed logic
+		bool bIsAtCorrectElevation = 0 <= prod && prod <= SpecialSin(radius); //TODO: radius might have changed logic
 		bool bLeftContains		   = Vector3.Dot(pos, arc_left_up ) >= 0;
 		bool bRightContains		   = Vector3.Dot(pos, arc_right_down) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
@@ -77,8 +77,8 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	{
 		// draw CoM path
 		UnityEditor.Handles.color = color;
-		Vector3 adjusted_center = path_center + path_normal*(height*Mathf.Sin(height));
-		float   adjusted_radius = arc_radius - (height - height*Mathf.Cos(height));
+		Vector3 adjusted_center = path_center + path_normal*SpecialSin(height);
+		float   adjusted_radius = arc_radius - SpecialCos(height);
 		Vector3 adjusted_from   = adjusted_center + arc_left*adjusted_radius;
 		UnityEditor.Handles.DrawWireArc(adjusted_center, path_normal, adjusted_from, arc_theta * 180 / Mathf.PI, adjusted_radius);
 		
@@ -204,8 +204,8 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 	public void InitializeCorner(SphericalIsoscelesTrapezoid left, SphericalIsoscelesTrapezoid right) //TODO: please delegate in the future
 	{
-		path_center = right.Evaluate(0); //or left.Evaluate(radius*angle)
-		path_normal = right.Evaluate(0);
+		path_center =  right.Evaluate(0); //or left.Evaluate(radius*angle)
+		path_normal = -right.Evaluate(0);
 
 		arc_left  = left.EvaluateNormal(left.arc_theta*left.arc_radius); //FIXME: incorrect logic
 		arc_right = right.EvaluateNormal(0); //FIXME: incorrect
@@ -340,7 +340,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		DrawArc(0.0f, Color.black);
 
 		// draw CoM path
-		DrawArc(0.1f, Color.white);
+		DrawArc(0.4f, Color.white);
 	}
 
 	/** Create a AABB that perfectly contains a circular arc
@@ -351,7 +351,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 * 
 	 *  @param collider the box collider that will be altered to contain the SphericalIsoscelesTrapezoid
 	 */
-	public void RecalculateAABB()
+	void RecalculateAABB()
 	{
 		BoxCollider	collider = this.GetComponent<BoxCollider>(); 
 
@@ -371,7 +371,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 									   z_max - z_min);
 	}
 
-	public SphericalIsoscelesTrapezoid Relink(SphericalIsoscelesTrapezoid left, SphericalIsoscelesTrapezoid right)
+	SphericalIsoscelesTrapezoid Relink(SphericalIsoscelesTrapezoid left, SphericalIsoscelesTrapezoid right)
 	{
 		this.next  = right;
 		this.prev  = left;
@@ -383,7 +383,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	}
 
 	
-	public static SphericalIsoscelesTrapezoid Spawn()
+	static SphericalIsoscelesTrapezoid Spawn()
 	{
 		//GameObject obj = (GameObject)Instantiate(Resources.Load("SphereIsoTrap")); ;
 		GameObject prefab = (GameObject) Resources.Load("SphereIsoTrap");
@@ -427,13 +427,15 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	//corner => path_phi of 0
 	//great circle => path_phi of PI/2
 
-	static float SpecialCos(float height) //Note: there are no real identities / relationships between specialcos and specialsin
+	//TODO: rename Elevation and Extrusion
+
+	float SpecialCos(float height) //Note: there are no real identities / relationships between specialcos and specialsin
 	{
 		float phi_complement = Mathf.PI / 2 - path_phi; //why not cache? idk this feels right
 		return height*(Mathf.Cos(phi_complement + height) - Mathf.Cos(phi_complement));
 	}
 	
-	static float SpecialSin(float height)
+	float SpecialSin(float height)
 	{
 		float phi_complement = Mathf.PI / 2 - path_phi;
 		return height*(Mathf.Sin(phi_complement + height) - Mathf.Sin(phi_complement));
