@@ -32,6 +32,14 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 	static int 												guid = 0;
 
+	/** Find the center of a character path when the circle is extruded by the character's height 
+	 * 
+	 */
+	Vector3 Center(float height)
+	{
+		return path_normal * Mathf.Cos(angle_to_normal - height);
+	}
+
 	/** Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
 	 *  
 	 */
@@ -39,7 +47,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	{
 		float prod = Vector3.Dot(pos - path_center, path_normal);
 
-		bool bIsAtCorrectElevation = 0 <= prod && prod <= Elevation(radius); //TODO: radius might have changed logic
+		bool bIsAtCorrectElevation = 0 <= prod && prod <= 1f; //FIXME: INFINI-JANK
 		bool bLeftContains		   = Vector3.Dot(pos, arc_left_up ) >= 0;
 		bool bRightContains		   = Vector3.Dot(pos, arc_right_down) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
@@ -76,20 +84,16 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	void DrawArc(float height, Color color)
 	{
 		UnityEditor.Handles.color = color;
-		
-		Vector3 from   = Evaluate(0, height);
-		Vector3 center = path_normal*Mathf.Cos(angle_to_normal+height);
-		float   radius = (from - center).magnitude; 
 
-		UnityEditor.Handles.DrawWireArc(center, path_normal, from, arc_angle * 180 / Mathf.PI, radius);
-		
-		//DebugUtility.Print(adj_from.magnitude.ToString(), 100);
+		UnityEditor.Handles.DrawWireArc(Center(height), path_normal, Evaluate(0, height), arc_angle * 180 / Mathf.PI, Radius(height));
 	}
 
 	void DrawRadial(float t, float height, Color color)
 	{
+		//if(arc_radius != 0) return;
+
 		UnityEditor.Handles.color = color;
-		UnityEditor.Handles.DrawLine(Vector3.zero, Evaluate(t, height)); 
+		UnityEditor.Handles.DrawLine(Evaluate(t, 0), Evaluate(t, height)); 
 	}
 
 	/** return the position of the player based on the circular path
@@ -97,11 +101,11 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 */
 	public Vector3 Evaluate(float t, float height)
 	{
-		float angle = t / arc_radius;
+		float angle = t / arc_radius; //FIXME: include height
 
-		Vector3 x = arc_left    * Mathf.Sin(angle_to_normal + height) * Mathf.Cos(angle);
-		Vector3 y = arc_left_up * Mathf.Sin(angle_to_normal + height) * Mathf.Sin(angle);
-		Vector3 z = path_normal * Mathf.Cos(angle_to_normal + height);
+		Vector3 x = arc_left    * Mathf.Sin(angle_to_normal - height) * Mathf.Cos(angle);
+		Vector3 y = arc_left_up * Mathf.Sin(angle_to_normal - height) * Mathf.Sin(angle);
+		Vector3 z = path_normal * Mathf.Cos(angle_to_normal - height);
 
 		return x + y + z;
 	}
@@ -196,7 +200,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 			arc_angle += Mathf.PI;
 		}
 
-		angle_to_normal = Mathf.Acos(Vector3.Dot(path_normal, path_center.normalized)); //TODO: check
+		angle_to_normal = Mathf.Acos(path_center.magnitude); //TODO: check
 
 		next = this; prev = this;
 		RecalculateAABB();
@@ -222,7 +226,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 			arc_angle += Mathf.PI;
 		}
 
-		angle_to_normal = Mathf.Acos(Vector3.Dot(path_normal, Evaluate(0)));
+		angle_to_normal = Mathf.Acos(path_center.magnitude); //TODO: check
 
 		this.Relink(left, right);
 		RecalculateAABB();
@@ -240,8 +244,8 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 		secant.Normalize();
 
-		Vector3 adjusted_center = path_center + path_normal*Elevation(height); //TODO: check
-		float   adjusted_radius = arc_radius  +				Extrusion(height); //TODO: check 
+		Vector3 adjusted_center = path_center + path_normal*0; //FIXME: UBER-DJANK
+		float   adjusted_radius = arc_radius  +				0; //FIXME: INCREDI-JJANK
 
 		Vector3 intersection = adjusted_center + secant*adjusted_radius;
 
@@ -338,11 +342,19 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		DrawArc(0.0f, Color.black);
 
 		// draw CoM path
-		DrawArc(0.2f, Color.white);
+		DrawArc(0.05f, Color.white);
 
-		DrawRadial(0, .1f, Color.red);
+		DrawRadial(0, 0.1f, Color.red);
 
-		DrawRadial(arc_angle*arc_radius, .1f, Color.blue);
+		DrawRadial(arc_angle*arc_radius, 0.1f, Color.blue);
+	}
+
+	public float Radius(float height)
+	{
+		Vector3 center = Center(height);
+		Vector3 pos    = Evaluate(0, height);
+
+		return (pos - center).magnitude;
 	}
 
 	/** Create a AABB that perfectly contains a circular arc
@@ -396,8 +408,6 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		GameObject obj = Instantiate(prefab) as GameObject;
 		#endif
 
-
-
 		obj.name = guid.ToString();
 
 		guid++;
@@ -421,15 +431,5 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		trapezoid.InitializeCorner(left, right);
 
 		return trapezoid; //used for next/prev
-	}
-
-	float Elevation(float height)
-	{
-		return Mathf.Cos(height + angle_to_normal);
-	}
-	
-	float Extrusion(float height)
-	{
-		return Mathf.Sin(height + angle_to_normal);
 	}
 }
