@@ -1,4 +1,4 @@
-/** The primative spherical geometry component that is used to traverse a block or terrain
+/** The primative spherical geometry component that is used to traverse a block or terrain //TODO: Rename ArcOfSphere
  *
  * TODO: detailed description
  * 
@@ -32,12 +32,12 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 	static int 												guid = 0;
 
-	/** Find the center of a character path when the circle is extruded by the character's height 
+	/** Find the center of a character path when the circle is extruded by the character's radius 
 	 * 
 	 */
-	Vector3 Center(float height)
+	Vector3 Center(float radius)
 	{
-		return path_normal * Mathf.Cos(angle_to_normal - height);
+		return path_normal * Mathf.Cos(angle_to_normal - radius);
 	}
 
 	/** Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
@@ -45,9 +45,10 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 */
 	public bool Contains(Vector3 pos, float radius)
 	{
-		float prod = Vector3.Dot(pos - path_center, path_normal);
+		bool bAboveGround = Vector3.Dot(pos - Center(0)     , path_normal) >= 0;
+		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0;
 
-		bool bIsAtCorrectElevation = 0 <= prod && prod <= 1f; //FIXME: INFINI-JANK
+		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM; //FIXME: INFINI-JANK
 		bool bLeftContains		   = Vector3.Dot(pos, arc_left_up ) >= 0;
 		bool bRightContains		   = Vector3.Dot(pos, arc_right_down) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
@@ -81,31 +82,31 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		return new Optional<float>();
 	}
 
-	void DrawArc(float height, Color color)
+	void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
 
-		UnityEditor.Handles.DrawWireArc(Center(height), path_normal, Evaluate(0, height), arc_angle * 180 / Mathf.PI, Radius(height));
+		UnityEditor.Handles.DrawWireArc(Center(radius), path_normal, Evaluate(0, 0 /*READ THE FAWKIN' DOCUMENTATION*/), arc_angle * 180 / Mathf.PI, Radius(radius));
 	}
 
-	void DrawRadial(float t, float height, Color color)
+	void DrawRadial(float t, float radius, Color color)
 	{
 		//if(arc_radius != 0) return;
 
 		UnityEditor.Handles.color = color;
-		UnityEditor.Handles.DrawLine(Evaluate(t, 0), Evaluate(t, height)); 
+		UnityEditor.Handles.DrawLine(Evaluate(t, 0), Evaluate(t, radius)); 
 	}
 
 	/** return the position of the player based on the circular path
 	 *  
 	 */
-	public Vector3 Evaluate(float t, float height)
+	public Vector3 Evaluate(float t, float radius)
 	{
-		float angle = t / arc_radius; //FIXME: include height
+		float angle = t / arc_radius; //FIXME: include radius
 
-		Vector3 x = arc_left    * Mathf.Sin(angle_to_normal - height) * Mathf.Cos(angle);
-		Vector3 y = arc_left_up * Mathf.Sin(angle_to_normal - height) * Mathf.Sin(angle);
-		Vector3 z = path_normal * Mathf.Cos(angle_to_normal - height);
+		Vector3 x = arc_left    * Mathf.Sin(angle_to_normal - radius) * Mathf.Cos(angle);
+		Vector3 y = arc_left_up * Mathf.Sin(angle_to_normal - radius) * Mathf.Sin(angle);
+		Vector3 z = path_normal * Mathf.Cos(angle_to_normal - radius);
 
 		return x + y + z;
 	}
@@ -121,7 +122,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 *  If the player would go outside of [0, arcCutoffAngle*arcRadius],
 	 *  the Trapezoid should transfer control of the player to (prev, next) respectively
 	 */
-	public static Vector3 Evaluate(ref float t, float height, ref SphericalIsoscelesTrapezoid seg)
+	public static Vector3 Evaluate(ref float t, float radius, ref SphericalIsoscelesTrapezoid seg)
 	{
 		if(t > seg.arc_angle*seg.arc_radius)
 		{
@@ -136,7 +137,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 			return Evaluate(ref t, 0.01f, ref seg);
 		}
 		
-		return seg.Evaluate(t, height);
+		return seg.Evaluate(t, radius);
 	}
 
 	public Vector3 EvaluateNormal(Vector3 pos, Vector3 right)
@@ -144,20 +145,20 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		return Vector3.Cross(right, pos).normalized;
 	}
 
-	public Vector3 EvaluateNormal(float t, float height)
+	public Vector3 EvaluateNormal(float t, float radius)
 	{
-		Vector3 pos = Evaluate(t, height);
-		Vector3 right = EvaluateRight(t, height);
+		Vector3 pos = Evaluate(t, radius);
+		Vector3 right = EvaluateRight(t, radius);
 
 		return EvaluateNormal(pos, right);
 	}
 
-	public Vector3 EvaluateRight(float t, float height)
+	public Vector3 EvaluateRight(float t, float radius)
 	{
 		float angle = t / arc_radius;
-		Vector3 x = arc_left_up * Mathf.Sin(angle_to_normal + height) * Mathf.Cos(angle);
-		Vector3 y = arc_left    * Mathf.Sin(angle_to_normal + height) * Mathf.Sin(angle);
-		Vector3 z = path_normal * Mathf.Cos(angle_to_normal + height);
+		Vector3 x = arc_left_up * Mathf.Sin(angle_to_normal + radius) * Mathf.Cos(angle);
+		Vector3 y = arc_left    * Mathf.Sin(angle_to_normal + radius) * Mathf.Sin(angle);
+		Vector3 z = path_normal * Mathf.Cos(angle_to_normal + radius);
 		return x + y + z;
 	}
 
@@ -190,7 +191,9 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
-		
+
+		//Vector3.OrthoNormalize(ref arc_left, ref arc_left_up, ref path_normal);
+
 		arc_radius = (left_edge - path_center).magnitude; //or right_edge
 		
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
@@ -216,7 +219,9 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
-		
+
+		//Vector3.OrthoNormalize(ref arc_left, ref arc_left_up, ref path_normal);
+
 		arc_radius = 0;
 		
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
@@ -235,7 +240,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	/** Find the point of collision as a parameterization of a circle.
 	 *  
 	 */
-	public Optional<float> Intersect(Vector3 to, Vector3 from, float height) //TODO: FIXME: UNJANKIFY
+	public Optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY
 	{
 		Vector3 right  = Vector3.Cross(from, to);
 		Vector3 secant = Vector3.Cross(path_normal, right);
@@ -342,17 +347,17 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		DrawArc(0.0f, Color.black);
 
 		// draw CoM path
-		DrawArc(0.05f, Color.white);
+		DrawArc(0.1f, Color.white);
 
 		DrawRadial(0, 0.1f, Color.red);
 
 		DrawRadial(arc_angle*arc_radius, 0.1f, Color.blue);
 	}
 
-	public float Radius(float height)
+	public float Radius(float radius)
 	{
-		Vector3 center = Center(height);
-		Vector3 pos    = Evaluate(0, height);
+		Vector3 center = Center(radius);
+		Vector3 pos    = Evaluate(0, radius);
 
 		return (pos - center).magnitude;
 	}
