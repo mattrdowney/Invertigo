@@ -19,13 +19,14 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 	[SerializeField] Vector3								path_center;
 	[SerializeField] Vector3								path_normal;
+	[SerializeField] Vector3								path_forward; //CONSIDER: how do things need to change?
 
 	[SerializeField] Vector3								arc_left;
 	[SerializeField] Vector3								arc_right; //CONSIDER: can be dropped
 
 	[SerializeField] Vector3								arc_left_up; //FIXME: shitty names 
 	[SerializeField] Vector3								arc_right_down; //FIXME
-	
+
 	[SerializeField] public float							arc_radius; //FIXME: temp hack public
 	[SerializeField] public float							arc_angle; //the angle to sweep around the center. FIXME:
 	[SerializeField] float									angle_to_normal;
@@ -86,7 +87,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	{
 		UnityEditor.Handles.color = color;
 
-		UnityEditor.Handles.DrawWireArc(Center(radius), path_normal, Evaluate(0, 0 /*READ THE FAWKIN' DOCUMENTATION*/), arc_angle * 180 / Mathf.PI, Radius(radius));
+		UnityEditor.Handles.DrawWireArc(Center(radius), path_normal, arc_left*Radius(radius), arc_angle * 180 / Mathf.PI, Radius(radius));
 	}
 
 	void DrawRadial(float t, float radius, Color color)
@@ -104,11 +105,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	{
 		float angle = t / arc_radius; //FIXME: include radius
 
-		Vector3 x = arc_left    * Mathf.Sin(angle_to_normal - radius) * Mathf.Cos(angle);
-		Vector3 y = arc_left_up * Mathf.Sin(angle_to_normal - radius) * Mathf.Sin(angle);
-		Vector3 z = path_normal * Mathf.Cos(angle_to_normal - radius);
-
-		return x + y + z;
+		return SphereUtility.Position(arc_left, arc_left_up, path_normal, angle_to_normal - radius, angle);
 	}
 
 	/** return the position of the player based on the circular path
@@ -147,6 +144,9 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 	public Vector3 EvaluateNormal(float t, float radius)
 	{
+		//float angle = t / arc_radius;
+		//return SphereUtility.Position(arc_left_up, -arc_left, path_normal, angle_to_normal - radius, angle);
+
 		Vector3 pos = Evaluate(t, radius);
 		Vector3 right = EvaluateRight(t, radius);
 
@@ -156,10 +156,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	public Vector3 EvaluateRight(float t, float radius)
 	{
 		float angle = t / arc_radius;
-		Vector3 x = arc_left_up * Mathf.Sin(angle_to_normal + radius) * Mathf.Cos(angle);
-		Vector3 y = arc_left    * Mathf.Sin(angle_to_normal + radius) * Mathf.Sin(angle);
-		Vector3 z = path_normal * Mathf.Cos(angle_to_normal + radius);
-		return x + y + z;
+		return SphereUtility.Position(arc_left_up, -arc_left, path_normal, angle_to_normal - radius, angle);
 	}
 
 	/** Recompute the orientation of a SphericalIsoscelesTrapezoid
@@ -212,17 +209,17 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	public void InitializeCorner(SphericalIsoscelesTrapezoid left, SphericalIsoscelesTrapezoid right) //TODO: please delegate in the future
 	{
 		path_center =  right.Evaluate(0); //or left.Evaluate(radius*angle)
-		path_normal = -right.Evaluate(0);
+		path_normal =  right.Evaluate(0);
 
-		arc_left  = left.EvaluateNormal(left.arc_angle*left.arc_radius, 0); //FIXME: incorrect logic
-		arc_right = right.EvaluateNormal(0, 0); //FIXME: incorrect
+		arc_left  = left.EvaluateNormal(left.arc_angle*left.arc_radius, 0);
+		arc_right = right.EvaluateNormal(0, 0);
 
 		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
 
 		//Vector3.OrthoNormalize(ref arc_left, ref arc_left_up, ref path_normal);
 
-		arc_radius = 0;
+		arc_radius = 1e-36f;//0; //FIXME: make zero
 		
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 		
@@ -231,7 +228,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 			arc_angle += Mathf.PI;
 		}
 
-		angle_to_normal = Mathf.Acos(path_center.magnitude); //TODO: check
+		angle_to_normal = Mathf.Acos(Mathf.Min(path_center.magnitude,1)); //TODO: check
 
 		this.Relink(left, right);
 		RecalculateAABB();
@@ -343,15 +340,17 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	
 	private void OnDrawGizmos() //TODO: get rid of this in production builds
 	{
+		//if(arc_radius > 1e-10) return;
+
 		// draw floor path
 		DrawArc(0.0f, Color.black);
 
 		// draw CoM path
-		DrawArc(0.1f, Color.white);
+		DrawArc(0.3f, Color.white);
 
-		DrawRadial(0, 0.1f, Color.red);
+		DrawRadial(0, 0.3f, Color.red);
 
-		DrawRadial(arc_angle*arc_radius, 0.1f, Color.blue);
+		DrawRadial(arc_angle*arc_radius, 0.3f, Color.blue);
 	}
 
 	public float Radius(float radius)
@@ -374,12 +373,12 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	{
 		BoxCollider	collider = this.GetComponent<BoxCollider>(); 
 
-		float x_min = MaxGradient(Vector3.left   ).x;
-		float x_max = MaxGradient(Vector3.right  ).x;
-		float y_min = MaxGradient(Vector3.down   ).y;
-		float y_max = MaxGradient(Vector3.up     ).y;
-		float z_min = MaxGradient(Vector3.back   ).z;
-		float z_max = MaxGradient(Vector3.forward).z;
+		float x_min = MaxGradient(Vector3.left   ).x - 1e-6f;
+		float x_max = MaxGradient(Vector3.right  ).x + 1e-6f;
+		float y_min = MaxGradient(Vector3.down   ).y - 1e-6f;
+		float y_max = MaxGradient(Vector3.up     ).y + 1e-6f;
+		float z_min = MaxGradient(Vector3.back   ).z - 1e-6f;
+		float z_max = MaxGradient(Vector3.forward).z + 1e-6f;
 
 		collider.center = new Vector3((x_max + x_min) / 2,
 		                              (y_max + y_min) / 2,
