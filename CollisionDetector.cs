@@ -1,14 +1,14 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
 public class CollisionDetector : Component
 {
-	List<SphericalIsoscelesTrapezoid>	colliders;
+	List<ArcOfSphere>	colliders;
 
 	void Awake()
 	{
-		colliders = new List<SphericalIsoscelesTrapezoid>();
+		colliders = new List<ArcOfSphere>();
 	}
 
 	//step 0: Character Controller adds the observed SphericalIsoscelesTriangle to a vector in OnCollisionEnter...
@@ -16,7 +16,7 @@ public class CollisionDetector : Component
 	{
 		foreach(ContactPoint col in collisions.contacts)
 		{
-			SphericalIsoscelesTrapezoid trap = col.otherCollider.gameObject.GetComponent<SphericalIsoscelesTrapezoid>();
+			ArcOfSphere trap = col.otherCollider.gameObject.GetComponent<ArcOfSphere>();
 			if(trap) colliders.Add(trap);
 		}
 	}
@@ -26,18 +26,18 @@ public class CollisionDetector : Component
 	{
 		foreach(ContactPoint col in collisions.contacts)
 		{
-			SphericalIsoscelesTrapezoid trap = col.otherCollider.gameObject.GetComponent<SphericalIsoscelesTrapezoid>();
+			ArcOfSphere trap = col.otherCollider.gameObject.GetComponent<ArcOfSphere>();
 			if(trap) colliders.Remove(trap);
 		}
 	}
 
-	public Optional<SphericalIsoscelesTrapezoid> Update(Vector3 desiredPos, Vector3 curPos)
+	public Optional<ArcOfSphere> Update(Vector3 desiredPos, Vector3 curPos)
 	{
-		Optional<SphericalIsoscelesTrapezoid> closest = new Optional<SphericalIsoscelesTrapezoid>();
+		Optional<ArcOfSphere> closest = new Optional<ArcOfSphere>();
 		Optional<float> 					  closestDistance = new Optional<float>();
 		
 		//Step 1: go through each colliding segment
-		foreach(SphericalIsoscelesTrapezoid trap in colliders)
+		foreach(ArcOfSphere trap in colliders)
 		{
 			//step 2: Character Controller asks the block if a collision actually occuring in Spherical coordinates
 			if(trap.Contains(desiredPos, 0.01f))

@@ -1,9 +1,9 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class GroundInfo
 {
-	public SphericalIsoscelesTrapezoid	segment;
+	public ArcOfSphere	segment;
 	public Block						block;
 	
 	public Vector3						normal;

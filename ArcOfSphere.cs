@@ -1,4 +1,4 @@
-/** The primative spherical geometry component that is used to traverse a block or terrain //TODO: Rename ArcOfSphere
+/** The primative spherical geometry component that is used to traverse a block or terrain
  *
  * TODO: detailed description
  * 
@@ -11,11 +11,11 @@ using System.Linq;
 //using System.Diagnostics;
 
 [System.Serializable]
-public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO: get rid of this in production builds
+public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of this in production builds
 {
 	/*CONSIDER: make const*/
-	[SerializeField] public SphericalIsoscelesTrapezoid		next; //CONSIDER: add k prefix
-	[SerializeField] public SphericalIsoscelesTrapezoid		prev;
+	[SerializeField] public ArcOfSphere		next; //CONSIDER: add k prefix
+	[SerializeField] public ArcOfSphere		prev;
 
 	[SerializeField] Vector3								path_center;
 	[SerializeField] Vector3								path_normal;
@@ -119,7 +119,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 *  If the player would go outside of [0, arcCutoffAngle*arcRadius],
 	 *  the Trapezoid should transfer control of the player to (prev, next) respectively
 	 */
-	public static Vector3 Evaluate(ref float t, float radius, ref SphericalIsoscelesTrapezoid seg)
+	public static Vector3 Evaluate(ref float t, float radius, ref ArcOfSphere seg)
 	{
 		if(t > seg.arc_angle*seg.arc_radius)
 		{
@@ -175,52 +175,46 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	 *          that is a great circle for the feet positions, a large lesser circle for the center of mass position,
 	 *          with a 90 degree arc going from forwards to right and a normal going in the positive y-direction.
 	 */
-	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal) //TODO: delegate Initialize corner?
+	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
-		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right_edge - left_edge, normal), 0),
-		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
-		
 		path_normal = normal.normalized;
 		path_center = normal*Vector3.Dot(left_edge, normal); //or right_edge
 
 		arc_left  = (left_edge  - path_center).normalized; //FIXME: obsolete for corner triangles
 		arc_right = (right_edge - path_center).normalized; //FIXME: obsolete
 
-		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //just in case
-		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
-
-		//Vector3.OrthoNormalize(ref arc_left, ref arc_left_up, ref path_normal);
-
 		arc_radius = (left_edge - path_center).magnitude; //or right_edge
-		
-		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 
-		if(Vector3.Dot(arc_left_up, arc_right) <= 0)
-		{
-			arc_angle += Mathf.PI;
-		}
-
-		angle_to_normal = Mathf.Acos(path_center.magnitude); //TODO: check
+		Initialize();
 
 		next = this; prev = this;
-		RecalculateAABB();
 	}
 
-	public void InitializeCorner(SphericalIsoscelesTrapezoid left, SphericalIsoscelesTrapezoid right) //TODO: please delegate in the future
+	public void InitializeCorner(ArcOfSphere left, ArcOfSphere right)
 	{
-		path_center =  right.Evaluate(0); //or left.Evaluate(radius*angle)
-		path_normal =  right.Evaluate(0);
+		path_center = right.Evaluate(0,0);
+		path_normal = right.Evaluate(0,0);
 
 		arc_left  = left.EvaluateNormal(left.arc_angle*left.arc_radius, 0);
 		arc_right = right.EvaluateNormal(0, 0);
+
+		arc_radius = 1e-36f;//0; //FIXME: make zero; magic numbers aren't ideal
+		
+		Initialize();
+
+		this.Relink(left, right);
+	}
+
+	public void Initialize()
+	{
+		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right edge - left edge, normal), 0),
+		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
 
 		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
 
 		//Vector3.OrthoNormalize(ref arc_left, ref arc_left_up, ref path_normal);
 
-		arc_radius = 1e-36f;//0; //FIXME: make zero
-		
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 		
 		if(Vector3.Dot(arc_left_up, arc_right) <= 0)
@@ -230,7 +224,6 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 		angle_to_normal = Mathf.Acos(Mathf.Min(path_center.magnitude,1)); //TODO: check
 
-		this.Relink(left, right);
 		RecalculateAABB();
 	}
 
@@ -246,13 +239,10 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 		secant.Normalize();
 
-		Vector3 adjusted_center = path_center + path_normal*0; //FIXME: UBER-DJANK
-		float   adjusted_radius = arc_radius  +				0; //FIXME: INCREDI-JJANK
+		Vector3 intersection = Center(radius) + secant*Radius(radius);
 
-		Vector3 intersection = adjusted_center + secant*adjusted_radius;
-
-		float x = Vector3.Dot(intersection, arc_left   ) / adjusted_radius;
-		float y = Vector3.Dot(intersection, arc_left_up) / adjusted_radius;
+		float x = Vector3.Dot(intersection, arc_left   ) / Radius(radius);
+		float y = Vector3.Dot(intersection, arc_left_up) / Radius(radius);
 		
 		float angle = Mathf.Atan2(y,x);
 
@@ -268,20 +258,20 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 		return new Optional<float>();
 	}
 
-	public SphericalIsoscelesTrapezoid LinkLeft(Vector3 pos)
+	public ArcOfSphere LinkLeft(Vector3 pos)
 	{
 		Vector3 left = this.Evaluate(0);
 
-		SphericalIsoscelesTrapezoid obj = SphericalIsoscelesTrapezoid.Spawn(pos, left, Vector3.Cross(pos, left));
+		ArcOfSphere obj = ArcOfSphere.Spawn(pos, left, Vector3.Cross(pos, left));
 
 		return obj.Relink(prev, this);
 	}
 
-	public SphericalIsoscelesTrapezoid LinkRight(Vector3 pos)
+	public ArcOfSphere LinkRight(Vector3 pos)
 	{
 		Vector3 right = this.Evaluate(arc_angle*arc_radius);
 
-		SphericalIsoscelesTrapezoid obj = SphericalIsoscelesTrapezoid.Spawn(right, pos, Vector3.Cross(right, pos));
+		ArcOfSphere obj = ArcOfSphere.Spawn(right, pos, Vector3.Cross(right, pos));
 
 		return obj.Relink(this, next);
 	}
@@ -389,7 +379,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 									   z_max - z_min);
 	}
 
-	SphericalIsoscelesTrapezoid Relink(SphericalIsoscelesTrapezoid left, SphericalIsoscelesTrapezoid right)
+	ArcOfSphere Relink(ArcOfSphere left, ArcOfSphere right)
 	{
 		this.next  = right;
 		this.prev  = left;
@@ -401,7 +391,7 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 	}
 
 	
-	static SphericalIsoscelesTrapezoid Spawn()
+	static ArcOfSphere Spawn()
 	{
 		//GameObject obj = (GameObject)Instantiate(Resources.Load("SphereIsoTrap")); ;
 		GameObject prefab = (GameObject) Resources.Load("SphereIsoTrap");
@@ -416,21 +406,21 @@ public class SphericalIsoscelesTrapezoid /* : Component*/ : MonoBehaviour //TODO
 
 		guid++;
 		
-		return obj.GetComponent<SphericalIsoscelesTrapezoid>();
+		return obj.GetComponent<ArcOfSphere>();
 	}
 
-	public static SphericalIsoscelesTrapezoid Spawn(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
+	public static ArcOfSphere Spawn(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
-		SphericalIsoscelesTrapezoid trapezoid = Spawn();
+		ArcOfSphere trapezoid = Spawn();
 		
 		trapezoid.Initialize(left_edge, right_edge, normal);
 		
 		return trapezoid; //used for next/prev
 	}
 
-	public static SphericalIsoscelesTrapezoid SpawnCorner(SphericalIsoscelesTrapezoid left, SphericalIsoscelesTrapezoid right)
+	public static ArcOfSphere SpawnCorner(ArcOfSphere left, ArcOfSphere right)
 	{
-		SphericalIsoscelesTrapezoid trapezoid = Spawn();
+		ArcOfSphere trapezoid = Spawn();
 
 		trapezoid.InitializeCorner(left, right);
 

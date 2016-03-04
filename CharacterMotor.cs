@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -94,7 +94,7 @@ abstract public class CharacterMotor : Component
 		}
 	}
 
-	public SphericalIsoscelesTrapezoid segment
+	public ArcOfSphere segment
 	{
 		get
 		{
@@ -119,7 +119,7 @@ abstract public class CharacterMotor : Component
 		set
 		{
 			ground.Value.t = value;
-			curPosition = SphericalIsoscelesTrapezoid.Evaluate(ref ground.Value.t, 0.01f, ref ground.Value.segment);
+			curPosition = ArcOfSphere.Evaluate(ref ground.Value.t, 0.01f, ref ground.Value.segment);
 		}
 	}
 
@@ -169,7 +169,7 @@ abstract public class CharacterMotor : Component
 		return new Vector3(xfactor/pos.y, -1/xz, zfactor*pos.y); //TODO: check
 	}
 
-	public void Traverse(Optional<SphericalIsoscelesTrapezoid> SIT, Vector3 desiredPos, Vector3 curPos)
+	public void Traverse(Optional<ArcOfSphere> SIT, Vector3 desiredPos, Vector3 curPos)
 	{
 		if(SIT.HasValue)
 		{
@@ -179,7 +179,7 @@ abstract public class CharacterMotor : Component
 			ground.Value.block   = SIT.Value.GetComponentInParent<Block>();
 			ground.Value.t		 = SIT.Value.Intersect(desiredPos, curPos, 0.01f).Value; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
 
-			curPosition = SphericalIsoscelesTrapezoid.Evaluate(ref ground.Value.t, 0.01f, ref ground.Value.segment);
+			curPosition = ArcOfSphere.Evaluate(ref ground.Value.t, 0.01f, ref ground.Value.segment);
 
 			ground.Value.right	 = SIT.Value.EvaluateRight(ground.Value.t, 0);
 			ground.Value.normal	 = SIT.Value.EvaluateNormal(curPos, ground.Value.right);
