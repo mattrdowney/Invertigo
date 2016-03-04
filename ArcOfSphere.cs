@@ -137,20 +137,21 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return seg.Evaluate(t, radius);
 	}
 
-	public Vector3 EvaluateNormal(Vector3 pos, Vector3 right)
-	{
-		return Vector3.Cross(right, pos).normalized;
-	}
+	//public Vector3 EvaluateNormal(Vector3 pos, Vector3 right)
+	//{
+	//	return Vector3.Cross(right, pos).normalized;
+	//}
 
 	public Vector3 EvaluateNormal(float t, float radius)
 	{
 		//float angle = t / arc_radius;
 		//return SphereUtility.Position(arc_left_up, -arc_left, path_normal, angle_to_normal - radius, angle);
 
-		Vector3 pos = Evaluate(t, radius);
-		Vector3 right = EvaluateRight(t, radius);
+		Vector3 position = Evaluate(t, radius);
+		//Vector3 right = EvaluateRight(t, radius);
+		//return EvaluateNormal(pos, right);
 
-		return EvaluateNormal(pos, right);
+		return Vector3.Cross(path_normal, position).normalized;
 	}
 
 	public Vector3 EvaluateRight(float t, float radius)
@@ -195,8 +196,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		path_center = right.Evaluate(0,0);
 		path_normal = right.Evaluate(0,0);
 
-		arc_left  = left.EvaluateNormal(left.arc_angle*left.arc_radius, 0);
-		arc_right = right.EvaluateNormal(0, 0);
+		arc_left  =  left.EvaluateNormal(left.arc_angle*left.arc_radius, 0);
+		arc_right = -right.EvaluateNormal(0, 0);
 
 		arc_radius = 1e-36f;//0; //FIXME: make zero; magic numbers aren't ideal
 		
@@ -331,6 +332,15 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	private void OnDrawGizmos() //TODO: get rid of this in production builds
 	{
 		//if(arc_radius > 1e-10) return;
+
+		/*if(arc_radius < 1e-10)
+		{
+			UnityEditor.Handles.color = Color.yellow;
+			UnityEditor.Handles.DrawLine(Center(0), Center(0) + arc_left_up);
+
+			UnityEditor.Handles.color = Color.cyan;
+			UnityEditor.Handles.DrawLine(Center(0), Center(0) + arc_right);
+		}*/
 
 		// draw floor path
 		DrawArc(0.0f, Color.black);

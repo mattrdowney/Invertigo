@@ -47,7 +47,7 @@ abstract public class CharacterMotor : Component
 			if(ground.HasValue)
 			{
 				ground.Value.right  = ground.Value.segment.EvaluateRight(ground.Value.t, 0);
-				ground.Value.normal = ground.Value.segment.EvaluateNormal(curPosition, ground.Value.right);
+				//ground.Value.normal = ground.Value.segment.EvaluateNormal(curPosition, ground.Value.right);
 			}
 		}
 	}
@@ -182,7 +182,7 @@ abstract public class CharacterMotor : Component
 			curPosition = ArcOfSphere.Evaluate(ref ground.Value.t, 0.01f, ref ground.Value.segment);
 
 			ground.Value.right	 = SIT.Value.EvaluateRight(ground.Value.t, 0);
-			ground.Value.normal	 = SIT.Value.EvaluateNormal(curPos, ground.Value.right);
+			//ground.Value.normal	 = SIT.Value.EvaluateNormal(curPos, ground.Value.right);
 		}
 		else
 		{
