@@ -196,8 +196,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		path_center = right.Evaluate(0,0);
 		path_normal = right.Evaluate(0,0);
 
-		arc_left  =  left.EvaluateNormal(left.arc_angle*left.arc_radius, 0);
-		arc_right = -right.EvaluateNormal(0, 0);
+		arc_left  = right.path_normal;
+		arc_right = left.path_normal;
 
 		arc_radius = 1e-36f;//0; //FIXME: make zero; magic numbers aren't ideal
 		
