@@ -33,6 +33,13 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	static int 												guid = 0;
 
+	float Begin(float radius)
+	{
+		return 0; //FIXME: temporary
+	}
+
+	float Begin () { return Begin(0); }
+
 	/** Find the center of a character path when the circle is extruded by the character's radius 
 	 * 
 	 */
@@ -86,17 +93,21 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
-
 		UnityEditor.Handles.DrawWireArc(Center(radius), path_normal, arc_left*Radius(radius), arc_angle * 180 / Mathf.PI, Radius(radius));
 	}
 
 	void DrawRadial(float t, float radius, Color color)
 	{
-		//if(arc_radius != 0) return;
-
 		UnityEditor.Handles.color = color;
 		UnityEditor.Handles.DrawLine(Evaluate(t, 0), Evaluate(t, radius)); 
 	}
+
+	float End(float radius)
+	{
+		return arc_angle*arc_radius; //FIXME: duct tape solution; doesn't take variable player height into account for concave edges
+	}
+
+	float End () { return End (0); }
 
 	/** return the position of the player based on the circular path
 	 *  
@@ -116,42 +127,34 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	/** return the position of the player based on the circular path
 	 * 
 	 *  return the position of the player based on the circular path
-	 *  If the player would go outside of [0, arcCutoffAngle*arcRadius],
+	 *  If the player would go outside of [Begin(radius), End(radius)],
 	 *  the Trapezoid should transfer control of the player to (prev, next) respectively
 	 */
 	public static Vector3 Evaluate(ref float t, float radius, ref ArcOfSphere seg)
 	{
-		if(t > seg.arc_angle*seg.arc_radius)
+		if(t > seg.End(radius))
 		{
-			t -= seg.arc_angle*seg.arc_radius;
+			t -= seg.End(radius);
 			seg = seg.next;
+			t += seg.Begin(radius);
 			return Evaluate(ref t, 0.01f, ref seg);
 		}
-		if(t < 0)
+		if(t < seg.Begin(radius))
 		{
-			t += seg.prev.arc_angle*seg.prev.arc_radius;
+			t -= seg.Begin(radius);
 			seg = seg.prev;
+			t += seg.End(radius);
 			return Evaluate(ref t, 0.01f, ref seg);
 		}
 		
 		return seg.Evaluate(t, radius);
 	}
 
-	//public Vector3 EvaluateNormal(Vector3 pos, Vector3 right)
-	//{
-	//	return Vector3.Cross(right, pos).normalized;
-	//}
-
 	public Vector3 EvaluateNormal(float t, float radius)
 	{
-		//float angle = t / arc_radius;
-		//return SphereUtility.Position(arc_left_up, -arc_left, path_normal, angle_to_normal - radius, angle);
+		float angle = t / arc_radius;
 
-		Vector3 position = Evaluate(t, radius);
-		//Vector3 right = EvaluateRight(t, radius);
-		//return EvaluateNormal(pos, right);
-
-		return Vector3.Cross(path_normal, position).normalized;
+		return SphereUtility.Position(arc_left, arc_left_up, path_normal, (Mathf.PI / 2) - (angle_to_normal - radius), angle);
 	}
 
 	public Vector3 EvaluateRight(float t, float radius)
@@ -196,8 +199,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		path_center = right.Evaluate(0,0);
 		path_normal = right.Evaluate(0,0);
 
-		arc_left  = right.path_normal;
-		arc_right = left.path_normal;
+		arc_left  = left.EvaluateNormal(left.End(0), 0);
+		arc_right = right.EvaluateNormal(right.Begin(0), 0);
 
 		arc_radius = 1e-36f;//0; //FIXME: make zero; magic numbers aren't ideal
 		
@@ -213,8 +216,6 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
-
-		//Vector3.OrthoNormalize(ref arc_left, ref arc_left_up, ref path_normal);
 
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 		
@@ -261,7 +262,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public ArcOfSphere LinkLeft(Vector3 pos)
 	{
-		Vector3 left = this.Evaluate(0);
+		Vector3 left = this.Evaluate(Begin());
 
 		ArcOfSphere obj = ArcOfSphere.Spawn(pos, left, Vector3.Cross(pos, left));
 
@@ -270,7 +271,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public ArcOfSphere LinkRight(Vector3 pos)
 	{
-		Vector3 right = this.Evaluate(arc_angle*arc_radius);
+		Vector3 right = this.Evaluate(End());
 
 		ArcOfSphere obj = ArcOfSphere.Spawn(right, pos, Vector3.Cross(right, pos));
 
@@ -287,8 +288,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		float quadrants = Mathf.Ceil(arc_angle / (Mathf.PI / 2f)); //maximum of 4, always integral, float for casting "left" and "right"
 		for(float quadrant = 0; quadrant < quadrants; ++quadrant)
 		{
-			float left  = arc_angle*arc_radius*( quadrant      / quadrants); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
-			float right = arc_angle*arc_radius*((quadrant + 1) / quadrants); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
+			float left  = End()*( quadrant      / quadrants); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
+			float right = End()*((quadrant + 1) / quadrants); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
 			
 			float left_product  = Vector3.Dot(Evaluate(left) , desired); //find the correlation factor between left and the desired direction
 			float right_product = Vector3.Dot(Evaluate(right), desired);
@@ -331,26 +332,18 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	
 	private void OnDrawGizmos() //TODO: get rid of this in production builds
 	{
-		//if(arc_radius > 1e-10) return;
-
-		/*if(arc_radius < 1e-10)
-		{
-			UnityEditor.Handles.color = Color.yellow;
-			UnityEditor.Handles.DrawLine(Center(0), Center(0) + arc_left_up);
-
-			UnityEditor.Handles.color = Color.cyan;
-			UnityEditor.Handles.DrawLine(Center(0), Center(0) + arc_right);
-		}*/
-
 		// draw floor path
 		DrawArc(0.0f, Color.black);
 
 		// draw CoM path
-		DrawArc(0.3f, Color.white);
+		DrawArc(0.025f, Color.grey);
 
-		DrawRadial(0, 0.3f, Color.red);
+		// draw ceil path
+		DrawArc(0.05f, Color.white);
 
-		DrawRadial(arc_angle*arc_radius, 0.3f, Color.blue);
+		DrawRadial(Begin(0.05f), 0.05f, Color.red);
+
+		DrawRadial(End(0.05f), 0.05f, Color.blue);
 	}
 
 	public float Radius(float radius)
@@ -403,7 +396,6 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	
 	static ArcOfSphere Spawn()
 	{
-		//GameObject obj = (GameObject)Instantiate(Resources.Load("SphereIsoTrap")); ;
 		GameObject prefab = (GameObject) Resources.Load("SphereIsoTrap");
 		
 		#if UNITY_EDITOR
