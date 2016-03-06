@@ -154,7 +154,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	{
 		float angle = t / arc_radius;
 
-		return SphereUtility.Position(arc_left, arc_left_up, path_normal, (Mathf.PI / 2) - (angle_to_normal - radius), angle);
+		return SphereUtility.Normal(arc_left, arc_left_up, path_normal, angle_to_normal - radius, angle);
 	}
 
 	public Vector3 EvaluateRight(float t, float radius)
@@ -219,12 +219,12 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 		
-		if(Vector3.Dot(arc_left_up, arc_right) <= 0)
+		if(Vector3.Dot(arc_left, arc_right) <= 0)
 		{
 			arc_angle += Mathf.PI;
 		}
 
-		angle_to_normal = Mathf.Acos(Mathf.Min(path_center.magnitude,1)); //TODO: check
+		angle_to_normal = Mathf.Acos(Mathf.Min(path_center.magnitude, 1)); //TODO: check
 
 		RecalculateAABB();
 	}
@@ -232,7 +232,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	/** Find the point of collision as a parameterization of a circle.
 	 *  
 	 */
-	public Optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY
+	public Optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this
 	{
 		Vector3 right  = Vector3.Cross(from, to);
 		Vector3 secant = Vector3.Cross(path_normal, right);
