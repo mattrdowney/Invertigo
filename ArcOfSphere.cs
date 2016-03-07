@@ -16,8 +16,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	/*CONSIDER: make const*/
 	[SerializeField] public ArcOfSphere		next; //CONSIDER: add k prefix
 	[SerializeField] public ArcOfSphere		prev;
-
-	[SerializeField] Vector3								path_center;
+	
 	[SerializeField] Vector3								path_normal;
 	[SerializeField] Vector3								path_forward; //CONSIDER: how do things need to change?
 
@@ -45,8 +44,10 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	Vector3 Center(float radius)
 	{
-		return path_normal * Mathf.Cos(angle_to_normal - radius);
+		return path_forward * Mathf.Cos(angle_to_normal - radius);
 	}
+
+	Vector3 Center() { return Center(0); }
 
 	/** Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
 	 *  
@@ -57,7 +58,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0;
 
 		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM; //FIXME: INFINI-JANK
-		bool bLeftContains		   = Vector3.Dot(pos, arc_left_up ) >= 0;
+		bool bLeftContains		   = Vector3.Dot(pos,  arc_left_up  ) >= 0;
 		bool bRightContains		   = Vector3.Dot(pos, arc_right_down) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
 		int  nOutOfThree		   = CountBooleans(bLeftContains, bRightContains, bIsObtuse);
@@ -96,6 +97,23 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		UnityEditor.Handles.DrawWireArc(Center(radius), path_normal, arc_left*Radius(radius), arc_angle * 180 / Mathf.PI, Radius(radius));
 	}
 
+	void DrawDefault()
+	{
+		if(arc_radius > .1f) return;
+
+		UnityEditor.Handles.color = Color.cyan;
+		UnityEditor.Handles.DrawLine(Evaluate(Begin()), Evaluate(Begin()) + arc_left*.1f);
+
+		UnityEditor.Handles.color = Color.magenta;
+		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right*.1f);
+
+		UnityEditor.Handles.color = Color.yellow;
+		UnityEditor.Handles.DrawLine(Evaluate(Begin()), Evaluate(Begin()) + arc_left_up*.1f);
+
+		UnityEditor.Handles.color = Color.green;
+		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right_down*.1f);
+	}
+
 	void DrawRadial(float t, float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
@@ -116,7 +134,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	{
 		float angle = t / arc_radius; //FIXME: include radius
 
-		return SphereUtility.Position(arc_left, arc_left_up, path_normal, angle_to_normal - radius, angle);
+		return SphereUtility.Position(arc_left, arc_left_up, path_forward, angle_to_normal - radius, angle);
 	}
 
 	/** return the position of the player based on the circular path
@@ -160,7 +178,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	public Vector3 EvaluateRight(float t, float radius)
 	{
 		float angle = t / arc_radius;
-		return SphereUtility.Position(arc_left_up, -arc_left, path_normal, angle_to_normal - radius, angle);
+		return SphereUtility.Position(arc_left_up, -arc_left, path_forward, angle_to_normal - radius, angle);
 	}
 
 	/** Recompute the orientation of a SphericalIsoscelesTrapezoid
@@ -181,35 +199,38 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
-		path_normal = normal.normalized;
-		path_center = normal*Vector3.Dot(left_edge, normal); //or right_edge
+		path_normal  = normal.normalized;
+		path_forward = normal.normalized;
+		Vector3 path_center = path_normal*Vector3.Dot(left_edge, path_normal); //or right_edge
 
 		arc_left  = (left_edge  - path_center).normalized; //FIXME: obsolete for corner triangles
 		arc_right = (right_edge - path_center).normalized; //FIXME: obsolete
 
 		arc_radius = (left_edge - path_center).magnitude; //or right_edge
 
-		Initialize();
+		Initialize(path_center);
 
 		next = this; prev = this;
 	}
 
 	public void InitializeCorner(ArcOfSphere left, ArcOfSphere right)
 	{
-		path_center = right.Evaluate(0,0);
-		path_normal = right.Evaluate(0,0);
+		Vector3 path_center = right.Evaluate(0,0);
+		path_normal  = -right.Evaluate(0,0);
+		path_forward =  right.Evaluate(0,0); 
+
 
 		arc_left  = left.EvaluateNormal(left.End(0), 0);
 		arc_right = right.EvaluateNormal(right.Begin(0), 0);
 
 		arc_radius = 1e-36f;//0; //FIXME: make zero; magic numbers aren't ideal
 		
-		Initialize();
+		Initialize(path_center);
 
 		this.Relink(left, right);
 	}
 
-	public void Initialize()
+	public void Initialize(Vector3 center)
 	{
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right edge - left edge, normal), 0),
 		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
@@ -217,14 +238,14 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
 
-		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
+		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180; //FIXME: logic error
 		
-		if(Vector3.Dot(arc_left, arc_right) <= 0)
+		if(Vector3.Dot(arc_left_up, arc_right) <= 0)
 		{
 			arc_angle += Mathf.PI;
 		}
 
-		angle_to_normal = Mathf.Acos(Mathf.Min(path_center.magnitude, 1)); //TODO: check
+		angle_to_normal = Mathf.Acos(Mathf.Min(center.magnitude, 1)); //TODO: check
 
 		RecalculateAABB();
 	}
@@ -344,6 +365,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		DrawRadial(Begin(0.05f), 0.05f, Color.red);
 
 		DrawRadial(End(0.05f), 0.05f, Color.blue);
+
+		DrawDefault();
 	}
 
 	public float Radius(float radius)
@@ -373,7 +396,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		float z_min = MaxGradient(Vector3.back   ).z - 1e-6f;
 		float z_max = MaxGradient(Vector3.forward).z + 1e-6f;
 
-		collider.center = new Vector3((x_max + x_min) / 2,
+		transform.position = new Vector3((x_max + x_min) / 2,
 		                              (y_max + y_min) / 2,
 		                              (z_max + z_min) / 2);
 

@@ -1,4 +1,6 @@
-﻿public struct Optional<T>
+﻿//Forgot to give credit! : http://stackoverflow.com/questions/16199227/optional-return-in-c-net
+
+public struct Optional<T>
 {
 	public bool HasValue { get; private set; }
 	private T val;
