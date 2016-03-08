@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
@@ -8,13 +8,13 @@ public class AbaddonEditor : Editor
 	Transform 								forward; //should be unneccessary, but w/e
 	Transform								yawTrans;
 	Transform								pitchTrans;
-	Abaddon									abaddon;
+	Abaddon									self;
 
 	Vector3									first_edge;
 	Vector3									last_edge;
 
-	SphericalIsoscelesTrapezoid				first_trapezoid; //FIXME: Property or Optional, null used for convenience
-	SphericalIsoscelesTrapezoid				last_trapezoid; //FIXME: Property or Optional, null used for convenience
+	ArcOfSphere				first_trapezoid; //FIXME: Property or Optional, null used for convenience
+	ArcOfSphere				last_trapezoid; //FIXME: Property or Optional, null used for convenience
 
 	void Align(SceneView scene_view)
 	{
@@ -41,23 +41,23 @@ public class AbaddonEditor : Editor
 
 			if(!first_trapezoid)
 			{
-				first_trapezoid = last_trapezoid = SphericalIsoscelesTrapezoid.Spawn(last_edge, click_point, Vector3.Cross (last_edge, click_point));
+				first_trapezoid = last_trapezoid = ArcOfSphere.Spawn(last_edge, click_point, Vector3.Cross (last_edge, click_point));
 			}
 			else
 			{
-				SphericalIsoscelesTrapezoid trapezoid = last_trapezoid.LinkRight(click_point);
+				ArcOfSphere trapezoid = last_trapezoid.LinkRight(click_point);
 
-				SphericalIsoscelesTrapezoid.SpawnCorner(last_trapezoid, trapezoid);
+				ArcOfSphere.SpawnCorner(last_trapezoid, trapezoid);
 
 				last_trapezoid = trapezoid;
 			}
 		}
 		else if(e.type == EventType.MouseDown && e.button == 0)
 		{
-			SphericalIsoscelesTrapezoid trapezoid = last_trapezoid.LinkRight(first_edge);
+			ArcOfSphere trapezoid = last_trapezoid.LinkRight(first_edge);
 
-			SphericalIsoscelesTrapezoid.SpawnCorner(last_trapezoid, trapezoid);
-			SphericalIsoscelesTrapezoid.SpawnCorner(trapezoid, first_trapezoid);
+			ArcOfSphere.SpawnCorner(last_trapezoid, trapezoid);
+			ArcOfSphere.SpawnCorner(trapezoid, first_trapezoid);
 
 			first_trapezoid = last_trapezoid = null;
 
@@ -100,7 +100,7 @@ public class AbaddonEditor : Editor
 
 	public void OnEnable()
 	{
-		abaddon = target as Abaddon;
+		self = target as Abaddon;
 		yawTrans   = GameObject.Find("/PivotYaw").transform;
 		pitchTrans = GameObject.Find("/PivotYaw/PivotPitch").transform;
 		forward    = GameObject.Find("/PivotYaw/PivotPitch/Zero").transform;
