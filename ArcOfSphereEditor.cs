@@ -9,11 +9,22 @@ public class ArcOfSphereEditor : Editor
 
 	//shift, latitude/longitude grid aligned with extra static variables for controlling the number of subdivisions (for making levels appear to grow/shrink)
 
-	void CornerEditor()
+	void CornerEditor(SceneView scene_view)
 	{
-		//space, move corner to position and recalculate
-		//q, place a new corner using LinkLeft at mouse cursor
-		//e, place a new corner using LinkRight at mouse cursor
+		Event e = Event.current;
+
+		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space) //space, move corner to position and recalculate
+		{
+
+		}
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Q) //q, place a new corner using LinkLeft at mouse cursor
+		{
+
+		}
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.E) //e, place a new corner using LinkRight at mouse cursor
+		{
+
+		}
 	}
 
 	public void OnEnable()
@@ -37,21 +48,47 @@ public class ArcOfSphereEditor : Editor
 		SceneView.onSceneGUIDelegate -= Step;
 	}
 
-	void PathEditor()
+	void PathEditor(SceneView scene_view)
 	{
-		//q, allign the arc with the imaginary great circle from half the left corner's sweeping angle
-		//e, ditto for the right corner
-
-		//k, rotate normal clockwise
-		//l, rotate normal counter-clockwise
-
-		//space, place corner at mouse position
+		Event e = Event.current;
+		
+		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space) //space, place corner at mouse position
+		{
+			
+		}
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Q) //q, allign the arc with the imaginary great circle from half the left corner's sweeping angle
+		{
+			
+		}
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.E) //e, ditto for the right corner
+		{
+			
+		}
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.K) //k, rotate normal clockwise
+		{
+			
+		}
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.L) //l, rotate normal counter-clockwise
+		{
+			
+		}
 	}
 
-	public void Step()
+	public void Step(SceneView scene_view)
 	{
-		//9, cycle to left ArcOfSphere
-		//0, cycle to right ArcOfSphere
+		Event e = Event.current;
+
+		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Alpha9)
+		{
+			Object[] selection = new Object[]{(Object)self.prev.gameObject};
+			Selection.objects = selection;
+		}
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Alpha0)
+		{
+			Object[] selection = new Object[]{(Object)self.next.gameObject};
+			Selection.objects = selection;
+		}
 		//turning on/off CornerEditor and PathEditor shouldn't be neccessary?
+		//what if multiple selected objects switch the selection? (seems to do nothing)
 	}
 }
