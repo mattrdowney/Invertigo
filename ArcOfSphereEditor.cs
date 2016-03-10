@@ -15,15 +15,30 @@ public class ArcOfSphereEditor : Editor
 
 		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space) //space, move corner to position and recalculate
 		{
+			//self.prev.Initialize(stuffstuffstuff);
+			//self.next.Initialize(stuffstuffstuff);
 
+			//AbaddonUtility.Reattach(self.prev.prev, self.prev, self, self.next, self.next.next); //TODO: do I need 5 args?
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Q) //q, place a new corner using LinkLeft at mouse cursor
 		{
+			//Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
+			
+			//ArcOfSphere trapezoid = self.LinkLeft(click_point);
+			
+			//ArcOfSphere corner = ArcOfSphere.SpawnCorner(trapezoid, self); //FIXME: very, very wrong 
 
+			//AbaddonUtility.Reattach(trapezoid, corner, self); //I feel like ReattachCorner and ReattachSegment might be required
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.E) //e, place a new corner using LinkRight at mouse cursor
 		{
+			//Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 
+			//ArcOfSphere trapezoid = self.LinkRight(click_point);
+				
+			//ArcOfSphere corner = ArcOfSphere.SpawnCorner(self, trapezoid); //FIXME: very, very wrong 
+
+			//AbaddonUtility.Reattach(self, corner, trapezoid);
 		}
 	}
 
@@ -54,7 +69,7 @@ public class ArcOfSphereEditor : Editor
 		
 		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space) //space, place corner at mouse position
 		{
-			
+
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Q) //q, allign the arc with the imaginary great circle from half the left corner's sweeping angle
 		{
@@ -66,11 +81,11 @@ public class ArcOfSphereEditor : Editor
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.K) //k, rotate normal clockwise
 		{
-			
+			//self.Initialize(self.Begin(), self.End(), +stuffstuffstuff);
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.L) //l, rotate normal counter-clockwise
 		{
-			
+			//self.Initialize(self.Begin(), self.End(), -stuffstuffstuff);
 		}
 	}
 

@@ -21,6 +21,18 @@ public static class AbaddonUtility
 		SceneView.onSceneGUIDelegate += WaitDown;
 	}
 
+	public static void DisallowRotation()
+	{
+		SceneView.onSceneGUIDelegate += WaitLeft;
+		SceneView.onSceneGUIDelegate += WaitRight;
+		SceneView.onSceneGUIDelegate += WaitUp;
+		SceneView.onSceneGUIDelegate += WaitDown;
+		SceneView.onSceneGUIDelegate -= RotateLeft;
+		SceneView.onSceneGUIDelegate -= RotateRight;
+		SceneView.onSceneGUIDelegate -= RotateUp;
+		SceneView.onSceneGUIDelegate -= RotateDown;
+	}
+
 	public static Vector3 CursorCast(Camera cam, Vector2 mousePos)
 	{
 		return cam.ScreenPointToRay(new Vector3(mousePos.x, cam.pixelHeight - mousePos.y, cam.nearClipPlane)).direction;

@@ -86,14 +86,8 @@ public class AbaddonEditor : Editor
 		SceneView.onSceneGUIDelegate -= Listen;
 		SceneView.onSceneGUIDelegate -= Edit;
 		SceneView.onSceneGUIDelegate -= Create;
-		SceneView.onSceneGUIDelegate -= AbaddonUtility.WaitLeft;
-		SceneView.onSceneGUIDelegate -= AbaddonUtility.WaitRight;
-		SceneView.onSceneGUIDelegate -= AbaddonUtility.WaitUp;
-		SceneView.onSceneGUIDelegate -= AbaddonUtility.WaitDown;
-		SceneView.onSceneGUIDelegate -= AbaddonUtility.RotateLeft;
-		SceneView.onSceneGUIDelegate -= AbaddonUtility.RotateRight;
-		SceneView.onSceneGUIDelegate -= AbaddonUtility.RotateUp;
-		SceneView.onSceneGUIDelegate -= AbaddonUtility.RotateDown;
+
+		AbaddonUtility.DisallowRotation();
 	}
 
 
