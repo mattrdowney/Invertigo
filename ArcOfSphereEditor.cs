@@ -22,21 +22,21 @@ public class ArcOfSphereEditor : Editor
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Q) //q, place a new corner using LinkLeft at mouse cursor
 		{
-			//Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
+			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 			
-			//ArcOfSphere trapezoid = self.LinkLeft(click_point);
+			ArcOfSphere trapezoid = self.LinkLeft(click_point);
 			
-			//ArcOfSphere corner = ArcOfSphere.SpawnCorner(trapezoid, self); //FIXME: very, very wrong 
+			ArcOfSphere corner = ArcOfSphere.SpawnCorner(self.prev, trapezoid);
 
 			//AbaddonUtility.Reattach(trapezoid, corner, self); //I feel like ReattachCorner and ReattachSegment might be required
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.E) //e, place a new corner using LinkRight at mouse cursor
 		{
-			//Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
+			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 
-			//ArcOfSphere trapezoid = self.LinkRight(click_point);
+			ArcOfSphere trapezoid = self.LinkRight(click_point);
 				
-			//ArcOfSphere corner = ArcOfSphere.SpawnCorner(self, trapezoid); //FIXME: very, very wrong 
+			ArcOfSphere corner = ArcOfSphere.SpawnCorner(trapezoid, self.next);
 
 			//AbaddonUtility.Reattach(self, corner, trapezoid);
 		}
@@ -69,7 +69,13 @@ public class ArcOfSphereEditor : Editor
 		
 		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space) //space, place corner at mouse position
 		{
+			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
+			
+			ArcOfSphere trapezoid = self.prev.LinkRight(click_point);
+			
+			ArcOfSphere corner = ArcOfSphere.SpawnCorner(trapezoid, self);
 
+			//Reattach()
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Q) //q, allign the arc with the imaginary great circle from half the left corner's sweeping angle
 		{
