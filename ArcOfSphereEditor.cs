@@ -24,9 +24,7 @@ public class ArcOfSphereEditor : Editor
 		{
 			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 			
-			ArcOfSphere trapezoid = self.LinkLeft(click_point);
-			
-			ArcOfSphere corner = ArcOfSphere.SpawnCorner(self.prev, trapezoid);
+			self.prev.DivideEdge(click_point);
 
 			//AbaddonUtility.Reattach(trapezoid, corner, self); //I feel like ReattachCorner and ReattachSegment might be required
 		}
@@ -34,10 +32,7 @@ public class ArcOfSphereEditor : Editor
 		{
 			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 
-			ArcOfSphere trapezoid = self.LinkRight(click_point);
-				
-			ArcOfSphere corner = ArcOfSphere.SpawnCorner(trapezoid, self.next);
-
+			self.next.DivideEdge(click_point);
 			//AbaddonUtility.Reattach(self, corner, trapezoid);
 		}
 	}
@@ -70,10 +65,8 @@ public class ArcOfSphereEditor : Editor
 		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space) //space, place corner at mouse position
 		{
 			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
-			
-			ArcOfSphere trapezoid = self.prev.LinkRight(click_point);
-			
-			ArcOfSphere corner = ArcOfSphere.SpawnCorner(trapezoid, self);
+
+			self.DivideEdge(click_point);
 
 			//Reattach()
 		}

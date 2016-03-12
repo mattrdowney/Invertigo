@@ -13,8 +13,6 @@ public class AbaddonEditor : Editor
 	ArcOfSphere								first_trapezoid; //FIXME: Property or Optional, null used for convenience
 	ArcOfSphere								last_trapezoid; //FIXME: Property or Optional, null used for convenience
 
-	Transform								block_transform;
-
 	void Create(SceneView scene_view)
 	{
 		Event e = Event.current;
@@ -27,15 +25,15 @@ public class AbaddonEditor : Editor
 			{
 				first_trapezoid = last_trapezoid = ArcOfSphere.Spawn(last_edge, click_point, Vector3.Cross (last_edge, click_point));
 
+				Transform block_transform = Block.Spawn().transform;
+
 				first_trapezoid.gameObject.transform.parent = block_transform;
 			}
 			else
 			{
 				ArcOfSphere trapezoid = last_trapezoid.LinkRight(click_point);
-				ArcOfSphere corner    = ArcOfSphere.SpawnCorner(last_trapezoid, trapezoid);
 
-				trapezoid.gameObject.transform.parent = block_transform;
-				corner   .gameObject.transform.parent = block_transform;
+				ArcOfSphere.SpawnCorner(last_trapezoid, trapezoid);
 
 				last_trapezoid = trapezoid;
 			}
@@ -43,12 +41,9 @@ public class AbaddonEditor : Editor
 		else if(e.type == EventType.MouseDown && e.button == 0)
 		{
 			ArcOfSphere trapezoid = last_trapezoid.LinkRight(first_edge);
-			ArcOfSphere corner0   = ArcOfSphere.SpawnCorner(last_trapezoid, trapezoid);
-			ArcOfSphere corner1   = ArcOfSphere.SpawnCorner(trapezoid, first_trapezoid);
 
-			trapezoid.gameObject.transform.parent = block_transform;
-			corner0  .gameObject.transform.parent = block_transform;
-			corner1  .gameObject.transform.parent = block_transform;
+			ArcOfSphere.SpawnCorner(last_trapezoid, trapezoid);
+			ArcOfSphere.SpawnCorner(trapezoid, first_trapezoid);
 
 			first_trapezoid = last_trapezoid = null;
 
@@ -69,10 +64,6 @@ public class AbaddonEditor : Editor
 			SceneView.onSceneGUIDelegate += Create;
 
 			first_edge = last_edge = AbaddonUtility.CursorCast(scene_view.camera, Event.current.mousePosition);
-
-			block_transform = Block.Spawn().transform;
-
-			Debug.Log(block_transform.name);
 
 			Debug.Log("Switching to Create");
 			AbaddonUtility.Align(scene_view);
