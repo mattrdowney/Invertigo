@@ -1,52 +1,38 @@
-﻿//Forgot to give credit! : http://stackoverflow.com/questions/16199227/optional-return-in-c-net
+﻿//All credit : http://stackoverflow.com/questions/16199227/optional-return-in-c-net
 
-public struct Optional<T>
+public struct optional<T>
 {
-	public bool HasValue { get; private set; }
+	public bool exists { get; private set; }
 	private T val;
-	public T Value
+	public T data
 	{
 		get
 		{
-			if (HasValue)
+			if (exists)
 				return val;
 			else
 				throw new System.InvalidOperationException();
 		}
 		set
 		{
-			HasValue = true;
+			exists = true;
 			val = value;
 		}
 	}
-	
-	public Optional(T value)
+
+	public optional(T value)
 	{
 		val = value;
-		HasValue = true;
+		exists = true;
 	}
 	
-	public static explicit operator T(Optional<T> optional)
+	public static explicit operator T(optional<T> other)
 	{
-		return optional.Value;
+		return other.data;
 	}
-	public static implicit operator Optional<T>(T value)
+
+	public static implicit operator optional<T>(T value)
 	{
-		return new Optional<T>(value);
-	}
-	
-	public override bool Equals(object obj)
-	{
-		if (obj is Optional<T>)
-			return this.Equals((Optional<T>)obj);
-		else
-			return false;
-	}
-	public bool Equals(Optional<T> other)
-	{
-		if (HasValue && other.HasValue)
-			return object.Equals(val, other.val);
-		else
-			return HasValue == other.HasValue;
+		return new optional<T>(value);
 	}
 }

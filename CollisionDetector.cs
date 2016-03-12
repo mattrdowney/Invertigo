@@ -31,10 +31,10 @@ public class CollisionDetector : Component
 		}
 	}
 
-	public Optional<ArcOfSphere> Update(Vector3 desiredPos, Vector3 curPos)
+	public optional<ArcOfSphere> Update(Vector3 desiredPos, Vector3 curPos)
 	{
-		Optional<ArcOfSphere> closest = new Optional<ArcOfSphere>();
-		Optional<float> 					  closestDistance = new Optional<float>();
+		optional<ArcOfSphere> closest = new optional<ArcOfSphere>();
+		optional<float> closestDistance = new optional<float>();
 		
 		//Step 1: go through each colliding segment
 		foreach(ArcOfSphere trap in colliders)
@@ -43,8 +43,8 @@ public class CollisionDetector : Component
 			if(trap.Contains(desiredPos, 0.01f))
 			{
 				//step 3: if a collision is happening, a list of TTCs (time till collision) are sorted to find the closest collision.
-				Optional<float> distance = trap.Distance(desiredPos, curPos);
-				if(distance.HasValue && (!closestDistance.HasValue || distance.Value < closestDistance.Value))
+				optional<float> distance = trap.Distance(desiredPos, curPos);
+				if(distance.exists && (!closestDistance.exists || distance.data < closestDistance.data))
 				{
 					closestDistance = distance;
 					closest = trap;

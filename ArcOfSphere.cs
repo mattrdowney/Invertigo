@@ -8,14 +8,13 @@
 using UnityEngine;
 using System.Collections;
 using System.Linq;
-//using System.Diagnostics;
 
 [System.Serializable]
 public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of this in production builds
 {
 	/*CONSIDER: make const*/
-	[SerializeField] public ArcOfSphere		next; //CONSIDER: add k prefix
-	[SerializeField] public ArcOfSphere		prev;
+	[SerializeField] public ArcOfSphere						next; //CONSIDER: add k prefix
+	[SerializeField] public ArcOfSphere						prev;
 	
 	[SerializeField] Vector3								path_normal;
 	[SerializeField] Vector3								path_forward; //CONSIDER: how do things need to change?
@@ -30,14 +29,14 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	[SerializeField] public float							arc_angle; //the angle to sweep around the center. FIXME:
 	[SerializeField] float									angle_to_normal;
 
-	static int 												guid = 0;
+	public static int 										guid = 0;
 
-	float Begin(float radius)
+	public float Begin(float radius)
 	{
 		return 0; //FIXME: temporary
 	}
 
-	float Begin () { return Begin(0); }
+	public float Begin () { return Begin(0); }
 
 	/** Find the center of a character path when the circle is extruded by the character's radius 
 	 * 
@@ -77,18 +76,18 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return boolean_list.Count(bIsTrue => bIsTrue); //count booleans that are true using Linq's .Count function
 	}
 
-	public Optional<float> Distance(Vector3 to, Vector3 from)
+	public optional<float> Distance(Vector3 to, Vector3 from)
 	{
-		Optional<float> intersection = Intersect(to, from, 0.01f);
+		optional<float> intersection = Intersect(to, from, 0.01f);
 		
-		if(intersection.HasValue)
+		if(intersection.exists)
 		{
-			float t = intersection.Value;
+			float t = intersection.data;
 			Vector3 newPos = Evaluate(t, 0.01f);
 			return Vector3.Distance(from, newPos);
 		}
 		
-		return new Optional<float>();
+		return new optional<float>();
 	}
 
 	void DrawArc(float radius, Color color)
@@ -120,12 +119,12 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		UnityEditor.Handles.DrawLine(Evaluate(t, 0), Evaluate(t, radius)); 
 	}
 
-	float End(float radius)
+	public float End(float radius)
 	{
 		return arc_angle*arc_radius; //FIXME: duct tape solution; doesn't take variable player height into account for concave edges
 	}
 
-	float End () { return End (0); }
+	public float End () { return End (0); }
 
 	/** return the position of the player based on the circular path
 	 *  
@@ -213,12 +212,16 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		next = this; prev = this;
 	}
 
+	public void Initialize(Vector3 left_edge, Vector3 right_edge)
+	{
+		Initialize(left_edge, right_edge, Vector3.Cross(left_edge, right_edge));
+	}
+
 	public void InitializeCorner(ArcOfSphere left, ArcOfSphere right)
 	{
 		Vector3 path_center = right.Evaluate(0,0);
 		path_normal  = -right.Evaluate(0,0);
 		path_forward =  right.Evaluate(0,0); 
-
 
 		arc_left  = left.EvaluateNormal(left.End(0), 0);
 		arc_right = right.EvaluateNormal(right.Begin(0), 0);
@@ -250,10 +253,27 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		RecalculateAABB();
 	}
 
+	public void DivideEdge(Vector3 division_point)
+	{
+		//if not edge return and log error!
+
+		ArcOfSphere left_corner  = prev;
+		ArcOfSphere right_corner = next;
+		
+		ArcOfSphere trapezoid = left_corner.LinkRight(division_point);
+		
+		Initialize(division_point, Evaluate(End()));
+		
+		ArcOfSphere corner = ArcOfSphere.SpawnCorner(trapezoid, this);
+		
+		left_corner .InitializeCorner(left_corner .prev, left_corner .next);
+		right_corner.InitializeCorner(right_corner.prev, right_corner.next);
+	}
+
 	/** Find the point of collision as a parameterization of a circle.
 	 *  
 	 */
-	public Optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this
+	public optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this
 	{
 		Vector3 right  = Vector3.Cross(from, to);
 		Vector3 secant = Vector3.Cross(path_normal, right);
@@ -278,7 +298,12 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		{
 			return angle*arc_radius; //there needs to be a mechanism for changing speed based on radius...
 		}
-		return new Optional<float>();
+		return new optional<float>();
+	}
+
+	public void LinkBlock(ArcOfSphere other)
+	{
+		this.gameObject.transform.parent = other.gameObject.transform.parent;
 	}
 
 	public ArcOfSphere LinkLeft(Vector3 pos)
@@ -286,6 +311,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		Vector3 left = this.Evaluate(Begin());
 
 		ArcOfSphere obj = ArcOfSphere.Spawn(pos, left, Vector3.Cross(pos, left));
+
+		obj.LinkBlock(this);
 
 		return obj.Relink(prev, this);
 	}
@@ -295,6 +322,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		Vector3 right = this.Evaluate(End());
 
 		ArcOfSphere obj = ArcOfSphere.Spawn(right, pos, Vector3.Cross(right, pos));
+
+		obj.LinkBlock(this);
 
 		return obj.Relink(this, next);
 	}
@@ -419,7 +448,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	
 	static ArcOfSphere Spawn()
 	{
-		GameObject prefab = (GameObject) Resources.Load("SphereIsoTrap");
+		GameObject prefab = (GameObject) Resources.Load("ArcOfSpherePrefab");
 		
 		#if UNITY_EDITOR
 		GameObject obj = UnityEditor.PrefabUtility.InstantiatePrefab(prefab) as GameObject;
@@ -448,6 +477,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		ArcOfSphere trapezoid = Spawn();
 
 		trapezoid.InitializeCorner(left, right);
+
+		trapezoid.LinkBlock(left);
 
 		return trapezoid; //used for next/prev
 	}

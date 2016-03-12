@@ -12,7 +12,7 @@ abstract public class CharacterMotor : Component
 	Vector3											_south;
 	Vector3											_west;
 
-	Optional<GroundInfo>							ground;
+	optional<GroundInfo>							ground;
 
 	Dictionary<string, float>						flags; //XXX: Strategy Pattern?
 
@@ -26,7 +26,7 @@ abstract public class CharacterMotor : Component
 	{
 		get
 		{
-			return ground.Value.block;
+			return ground.data.block;
 		}
 	}
 
@@ -44,9 +44,9 @@ abstract public class CharacterMotor : Component
 			_south = FindSouth(_curPosition);
 			_west  = Vector3.Cross(_south, _curPosition);
 
-			if(ground.HasValue)
+			if(ground.exists)
 			{
-				ground.Value.right  = ground.Value.segment.EvaluateRight(ground.Value.t, 0);
+				ground.data.right  = ground.data.segment.EvaluateRight(ground.data.t, 0);
 				//ground.Value.normal = ground.Value.segment.EvaluateNormal(curPosition, ground.Value.right);
 			}
 		}
@@ -56,7 +56,7 @@ abstract public class CharacterMotor : Component
 	{
 		get
 		{
-			return ground.HasValue;
+			return ground.exists;
 		}
 	}
 
@@ -81,7 +81,7 @@ abstract public class CharacterMotor : Component
 	{
 		get
 		{
-			return ground.Value.normal;
+			return ground.data.normal;
 		}
 		//TODO: vector reject velocity onto normal as well, move to curPosition set
 	}
@@ -90,7 +90,7 @@ abstract public class CharacterMotor : Component
 	{
 		get
 		{
-			return ground.Value.right;
+			return ground.data.right;
 		}
 	}
 
@@ -98,7 +98,7 @@ abstract public class CharacterMotor : Component
 	{
 		get
 		{
-			return ground.Value.segment;
+			return ground.data.segment;
 		}
 	}
 
@@ -114,12 +114,12 @@ abstract public class CharacterMotor : Component
 	{
 		get
 		{
-			return ground.Value.t;
+			return ground.data.t;
 		}
 		set
 		{
-			ground.Value.t = value;
-			curPosition = ArcOfSphere.Evaluate(ref ground.Value.t, 0.01f, ref ground.Value.segment);
+			ground.data.t = value;
+			curPosition = ArcOfSphere.Evaluate(ref ground.data.t, 0.01f, ref ground.data.segment);
 		}
 	}
 
@@ -146,9 +146,9 @@ abstract public class CharacterMotor : Component
 				_velocity.Normalize();
 			}
 
-			if(ground.HasValue)
+			if(ground.exists)
 			{
-				_velocity = Vector3.ProjectOnPlane(_velocity, ground.Value.normal);
+				_velocity = Vector3.ProjectOnPlane(_velocity, ground.data.normal);
 			}
 		}
 	}
@@ -169,24 +169,24 @@ abstract public class CharacterMotor : Component
 		return new Vector3(xfactor/pos.y, -1/xz, zfactor*pos.y); //TODO: check
 	}
 
-	public void Traverse(Optional<ArcOfSphere> SIT, Vector3 desiredPos, Vector3 curPos)
+	public void Traverse(optional<ArcOfSphere> arc, Vector3 desiredPos, Vector3 curPos)
 	{
-		if(SIT.HasValue)
+		if(arc.exists)
 		{
 			ground = new GroundInfo();
 
-			ground.Value.segment = SIT.Value;
-			ground.Value.block   = SIT.Value.GetComponentInParent<Block>();
-			ground.Value.t		 = SIT.Value.Intersect(desiredPos, curPos, 0.01f).Value; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
+			ground.data.segment = arc.data;
+			ground.data.block   = arc.data.GetComponentInParent<Block>();
+			ground.data.t		 = arc.data.Intersect(desiredPos, curPos, 0.01f).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
 
-			curPosition = ArcOfSphere.Evaluate(ref ground.Value.t, 0.01f, ref ground.Value.segment);
+			curPosition = ArcOfSphere.Evaluate(ref ground.data.t, 0.01f, ref ground.data.segment);
 
-			ground.Value.right	 = SIT.Value.EvaluateRight(ground.Value.t, 0);
+			ground.data.right	 = arc.data.EvaluateRight(ground.data.t, 0);
 			//ground.Value.normal	 = SIT.Value.EvaluateNormal(curPos, ground.Value.right);
 		}
 		else
 		{
-			ground = new Optional<GroundInfo>();
+			ground = new optional<GroundInfo>();
 		}
 	}
 }

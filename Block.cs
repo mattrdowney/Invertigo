@@ -5,9 +5,28 @@ abstract public class Block : Component
 {
 	BlockMotor						motor;
 
+	static int						guid = 0;
+
 	public virtual Vector3 Evaluate(CharacterMotor charMotor)
 	{
 		return Vector3.zero;
+	}
+
+	public static GameObject Spawn()
+	{
+		GameObject prefab = (GameObject) Resources.Load("BlockPrefab");
+		
+		#if UNITY_EDITOR
+		GameObject obj = UnityEditor.PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+		#else
+		GameObject obj = Instantiate(prefab) as GameObject;
+		#endif
+		
+		obj.name = guid.ToString();
+		
+		guid++;
+		
+		return obj;
 	}
 }
 
