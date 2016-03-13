@@ -25,22 +25,19 @@ public class ArcOfSphereEditor : Editor
 			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 			
 			self.prev.DivideEdge(click_point);
-
-			//AbaddonUtility.Reattach(trapezoid, corner, self); //I feel like ReattachCorner and ReattachSegment might be required
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.E) //e, place a new corner using LinkRight at mouse cursor
 		{
 			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 
 			self.next.DivideEdge(click_point);
-			//AbaddonUtility.Reattach(self, corner, trapezoid);
 		}
 	}
 
 	public void OnEnable()
 	{
 		self = target as ArcOfSphere;
-		if(self.arc_radius == 1e-36f) //FIXME: make zero
+		if(self.Radius() == 1e-36f) //FIXME: make zero
 		{
 			SceneView.onSceneGUIDelegate += CornerEditor;
 		}

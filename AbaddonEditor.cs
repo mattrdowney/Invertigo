@@ -7,11 +7,9 @@ public class AbaddonEditor : Editor
 {
 	Abaddon									self;
 
-	Vector3									first_edge;
-	Vector3									last_edge;
+	Vector3									first_click_point;
 
-	ArcOfSphere								first_trapezoid; //FIXME: Property or Optional, null used for convenience
-	ArcOfSphere								last_trapezoid; //FIXME: Property or Optional, null used for convenience
+	ArcOfSphere								arc; //FIXME: Property or Optional, null used for convenience
 
 	void Create(SceneView scene_view)
 	{
@@ -21,31 +19,20 @@ public class AbaddonEditor : Editor
 		{
 			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 
-			if(!first_trapezoid)
+			if(!arc)
 			{
-				first_trapezoid = last_trapezoid = ArcOfSphere.Spawn(last_edge, click_point, Vector3.Cross (last_edge, click_point));
-
 				Transform block_transform = Block.Spawn().transform;
 
-				first_trapezoid.gameObject.transform.parent = block_transform;
+				arc = ArcOfSphere.StartShape(first_click_point, click_point, block_transform);
 			}
 			else
 			{
-				ArcOfSphere trapezoid = last_trapezoid.LinkRight(click_point);
-
-				ArcOfSphere.SpawnCorner(last_trapezoid, trapezoid);
-
-				last_trapezoid = trapezoid;
+				arc = arc.DivideEdge(click_point);
 			}
 		}
 		else if(e.type == EventType.MouseDown && e.button == 0)
 		{
-			ArcOfSphere trapezoid = last_trapezoid.LinkRight(first_edge);
-
-			ArcOfSphere.SpawnCorner(last_trapezoid, trapezoid);
-			ArcOfSphere.SpawnCorner(trapezoid, first_trapezoid);
-
-			first_trapezoid = last_trapezoid = null;
+			arc = null;
 
 			ArcOfSphere.guid = 0;
 
@@ -63,7 +50,7 @@ public class AbaddonEditor : Editor
 			SceneView.onSceneGUIDelegate -= Edit;
 			SceneView.onSceneGUIDelegate += Create;
 
-			first_edge = last_edge = AbaddonUtility.CursorCast(scene_view.camera, Event.current.mousePosition);
+			first_click_point = AbaddonUtility.CursorCast(scene_view.camera, Event.current.mousePosition);
 
 			Debug.Log("Switching to Create");
 			AbaddonUtility.Align(scene_view);
