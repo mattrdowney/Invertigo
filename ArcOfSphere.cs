@@ -13,21 +13,21 @@ using System.Linq;
 public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of this in production builds
 {
 	/*CONSIDER: make const*/
-	[SerializeField] public ArcOfSphere						next; //CONSIDER: add k prefix
+	[SerializeField] public ArcOfSphere						next;
 	[SerializeField] public ArcOfSphere						prev;
-	
+
 	[SerializeField] Vector3								path_normal;
-	[SerializeField] Vector3								path_forward; //CONSIDER: how do things need to change?
 
 	[SerializeField] Vector3								arc_left;
 	[SerializeField] Vector3								arc_right; //CONSIDER: can be dropped
 
-	[SerializeField] Vector3								arc_left_up; //FIXME: shitty names 
-	[SerializeField] Vector3								arc_right_down; //FIXME
+	[SerializeField] Vector3								arc_left_normal; //FIXME?: shitty names 
+	[SerializeField] Vector3								arc_right_normal; //FIXME?
 
-	[SerializeField] float									arc_radius; //FIXME: temp hack public
-	[SerializeField] float									arc_angle; //the angle to sweep around the center. FIXME:
+	[SerializeField] float									arc_radius;
+	[SerializeField] float									arc_angle; //the angle to sweep around the center.
 	[SerializeField] float									angle_to_normal;
+	[SerializeField] float									radius_sign;
 
 	public static int 										guid = 0;
 
@@ -43,7 +43,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	Vector3 Center(float radius)
 	{
-		return path_forward * Mathf.Cos(angle_to_normal - radius);
+		return path_normal * Mathf.Cos(angle_to_normal - radius_sign*radius);
 	}
 
 	Vector3 Center() { return Center(0); }
@@ -57,8 +57,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0;
 
 		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM; //FIXME: INFINI-JANK
-		bool bLeftContains		   = Vector3.Dot(pos,  arc_left_up  ) >= 0;
-		bool bRightContains		   = Vector3.Dot(pos, arc_right_down) >= 0;
+		bool bLeftContains		   = Vector3.Dot(pos,  arc_left_normal  ) >= 0;
+		bool bRightContains		   = Vector3.Dot(pos, arc_right_normal) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
 		int  nOutOfThree		   = CountBooleans(bLeftContains, bRightContains, bIsObtuse);
 
@@ -78,22 +78,41 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public optional<float> Distance(Vector3 to, Vector3 from)
 	{
-		optional<float> intersection = Intersect(to, from, 0.01f);
+		optional<float> intersection = Intersect(to, from, 0.01f); //FIXME: magic number
 		
 		if(intersection.exists)
 		{
 			float t = intersection.data;
-			Vector3 newPos = Evaluate(t, 0.01f);
-			return Vector3.Distance(from, newPos);
+			Vector3 newPos = Evaluate(t, 0.01f); //FIXME: magic number
+			return Vector3.Distance(from, newPos); //FIXME: Accidentally used Cartesian distance!
 		}
 		
 		return new optional<float>();
 	}
 
+	public ArcOfSphere DivideEdge(Vector3 division_point)
+	{
+		DebugUtility.Assert(Radius() != 0, "Trying to divide corner!");
+		
+		ArcOfSphere left_corner  = prev;
+		ArcOfSphere right_corner = next;
+		
+		ArcOfSphere arc = left_corner.LinkRight(division_point);
+		
+		Initialize(division_point, Evaluate(End()));
+		
+		ArcOfSphere corner = ArcOfSphere.SpawnCorner(arc, this);
+		
+		left_corner .InitializeCorner(left_corner .prev, left_corner .next);
+		right_corner.InitializeCorner(right_corner.prev, right_corner.next);
+		
+		return this; //not really necessary
+	}
+
 	void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
-		UnityEditor.Handles.DrawWireArc(Center(radius), path_normal, arc_left*Radius(radius), arc_angle * 180 / Mathf.PI, Radius(radius));
+		UnityEditor.Handles.DrawWireArc(Center(radius), radius_sign*path_normal, arc_left*Radius(radius), arc_angle * 180 / Mathf.PI, Radius(radius));
 	}
 
 	void DrawDefault()
@@ -107,10 +126,10 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right*.1f);
 
 		UnityEditor.Handles.color = Color.yellow;
-		UnityEditor.Handles.DrawLine(Evaluate(Begin()), Evaluate(Begin()) + arc_left_up*.1f);
+		UnityEditor.Handles.DrawLine(Evaluate(Begin()), Evaluate(Begin()) + arc_left_normal*.1f);
 
 		UnityEditor.Handles.color = Color.green;
-		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right_down*.1f);
+		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right_normal*.1f);
 	}
 
 	void DrawRadial(float t, float radius, Color color)
@@ -133,7 +152,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	{
 		float angle = t / arc_radius; //FIXME: include radius
 
-		return SphereUtility.Position(arc_left, arc_left_up, path_forward, angle_to_normal - radius, angle);
+		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, angle_to_normal - radius_sign*radius, angle);
 	}
 
 	/** return the position of the player based on the circular path
@@ -149,14 +168,14 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public static Vector3 Evaluate(ref float t, float radius, ref ArcOfSphere seg)
 	{
-		if(t > seg.End(radius))
+		if(t > seg.End(radius)) //Consider: when do I fix the >= error?
 		{
 			t -= seg.End(radius);
 			seg = seg.next;
 			t += seg.Begin(radius);
 			return Evaluate(ref t, radius, ref seg);
 		}
-		if(t < seg.Begin(radius))
+		if(t < seg.Begin(radius)) //Consider: when do I fix the <= error?
 		{
 			t -= seg.Begin(radius);
 			seg = seg.prev;
@@ -171,14 +190,18 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	{
 		float angle = t / arc_radius;
 
-		return SphereUtility.Normal(arc_left, arc_left_up, path_normal, angle_to_normal - radius, angle);
+		return SphereUtility.Normal(arc_left, arc_left_normal, path_normal, angle_to_normal - radius_sign*radius, angle);
 	}
+
+	public Vector3 EvaluateNormal(float t) { return EvaluateNormal(t, 0); }
 
 	public Vector3 EvaluateRight(float t, float radius)
 	{
 		float angle = t / arc_radius;
-		return SphereUtility.Position(arc_left_up, -arc_left, path_forward, angle_to_normal - radius, angle);
+		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, angle_to_normal - radius_sign*radius, angle);
 	}
+
+	public Vector3 EvaluateRight(float t) { return EvaluateRight(t, 0); }
 
 	/** Recompute the orientation of a SphericalIsoscelesarc
 	 * 
@@ -198,8 +221,9 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
-		path_normal  = normal.normalized;
-		path_forward = normal.normalized;
+		radius_sign = +1;
+
+		path_normal = normal.normalized;
 		Vector3 path_center = path_normal*Vector3.Dot(left_edge, path_normal); //or right_edge
 
 		arc_left  = (left_edge  - path_center).normalized; //FIXME: obsolete for corner triangles
@@ -219,12 +243,13 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public void InitializeCorner(ArcOfSphere left, ArcOfSphere right)
 	{
-		Vector3 path_center = right.Evaluate(0,0);
-		path_normal  = -right.Evaluate(0,0);
-		path_forward =  right.Evaluate(0,0); 
+		radius_sign = -1;
 
-		arc_left  = left.EvaluateNormal(left.End(0), 0);
-		arc_right = right.EvaluateNormal(right.Begin(0), 0);
+		Vector3 path_center = right.Evaluate(right.Begin());
+		path_normal =  right.Evaluate(right.Begin()); 
+
+		arc_left  = left.EvaluateNormal(left.End());
+		arc_right = right.EvaluateNormal(right.Begin());
 
 		arc_radius = 1e-36f;//0; //FIXME: make zero; magic numbers aren't ideal
 		
@@ -238,12 +263,12 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right edge - left edge, normal), 0),
 		//                    "ArcOfSphere: Initialize: failed assert");
 
-		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
-		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
+		arc_left_normal    = -Vector3.Cross(arc_left , radius_sign*path_normal).normalized; //CHECK: probably right, but just in case
+		arc_right_normal =  Vector3.Cross(arc_right, radius_sign*path_normal).normalized;
 
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180; //FIXME: logic error
 		
-		if(Vector3.Dot(arc_left_up, arc_right) <= 0)
+		if(Vector3.Dot(arc_left_normal, arc_right) <= 0)
 		{
 			arc_angle += Mathf.PI;
 		}
@@ -253,27 +278,9 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		RecalculateAABB();
 	}
 
-	public ArcOfSphere DivideEdge(Vector3 division_point)
-	{
-		//if not edge return and log error!
-
-		ArcOfSphere left_corner  = prev;
-		ArcOfSphere right_corner = next;
-		
-		ArcOfSphere arc = left_corner.LinkRight(division_point);
-		
-		Initialize(division_point, Evaluate(End()));
-		
-		ArcOfSphere corner = ArcOfSphere.SpawnCorner(arc, this);
-		
-		left_corner .InitializeCorner(left_corner .prev, left_corner .next);
-		right_corner.InitializeCorner(right_corner.prev, right_corner.next);
-
-		return this; //not really necessary
-	}
-
 	/** Find the point of collision as a parameterization of a circle.
 	 *  
+	 *  Thoughts: projecting all points onto the plane defined by normal "path_forward" would make the math simple-ish
 	 */
 	public optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this
 	{
@@ -284,10 +291,10 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 		secant.Normalize();
 
-		Vector3 intersection = Center(radius) + secant*Radius(radius);
+		Vector3 intersection = Center(radius) + secant*Radius(radius); 
 
 		float x = Vector3.Dot(intersection, arc_left   ) / Radius(radius);
-		float y = Vector3.Dot(intersection, arc_left_up) / Radius(radius);
+		float y = Vector3.Dot(intersection, arc_left_normal) / Radius(radius);
 		
 		float angle = Mathf.Atan2(y,x);
 
@@ -416,20 +423,20 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	{
 		BoxCollider	collider = this.GetComponent<BoxCollider>(); 
 
-		float x_min = MaxGradient(Vector3.left   ).x - 1e-6f;
-		float x_max = MaxGradient(Vector3.right  ).x + 1e-6f;
-		float y_min = MaxGradient(Vector3.down   ).y - 1e-6f;
-		float y_max = MaxGradient(Vector3.up     ).y + 1e-6f;
-		float z_min = MaxGradient(Vector3.back   ).z - 1e-6f;
-		float z_max = MaxGradient(Vector3.forward).z + 1e-6f;
+		float x_min = MaxGradient(Vector3.left   ).x;
+		float x_max = MaxGradient(Vector3.right  ).x;
+		float y_min = MaxGradient(Vector3.down   ).y;
+		float y_max = MaxGradient(Vector3.up     ).y;
+		float z_min = MaxGradient(Vector3.back   ).z;
+		float z_max = MaxGradient(Vector3.forward).z;
 
 		transform.position = new Vector3((x_max + x_min) / 2,
 		                    			 (y_max + y_min) / 2,
 		                              	 (z_max + z_min) / 2);
 
-		collider.size   = new Vector3( x_max - x_min,
-									   y_max - y_min,
-									   z_max - z_min);
+		collider.size   = new Vector3(x_max - x_min, 
+		                              y_max - y_min,
+		                              z_max - z_min);
 	}
 
 	ArcOfSphere Relink(ArcOfSphere left, ArcOfSphere right)
@@ -443,6 +450,29 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return this;
 	}
 
+	public ArcOfSphere RemoveCorner()
+	{
+		DebugUtility.Assert(Radius() == 0, "Trying to remove edge!");
+
+		ArcOfSphere left_edge  = prev;
+		ArcOfSphere right_edge = next;
+		ArcOfSphere left_corner  = left_edge.prev;
+		ArcOfSphere right_corner = right_edge.next;
+
+		Vector3 begin = left_edge.Evaluate(left_edge.Begin());
+		Vector3 end   = right_edge.Evaluate(right_edge.End());
+
+		left_edge.Relink(left_corner, right_corner);
+		left_edge.Initialize(begin, end);
+
+		DestroyImmediate(this.gameObject);
+		DestroyImmediate(right_edge.gameObject);
+
+		left_corner .InitializeCorner(left_corner .prev, left_corner .next);
+		right_corner.InitializeCorner(right_corner.prev, right_corner.next);
+		
+		return left_edge;
+	}
 	
 	static ArcOfSphere Spawn()
 	{
