@@ -25,8 +25,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	[SerializeField] Vector3								arc_left_up; //FIXME: shitty names 
 	[SerializeField] Vector3								arc_right_down; //FIXME
 
-	[SerializeField] public float							arc_radius; //FIXME: temp hack public
-	[SerializeField] public float							arc_angle; //the angle to sweep around the center. FIXME:
+	[SerializeField] float									arc_radius; //FIXME: temp hack public
+	[SerializeField] float									arc_angle; //the angle to sweep around the center. FIXME:
 	[SerializeField] float									angle_to_normal;
 
 	public static int 										guid = 0;
@@ -48,7 +48,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	Vector3 Center() { return Center(0); }
 
-	/** Determine if the character (represented by a point) is inside of a trapezoid (extruded by the radius of the player)
+	/** Determine if the character (represented by a point) is inside of a arc (extruded by the radius of the player)
 	 *  
 	 */
 	public bool Contains(Vector3 pos, float radius)
@@ -145,7 +145,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 * 
 	 *  return the position of the player based on the circular path
 	 *  If the player would go outside of [Begin(radius), End(radius)],
-	 *  the Trapezoid should transfer control of the player to (prev, next) respectively
+	 *  the arc should transfer control of the player to (prev, next) respectively
 	 */
 	public static Vector3 Evaluate(ref float t, float radius, ref ArcOfSphere seg)
 	{
@@ -154,14 +154,14 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 			t -= seg.End(radius);
 			seg = seg.next;
 			t += seg.Begin(radius);
-			return Evaluate(ref t, 0.01f, ref seg);
+			return Evaluate(ref t, radius, ref seg);
 		}
 		if(t < seg.Begin(radius))
 		{
 			t -= seg.Begin(radius);
 			seg = seg.prev;
 			t += seg.End(radius);
-			return Evaluate(ref t, 0.01f, ref seg);
+			return Evaluate(ref t, radius, ref seg);
 		}
 		
 		return seg.Evaluate(t, radius);
@@ -180,10 +180,10 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return SphereUtility.Position(arc_left_up, -arc_left, path_forward, angle_to_normal - radius, angle);
 	}
 
-	/** Recompute the orientation of a SphericalIsoscelesTrapezoid
+	/** Recompute the orientation of a SphericalIsoscelesarc
 	 * 
 	 *  Destroys all information other than prev, next. Replaces this information with the information for traversing
-	 *      the top of a SphericalIsoscelesTrapezoid on a unit sphere.
+	 *      the top of a SphericalIsoscelesarc on a unit sphere.
 	 * 
 	 * @param left_edge: the left-bottom point (left implies it is the 1st point when enumerated clockwise for concave objects,
 	 * 		  bottom implies it is the position of the player's feet)
@@ -192,7 +192,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 * @param normal: the normal plane that intersects lhs and rhs and forms the walking path for the players center
 	 * 		  of mass, sign matters because it indicates which direction is up for calculating the center of mass.
 	 * 
-	 * @example Initialize(Vector3(0,0,1), Vector3(1,0,0), Vector3(0,1,0)) will initialize a Spherical Isosceles Trapezoid
+	 * @example Initialize(Vector3(0,0,1), Vector3(1,0,0), Vector3(0,1,0)) will initialize a Spherical Isosceles arc
 	 *          that is a great circle for the feet positions, a large lesser circle for the center of mass position,
 	 *          with a 90 degree arc going from forwards to right and a normal going in the positive y-direction.
 	 */
@@ -236,7 +236,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	public void Initialize(Vector3 center)
 	{
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right edge - left edge, normal), 0),
-		//                    "SphericalIsoscelesTrapezoid: Initialize: failed assert");
+		//                    "ArcOfSphere: Initialize: failed assert");
 
 		arc_left_up    = -Vector3.Cross(arc_left , path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_down =  Vector3.Cross(arc_right, path_normal).normalized;
@@ -253,21 +253,23 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		RecalculateAABB();
 	}
 
-	public void DivideEdge(Vector3 division_point)
+	public ArcOfSphere DivideEdge(Vector3 division_point)
 	{
 		//if not edge return and log error!
 
 		ArcOfSphere left_corner  = prev;
 		ArcOfSphere right_corner = next;
 		
-		ArcOfSphere trapezoid = left_corner.LinkRight(division_point);
+		ArcOfSphere arc = left_corner.LinkRight(division_point);
 		
 		Initialize(division_point, Evaluate(End()));
 		
-		ArcOfSphere corner = ArcOfSphere.SpawnCorner(trapezoid, this);
+		ArcOfSphere corner = ArcOfSphere.SpawnCorner(arc, this);
 		
 		left_corner .InitializeCorner(left_corner .prev, left_corner .next);
 		right_corner.InitializeCorner(right_corner.prev, right_corner.next);
+
+		return this; //not really necessary
 	}
 
 	/** Find the point of collision as a parameterization of a circle.
@@ -301,27 +303,21 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return new optional<float>();
 	}
 
-	public void LinkBlock(ArcOfSphere other)
+	public void LinkBlock(Transform block_transform)
 	{
-		this.gameObject.transform.parent = other.gameObject.transform.parent;
+		this.gameObject.transform.parent = block_transform;
 	}
 
-	public ArcOfSphere LinkLeft(Vector3 pos)
+	public void LinkBlock(ArcOfSphere other)
 	{
-		Vector3 left = this.Evaluate(Begin());
-
-		ArcOfSphere obj = ArcOfSphere.Spawn(pos, left, Vector3.Cross(pos, left));
-
-		obj.LinkBlock(this);
-
-		return obj.Relink(prev, this);
+		LinkBlock(other.gameObject.transform.parent);
 	}
 
 	public ArcOfSphere LinkRight(Vector3 pos)
 	{
 		Vector3 right = this.Evaluate(End());
 
-		ArcOfSphere obj = ArcOfSphere.Spawn(right, pos, Vector3.Cross(right, pos));
+		ArcOfSphere obj = ArcOfSphere.Spawn(right, pos);
 
 		obj.LinkBlock(this);
 
@@ -406,13 +402,15 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return (pos - center).magnitude;
 	}
 
+	public float Radius() { return Radius(0); }
+
 	/** Create a AABB that perfectly contains a circular arc
 	 * 
 	 *  TODO: detailed description and math link
 	 * 
 	 *  TODO: Ex. 
 	 * 
-	 *  @param collider the box collider that will be altered to contain the SphericalIsoscelesTrapezoid
+	 *  @param collider the box collider that will be altered to contain the ArcOfSphere
 	 */
 	void RecalculateAABB()
 	{
@@ -426,8 +424,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		float z_max = MaxGradient(Vector3.forward).z + 1e-6f;
 
 		transform.position = new Vector3((x_max + x_min) / 2,
-		                              (y_max + y_min) / 2,
-		                              (z_max + z_min) / 2);
+		                    			 (y_max + y_min) / 2,
+		                              	 (z_max + z_min) / 2);
 
 		collider.size   = new Vector3( x_max - x_min,
 									   y_max - y_min,
@@ -465,21 +463,41 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public static ArcOfSphere Spawn(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
-		ArcOfSphere trapezoid = Spawn();
+		ArcOfSphere arc = Spawn();
 		
-		trapezoid.Initialize(left_edge, right_edge, normal);
+		arc.Initialize(left_edge, right_edge, normal);
 		
-		return trapezoid; //used for next/prev
+		return arc; //used for next/prev
+	}
+
+	public static ArcOfSphere Spawn(Vector3 left_edge, Vector3 right_edge)
+	{
+		return Spawn(left_edge, right_edge, Vector3.Cross(left_edge, right_edge));
 	}
 
 	public static ArcOfSphere SpawnCorner(ArcOfSphere left, ArcOfSphere right)
 	{
-		ArcOfSphere trapezoid = Spawn();
+		ArcOfSphere arc = Spawn();
 
-		trapezoid.InitializeCorner(left, right);
+		arc.InitializeCorner(left, right);
 
-		trapezoid.LinkBlock(left);
+		arc.LinkBlock(left);
 
-		return trapezoid; //used for next/prev
+		return arc; //used for next/prev
+	}
+
+	public static ArcOfSphere StartShape(Vector3 left_edge, Vector3 right_edge, Transform block_transform)
+	{
+		ArcOfSphere arc0 = Spawn();
+		arc0.Initialize(left_edge, right_edge);
+
+		ArcOfSphere arc1 = arc0.LinkRight(left_edge);
+
+		SpawnCorner(arc0, arc1).LinkBlock(block_transform);
+		SpawnCorner(arc1, arc0).LinkBlock(block_transform);
+		arc0.LinkBlock(block_transform);
+		arc1.LinkBlock(block_transform);
+
+		return arc1;
 	}
 }
