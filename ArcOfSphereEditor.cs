@@ -20,13 +20,17 @@ public class ArcOfSphereEditor : Editor
 
 			//AbaddonUtility.Reattach(self.prev.prev, self.prev, self, self.next, self.next.next); //TODO: do I need 5 args?
 		}
-		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Q) //q, place a new corner using LinkLeft at mouse cursor
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.M) //m, remove selected corner
+		{
+			SelectArc(self.RemoveCorner());
+		}
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Q) //q, place a new corner using LinkLeft at mouse cursor //Consider: delete, redundant
 		{
 			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 			
 			self.prev.DivideEdge(click_point);
 		}
-		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.E) //e, place a new corner using LinkRight at mouse cursor
+		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.E) //e, place a new corner using LinkRight at mouse cursor //Consider: delete, redundant
 		{
 			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
 
@@ -37,7 +41,7 @@ public class ArcOfSphereEditor : Editor
 	public void OnEnable()
 	{
 		self = target as ArcOfSphere;
-		if(self.Radius() == 1e-36f) //FIXME: make zero
+		if(self.Radius() == 0)
 		{
 			SceneView.onSceneGUIDelegate += CornerEditor;
 		}
@@ -85,21 +89,29 @@ public class ArcOfSphereEditor : Editor
 		}
 	}
 
+	
+	void SelectArc(ArcOfSphere arc)
+	{
+		Object[] selection = new Object[]{(Object)arc.gameObject};
+		Selection.objects = selection;
+	}
+
 	public void Step(SceneView scene_view)
 	{
 		Event e = Event.current;
 
 		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Alpha9)
 		{
-			Object[] selection = new Object[]{(Object)self.prev.gameObject};
-			Selection.objects = selection;
+			SelectArc(self.prev);
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Alpha0)
 		{
-			Object[] selection = new Object[]{(Object)self.next.gameObject};
-			Selection.objects = selection;
+			SelectArc(self.next);
 		}
 		//turning on/off CornerEditor and PathEditor shouldn't be neccessary?
 		//what if multiple selected objects switch the selection? (seems to do nothing)
 	}
+
+
+
 }
