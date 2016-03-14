@@ -23,4 +23,6 @@ abstract public class Character : MonoBehaviour
 	{
 		//motor.Move();
 	}
+
+	//camera.transparencySortMode = TransparencySortMode.Perspective;
 }

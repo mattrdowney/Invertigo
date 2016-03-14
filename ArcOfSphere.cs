@@ -6,6 +6,7 @@
  */
 
 using UnityEngine;
+using UnityEditor;
 using System.Collections;
 using System.Linq;
 
@@ -221,6 +222,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
+		Save(this);
+
 		radius_sign = +1;
 
 		path_normal = normal.normalized;
@@ -243,6 +246,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public void InitializeCorner(ArcOfSphere left, ArcOfSphere right)
 	{
+		Save(this);
+
 		radius_sign = -1;
 
 		Vector3 path_center = right.Evaluate(right.Begin());
@@ -312,7 +317,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public void LinkBlock(Transform block_transform)
 	{
-		this.gameObject.transform.parent = block_transform;
+		Undo.SetTransformParent(this.transform, block_transform, "Link arc to block");
+		//this.transform.parent = block_transform;
 	}
 
 	public void LinkBlock(ArcOfSphere other)
@@ -441,6 +447,10 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	ArcOfSphere Relink(ArcOfSphere left, ArcOfSphere right)
 	{
+		Save(this);
+		Save(left);
+		Save(right);
+
 		this.next  = right;
 		this.prev  = left;
 
@@ -459,30 +469,45 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		ArcOfSphere left_corner  = left_edge.prev;
 		ArcOfSphere right_corner = right_edge.next;
 
+		Save(left_edge);
+		Save(left_corner);
+		Save(right_corner);
+
 		Vector3 begin = left_edge.Evaluate(left_edge.Begin());
 		Vector3 end   = right_edge.Evaluate(right_edge.End());
 
 		left_edge.Relink(left_corner, right_corner);
 		left_edge.Initialize(begin, end);
 
-		DestroyImmediate(this.gameObject);
-		DestroyImmediate(right_edge.gameObject);
+		Undo.DestroyObjectImmediate(this.gameObject);
+		Undo.DestroyObjectImmediate(right_edge.gameObject);
+		//DestroyImmediate(this.gameObject);
+		//DestroyImmediate(right_edge.gameObject);
 
 		left_corner .InitializeCorner(left_corner .prev, left_corner .next);
 		right_corner.InitializeCorner(right_corner.prev, right_corner.next);
 		
 		return left_edge;
 	}
-	
+
+	static void Save(ArcOfSphere arc)
+	{
+		Undo.RecordObject(arc, "Save arc of sphere");
+		Undo.RecordObject(arc.transform, "Save transform");
+		Undo.RecordObject(arc.GetComponent<BoxCollider>(), "Save box collider");
+	}
+
 	static ArcOfSphere Spawn()
 	{
 		GameObject prefab = (GameObject) Resources.Load("ArcOfSpherePrefab");
 		
 		#if UNITY_EDITOR
-		GameObject obj = UnityEditor.PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+		GameObject obj = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
 		#else
 		GameObject obj = Instantiate(prefab) as GameObject;
 		#endif
+
+		Undo.RegisterCreatedObjectUndo (obj, "Created arc");
 
 		obj.name = guid.ToString();
 

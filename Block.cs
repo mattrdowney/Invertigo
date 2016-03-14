@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEditor;
 using System.Collections;
 
 abstract public class Block : Component
@@ -21,6 +22,8 @@ abstract public class Block : Component
 		#else
 		GameObject obj = Instantiate(prefab) as GameObject;
 		#endif
+
+		Undo.RegisterCreatedObjectUndo(obj, "Created block");
 		
 		obj.name = guid.ToString();
 		
