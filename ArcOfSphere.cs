@@ -77,15 +77,15 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return boolean_list.Count(bIsTrue => bIsTrue); //count booleans that are true using Linq's .Count function
 	}
 
-	public optional<float> Distance(Vector3 to, Vector3 from)
+	public optional<float> Distance(Vector3 to, Vector3 from, float radius)
 	{
-		optional<float> intersection = Intersect(to, from, 0.01f); //FIXME: magic number
+		optional<float> intersection = Intersect(to, from, radius); //FIXME: magic number
 		
 		if(intersection.exists)
 		{
-			float t = intersection.data;
-			Vector3 newPos = Evaluate(t, 0.01f); //FIXME: magic number
-			return Vector3.Distance(from, newPos); //FIXME: Accidentally used Cartesian distance!
+			float angle = intersection.data;
+			Vector3 new_position = Evaluate(angle); //FIXME: magic number
+			return Vector3.Distance(from, new_position); //FIXME: Accidentally used Cartesian distance!
 		}
 		
 		return new optional<float>();
@@ -133,15 +133,15 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right_normal*.1f);
 	}
 
-	void DrawRadial(float t, float radius, Color color)
+	void DrawRadial(float angle, float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
-		UnityEditor.Handles.DrawLine(Evaluate(t, 0), Evaluate(t, radius)); 
+		UnityEditor.Handles.DrawLine(Evaluate(angle, 0), Evaluate(angle, radius)); 
 	}
 
 	public float End(float radius)
 	{
-		return arc_angle*arc_radius; //FIXME: duct tape solution; doesn't take variable player height into account for concave edges
+		return arc_angle; //FIXME: duct tape solution; doesn't take variable player height into account for concave edges
 	}
 
 	public float End () { return End (0); }
@@ -149,17 +149,12 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	/** return the position of the player based on the circular path
 	 *  
 	 */
-	public Vector3 Evaluate(float t, float radius)
+	public Vector3 Evaluate(float angle, float radius)
 	{
-		float angle = t / arc_radius; //FIXME: include radius
-
 		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, angle_to_normal - radius_sign*radius, angle);
 	}
 
-	/** return the position of the player based on the circular path
-	 *  
-	 */
-	public Vector3 Evaluate(float t) { return Evaluate(t, 0); }
+	public Vector3 Evaluate(float angle) { return Evaluate(angle, 0); }
 
 	/** return the position of the player based on the circular path
 	 * 
@@ -167,42 +162,39 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 *  If the player would go outside of [Begin(radius), End(radius)],
 	 *  the arc should transfer control of the player to (prev, next) respectively
 	 */
-	public static Vector3 Evaluate(ref float t, float radius, ref ArcOfSphere seg)
+	public static Vector3 Evaluate(ref float angle, float radius, ref ArcOfSphere arc)
 	{
-		if(t > seg.End(radius)) //Consider: when do I fix the >= error?
+		if(angle >= arc.End(radius))
 		{
-			t -= seg.End(radius);
-			seg = seg.next;
-			t += seg.Begin(radius);
-			return Evaluate(ref t, radius, ref seg);
+			angle -= arc.End(radius);
+			arc = arc.next;
+			angle += arc.Begin(radius);
+			return Evaluate(ref angle, radius, ref arc);
 		}
-		if(t < seg.Begin(radius)) //Consider: when do I fix the <= error?
+		if(angle < arc.Begin(radius)) //Consider: when was this an error; shame on me
 		{
-			t -= seg.Begin(radius);
-			seg = seg.prev;
-			t += seg.End(radius);
-			return Evaluate(ref t, radius, ref seg);
+			angle -= arc.Begin(radius);
+			arc = arc.prev;
+			angle += arc.End(radius);
+			return Evaluate(ref angle, radius, ref arc);
 		}
 		
-		return seg.Evaluate(t, radius);
+		return arc.Evaluate(angle);
 	}
 
-	public Vector3 EvaluateNormal(float t, float radius)
+	public Vector3 EvaluateNormal(float angle, float radius)
 	{
-		float angle = t / arc_radius;
-
 		return SphereUtility.Normal(arc_left, arc_left_normal, path_normal, angle_to_normal - radius_sign*radius, angle);
 	}
 
-	public Vector3 EvaluateNormal(float t) { return EvaluateNormal(t, 0); }
+	public Vector3 EvaluateNormal(float angle) { return EvaluateNormal(angle, 0); }
 
-	public Vector3 EvaluateRight(float t, float radius)
+	public Vector3 EvaluateRight(float angle, float radius)
 	{
-		float angle = t / arc_radius;
 		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, angle_to_normal - radius_sign*radius, angle);
 	}
 
-	public Vector3 EvaluateRight(float t) { return EvaluateRight(t, 0); }
+	public Vector3 EvaluateRight(float angle) { return EvaluateRight(angle, 0); }
 
 	/** Recompute the orientation of a SphericalIsoscelesarc
 	 * 
@@ -256,7 +248,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		arc_left  = left.EvaluateNormal(left.End());
 		arc_right = right.EvaluateNormal(right.Begin());
 
-		arc_radius = 1e-36f;//0; //FIXME: make zero; magic numbers aren't ideal
+		arc_radius = 0;
 		
 		Initialize(path_center);
 
@@ -268,7 +260,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right edge - left edge, normal), 0),
 		//                    "ArcOfSphere: Initialize: failed assert");
 
-		arc_left_normal    = -Vector3.Cross(arc_left , radius_sign*path_normal).normalized; //CHECK: probably right, but just in case
+		arc_left_normal  = -Vector3.Cross(arc_left , radius_sign*path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_normal =  Vector3.Cross(arc_right, radius_sign*path_normal).normalized;
 
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180; //FIXME: logic error
@@ -310,7 +302,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 		if(angle <= arc_angle)
 		{
-			return angle*arc_radius; //there needs to be a mechanism for changing speed based on radius...
+			return angle;
 		}
 		return new optional<float>();
 	}
@@ -409,10 +401,10 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public float Radius(float radius)
 	{
-		Vector3 center = Center(radius);
-		Vector3 pos    = Evaluate(0, radius);
+		Vector3 center   = Center(radius);
+		Vector3 position = Evaluate(Begin(), radius);
 
-		return (pos - center).magnitude;
+		return (position - center).magnitude;
 	}
 
 	public float Radius() { return Radius(0); }
@@ -507,7 +499,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		GameObject obj = Instantiate(prefab) as GameObject;
 		#endif
 
-		Undo.RegisterCreatedObjectUndo (obj, "Created arc");
+		Undo.RegisterCreatedObjectUndo(obj, "Created arc");
 
 		obj.name = guid.ToString();
 

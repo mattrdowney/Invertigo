@@ -73,6 +73,26 @@ public class SphereUtility
 
 		//Seriously, why am I doing this to myself? With enough frame-rate no sane person would notice...
 		//sleeping on it...
+
+		//Maybe I can do 1/(Integral(a,b)[P(x)]dx)*Integral(a,b)[P(x)*E(x)]]d_x
+		// instead of 1/(b-a)*Integral(a,b)[1*E(x)]]d_x
+		// which means the equation might be:
+		// 1/(vel_y*pos_y + 2*vel_y*pos_y*pos_y)*Integral(a,b)[(vel_y + vel_y*pos_y)*E(x)]]d_x
+
+		//this, the way I see it now, is a way of weighting the distribution,
+		// sort of like how you can get the moment of inertia by Integral(a,b)[Mass(x)*DistanceFromCenter(x)]dx
+
+		//I need a probability distribution function that generates the fraction of time spent in a given position during freefall...
+		// while the original equation might be it, I sort of doubt it.
+
+		//by "probability distribution function" I probably don't mean probability density or mass functions since I doubt everything will add conveniently up to 1
+		// since timestamps are variable (from .02s to .1s to ?)
+
+		//likely turn of events: use delta = vel_o*t + .5*a*t*t as a density function where vel_xo*t (mostly(?)) "drops out"
+		// this is because delta is a representation (if I'm right) of what thin slice of space a particle occupies at time t.
+		// I might have to take a reciprocal or something, though
+
+		//End bullshit math
 	}
 	*/
 }

@@ -19,7 +19,7 @@ public class Player : Character
 	void FixedUpdate ()
 	{
 		//Calculate collision information
-		detector.Update(charMotor.curPosition,charMotor.prevPosition);
+		detector.Update(charMotor.curPosition, charMotor.prevPosition, charMotor.radius);
 
 		//move left/right
 		charMotor.input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis ("Vertical"));

@@ -18,6 +18,8 @@ abstract public class CharacterMotor : Component
 
 	Vector2											_input;
 
+	float											_radius;
+
 	//TODO: make flags into delegater Queue<*fun()> https://social.msdn.microsoft.com/Forums/en-US/2c08a0d0-58e4-4df6-b6d3-75e785fff8a8/array-of-function-pointers?forum=csharplanguage
 
 	//ideally there should be three setters: position, velocity, and segment
@@ -46,8 +48,8 @@ abstract public class CharacterMotor : Component
 
 			if(ground.exists)
 			{
-				ground.data.right  = ground.data.segment.EvaluateRight(ground.data.t, 0);
-				//ground.Value.normal = ground.Value.segment.EvaluateNormal(curPosition, ground.Value.right);
+				ground.data.right  = ground.data.arc.EvaluateRight (ground.data.t, 0); //FIXME: t should be angle
+				ground.data.normal = ground.data.arc.EvaluateNormal(ground.data.t, 0); //FIXME:
 			}
 		}
 	}
@@ -85,7 +87,15 @@ abstract public class CharacterMotor : Component
 		}
 		//TODO: vector reject velocity onto normal as well, move to curPosition set
 	}
-	
+
+	public float radius
+	{
+		get
+		{
+			return _radius;
+		}
+	}
+
 	public Vector3 right
 	{
 		get
@@ -98,7 +108,7 @@ abstract public class CharacterMotor : Component
 	{
 		get
 		{
-			return ground.data.segment;
+			return ground.data.arc;
 		}
 	}
 
@@ -119,7 +129,7 @@ abstract public class CharacterMotor : Component
 		set
 		{
 			ground.data.t = value;
-			curPosition = ArcOfSphere.Evaluate(ref ground.data.t, 0.01f, ref ground.data.segment);
+			curPosition = ArcOfSphere.Evaluate(ref ground.data.t, radius, ref ground.data.arc); //FIXME:
 		}
 	}
 
@@ -169,20 +179,20 @@ abstract public class CharacterMotor : Component
 		return new Vector3(xfactor/pos.y, -1/xz, zfactor*pos.y); //TODO: check
 	}
 
-	public void Traverse(optional<ArcOfSphere> arc, Vector3 desiredPos, Vector3 curPos)
+	public void Traverse(optional<ArcOfSphere> arc, Vector3 desiredPos)
 	{
 		if(arc.exists)
 		{
 			ground = new GroundInfo();
 
-			ground.data.segment = arc.data;
+			ground.data.arc 	= arc.data;
 			ground.data.block   = arc.data.GetComponentInParent<Block>();
-			ground.data.t		 = arc.data.Intersect(desiredPos, curPos, 0.01f).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
+			ground.data.t		= arc.data.Intersect(desiredPos, curPosition, radius).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
 
-			curPosition = ArcOfSphere.Evaluate(ref ground.data.t, 0.01f, ref ground.data.segment);
+			curPosition = ArcOfSphere.Evaluate(ref ground.data.t, radius, ref ground.data.arc); //FIXME:
 
-			ground.data.right	 = arc.data.EvaluateRight(ground.data.t, 0);
-			//ground.Value.normal	 = SIT.Value.EvaluateNormal(curPos, ground.Value.right);
+			ground.data.right	= arc.data.EvaluateRight (ground.data.t, radius); //FIXME: 
+			ground.data.normal	= arc.data.EvaluateNormal(ground.data.t, radius); //FIXME:
 		}
 		else
 		{

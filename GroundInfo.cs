@@ -3,7 +3,7 @@ using System.Collections;
 
 public class GroundInfo
 {
-	public ArcOfSphere	segment;
+	public ArcOfSphere					arc;
 	public Block						block;
 	
 	public Vector3						normal;
