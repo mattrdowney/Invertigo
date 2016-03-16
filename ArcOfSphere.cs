@@ -22,15 +22,14 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	[SerializeField] Vector3								arc_left;
 	[SerializeField] Vector3								arc_right; //CONSIDER: can be dropped
 
-	[SerializeField] Vector3								arc_left_normal; //FIXME?: shitty names 
-	[SerializeField] Vector3								arc_right_normal; //FIXME?
-
-	[SerializeField] float									arc_radius;
+	[SerializeField] Vector3								arc_left_normal;
+	[SerializeField] Vector3								arc_right_normal;
+	
 	[SerializeField] float									arc_angle; //the angle to sweep around the center.
 	[SerializeField] float									angle_to_normal;
 	[SerializeField] float									radius_sign;
 
-	public static int 										guid = 0;
+	public static int 										guid = 0; //TODO: remove this eventually
 
 	public float Begin(float radius)
 	{
@@ -54,14 +53,14 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public bool Contains(Vector3 pos, float radius)
 	{
-		bool bAboveGround = Vector3.Dot(pos - Center(0)     , path_normal) >= 0;
+		bool bAboveGround = Vector3.Dot(pos - Center()      , path_normal) >= 0;
 		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0;
 
-		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM; //FIXME: INFINI-JANK
+		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
 		bool bLeftContains		   = Vector3.Dot(pos,  arc_left_normal  ) >= 0;
 		bool bRightContains		   = Vector3.Dot(pos, arc_right_normal) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
-		int  nOutOfThree		   = CountBooleans(bLeftContains, bRightContains, bIsObtuse);
+		int  nOutOfThree		   = CountTrueBooleans(bLeftContains, bRightContains, bIsObtuse);
 
 		return bIsAtCorrectElevation && nOutOfThree >= 2; //XXX: might even now be wrong
 	}
@@ -70,21 +69,23 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 * 
 	 *  credit: http://stackoverflow.com/questions/377990/elegantly-determine-if-more-than-one-boolean-is-true
 	 * 
-	 *  @example "CountBooleans(true, false, true, true);" will return 3
+	 *  @example "CountTrueBooleans(true, false, true, true);" will return 3
 	 */
-	static int CountBooleans(params bool[] boolean_list) //allow for comma separated booleans using "params"
+	static int CountTrueBooleans(params bool[] boolean_list) //allow for comma separated booleans using "params"
 	{
 		return boolean_list.Count(bIsTrue => bIsTrue); //count booleans that are true using Linq's .Count function
 	}
 
 	public optional<float> Distance(Vector3 to, Vector3 from, float radius)
 	{
-		optional<float> intersection = Intersect(to, from, radius); //FIXME: magic number
-		
+		optional<float> intersection = Intersect(to, from, radius);
+
+		Debug.Log(intersection.exists);
+
 		if(intersection.exists)
 		{
 			float angle = intersection.data;
-			Vector3 new_position = Evaluate(angle); //FIXME: magic number
+			Vector3 new_position = Evaluate(angle);
 			return Vector3.Distance(from, new_position); //FIXME: Accidentally used Cartesian distance!
 		}
 		
@@ -118,7 +119,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	void DrawDefault()
 	{
-		if(arc_radius > .1f) return;
+		if(Radius() > 0) return;
 
 		UnityEditor.Handles.color = Color.cyan;
 		UnityEditor.Handles.DrawLine(Evaluate(Begin()), Evaluate(Begin()) + arc_left*.1f);
@@ -221,10 +222,8 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		path_normal = normal.normalized;
 		Vector3 path_center = path_normal*Vector3.Dot(left_edge, path_normal); //or right_edge
 
-		arc_left  = (left_edge  - path_center).normalized; //FIXME: obsolete for corner triangles
-		arc_right = (right_edge - path_center).normalized; //FIXME: obsolete
-
-		arc_radius = (left_edge - path_center).magnitude; //or right_edge
+		arc_left  = (left_edge  - path_center).normalized;
+		arc_right = (right_edge - path_center).normalized;
 
 		Initialize(path_center);
 
@@ -247,8 +246,6 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 		arc_left  = left.EvaluateNormal(left.End());
 		arc_right = right.EvaluateNormal(right.Begin());
-
-		arc_radius = 0;
 		
 		Initialize(path_center);
 
@@ -263,7 +260,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		arc_left_normal  = -Vector3.Cross(arc_left , radius_sign*path_normal).normalized; //CHECK: probably right, but just in case
 		arc_right_normal =  Vector3.Cross(arc_right, radius_sign*path_normal).normalized;
 
-		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180; //FIXME: logic error
+		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 		
 		if(Vector3.Dot(arc_left_normal, arc_right) <= 0)
 		{
@@ -381,7 +378,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return max_gradient;
 	}
 	
-	private void OnDrawGizmos() //TODO: get rid of this in production builds
+	private void OnDrawGizmos() //TODO: get rid of this in production builds //It's tedious that I can't just put this in the editor code
 	{
 		// draw floor path
 		DrawArc(0.0f, Color.black);

@@ -2,23 +2,28 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-abstract public class CharacterMotor : Component
+[System.Serializable]
+public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: make Component
 {
-	Vector3											_curPosition;
-	Vector3											_prevPosition;
+	[SerializeField] Vector3						_curPosition;
+	[SerializeField] Vector3						_prevPosition;
+	
+	[SerializeField] float							_phi;
+	[SerializeField] float							_theta;
 
-	Vector2											_velocity;
+	[SerializeField] float							_vertical_velocity;
+	[SerializeField] float							_horizontal_velocity;
 
-	Vector3											_south;
-	Vector3											_west;
+	[SerializeField] Vector3						_south;
+	[SerializeField] Vector3						_west;
 
 	optional<GroundInfo>							ground;
 
 	Dictionary<string, float>						flags; //XXX: Strategy Pattern?
 
-	Vector2											_input;
+	[SerializeField] Vector2						_input;
 
-	float											_radius;
+	[SerializeField] float							_radius;
 
 	//TODO: make flags into delegater Queue<*fun()> https://social.msdn.microsoft.com/Forums/en-US/2c08a0d0-58e4-4df6-b6d3-75e785fff8a8/array-of-function-pointers?forum=csharplanguage
 
@@ -94,6 +99,10 @@ abstract public class CharacterMotor : Component
 		{
 			return _radius;
 		}
+		set
+		{
+			_radius = value;
+		}
 	}
 
 	public Vector3 right
@@ -141,7 +150,7 @@ abstract public class CharacterMotor : Component
 	/** Horizontal (x) velocity is the distance travelled along the circumference of the intersection of the unit sphere and an xz plane.
 	 *  Vertical   (y) velocity is the distance travelled towards or away from the North Pole
 	 */
-	public Vector2 velocity
+	/*public Vector2 velocity
 	{
 		get
 		{
@@ -161,7 +170,7 @@ abstract public class CharacterMotor : Component
 				_velocity = Vector3.ProjectOnPlane(_velocity, ground.data.normal);
 			}
 		}
-	}
+	}*/
 
 	public Vector3 West
 	{
@@ -198,5 +207,14 @@ abstract public class CharacterMotor : Component
 		{
 			ground = new optional<GroundInfo>();
 		}
+	}
+
+	public void Update()
+	{
+		input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")); //HACK: hardcoded and won't support AI
+
+		SphereUtility.Accelerate(ref _phi, ref _theta, ref _vertical_velocity, ref _horizontal_velocity, 0.01f, -input.x/100, Time.fixedDeltaTime);
+
+		transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, _phi, _theta);
 	}
 }

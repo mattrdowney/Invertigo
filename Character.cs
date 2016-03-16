@@ -1,13 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent (typeof (CollisionDetector))]
-[RequireComponent (typeof (CharacterMotor))]
 abstract public class Character : MonoBehaviour
 {
-	CollisionDetector coll;
-	CharacterMotor motor;
-	CharacterState state;
+	protected CollisionDetector detector;
+	protected CharacterMotor motor;
+	protected CharacterState state;
 
 	public Vector3   position()
 	{

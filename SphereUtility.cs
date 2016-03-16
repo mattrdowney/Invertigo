@@ -16,6 +16,19 @@ public class SphereUtility
 		Vector3 z = z_axis *  Mathf.Sin(phi);
 		return x + y + z;
 	}
+	public static void Accelerate(ref float phi, ref float theta, ref float vertical_velocity, ref float horizontal_velocity, float gravity, float traction, float delta_time)
+	{
+		phi   += vertical_velocity   * delta_time / 2;
+		theta += horizontal_velocity * delta_time / 2 / Mathf.Sin(phi); //Assert: Sin(0) and Sin(180) must be un-reachable
+
+		vertical_velocity   += gravity  * delta_time / 2;
+		horizontal_velocity += traction * delta_time; 
+		vertical_velocity   += gravity  * delta_time / 2;
+
+		phi   += vertical_velocity   * delta_time / 2;
+		theta += horizontal_velocity * delta_time / 2 / Mathf.Sin(phi); //Assert: Sin(0) and Sin(180) must be un-reachable
+	}
+
 	/*
 	public static void Accelerate(ref float phi, ref float theta, ref float vertical_velocity, ref float horizontal_velocity)
 	{

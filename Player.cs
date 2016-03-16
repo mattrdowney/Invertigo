@@ -1,11 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+[RequireComponent(typeof(CharacterMotor))]
+[RequireComponent(typeof(CollisionDetector))]
 public class Player : Character
 {
-	CollisionDetector				detector;
-	CharacterMotor					charMotor;
-
 	//move into character motor
 	//enum PlayerState {FALLING, GROUNDED, MAGNETIZED, GRAPPLING} //TODO: switch state machines to Behaviours
 
@@ -16,13 +15,33 @@ public class Player : Character
 
 	//Block ground;
 
-	void FixedUpdate ()
+	void Awake()
 	{
-		//Calculate collision information
-		detector.Update(charMotor.curPosition, charMotor.prevPosition, charMotor.radius);
+		motor = gameObject.GetComponent<CharacterMotor>();
+		detector = gameObject.GetComponent<CollisionDetector>();
+		state = null;
+
+		motor.radius = 0.1f;
+	}
+
+	void FixedUpdate() //HACK: just trying to get this to work
+	{
+		if(!motor.grounded)
+		{
+			//Calculate collision information
+			optional<ArcOfSphere> arc = detector.ArcCast(motor.curPosition, motor.prevPosition, motor.radius);
+
+			if(arc.exists) Debug.Log(arc.data.name);
+
+			motor.Traverse(arc, motor.curPosition);
+		}
+		else
+		{
+
+		}
 
 		//move left/right
-		charMotor.input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis ("Vertical"));
+		motor.input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis ("Vertical"));
 
 		//figure out position for next frame and move there
 		//charMotor.Move(/*AI-Info*/);
