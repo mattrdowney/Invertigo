@@ -276,7 +276,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 *  
 	 *  Thoughts: projecting all points onto the plane defined by normal "path_forward" would make the math simple-ish
 	 */
-	public optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this
+	public optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
 		Vector3 right  = Vector3.Cross(from, to);
 		Vector3 secant = Vector3.Cross(path_normal, right);
