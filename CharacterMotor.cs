@@ -196,7 +196,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 			ground.data.arc 	= arc.data;
 			ground.data.block   = arc.data.GetComponentInParent<Block>();
-			ground.data.t		= arc.data.Intersect(desiredPos, curPosition, radius).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
+			//ground.data.t		= arc.data.Intersect(desiredPos, curPosition, radius).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
 
 			curPosition = ArcOfSphere.Evaluate(ref ground.data.t, radius, ref ground.data.arc); //FIXME:
 
@@ -216,5 +216,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		SphereUtility.Accelerate(ref _phi, ref _theta, ref _vertical_velocity, ref _horizontal_velocity, 0.01f, -input.x/100, Time.fixedDeltaTime);
 
 		transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, _phi, _theta);
+
+		curPosition = transform.position;
 	}
 }

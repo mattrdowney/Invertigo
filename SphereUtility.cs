@@ -16,45 +16,100 @@ public class SphereUtility
 		Vector3 z = z_axis *  Mathf.Sin(phi);
 		return x + y + z;
 	}
-
+	
 	public static Vector3 Intersection(float phi_1, float theta_1, float radius_1, float phi_2, float theta_2, float radius_2) //all credit: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
 		Vector3 sphere_center_1 = Position(Vector3.right, Vector3.up, Vector3.forward, phi_1, theta_1);
 		Vector3 sphere_center_2 = Position(Vector3.right, Vector3.up, Vector3.forward, phi_2, theta_2);
-
+		
 		float cr1 = Mathf.Cos(radius_1); //FIXME: Name
 		float cr2 = Mathf.Cos(radius_2);
-
+		
 		float dot_product = Vector3.Dot(sphere_center_1, sphere_center_2);
-
+		
 		float a = (cr1 - cr2 * dot_product) / (1 - dot_product*dot_product); //FIXME: rename
 		float b = (cr2 - cr1 * dot_product) / (1 - dot_product*dot_product);
-
+		
 		Vector3 intersection_center = a*sphere_center_1 + b*sphere_center_2;
-
+		
 		Vector3 binormal = Vector3.Cross(sphere_center_1, sphere_center_2); //TODO: CHECK: is this name right?
-
+		
 		float t = Mathf.Sqrt((1 - Vector3.Dot(intersection_center, intersection_center)) / Vector3.Dot(binormal, binormal)); //CONSIDER: rename?
-
+		
 		Vector3 intersection_1 = intersection_center + t*binormal;
 		Vector3 intersection_2 = intersection_center - t*binormal;
-
+		
 		return intersection_1; //HACK: return both or pick the correct point 
 	}
-
+	
+	public static Vector3 Intersection(Vector3 begin, Vector3 end, Vector3 center, float radius) //all credit: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
+	{
+		Vector3 path_center = -Vector3.Cross(begin, end).normalized;
+		
+		float cr1 = Mathf.Cos(radius); //FIXME: Name
+		float cr2 = Mathf.Cos(Mathf.PI/2);
+		
+		Debug.Log ("cr1: " + cr1 + ", cr2: " + cr2);
+		
+		float dot_product = Vector3.Dot(center, path_center); //CONSIDER: rename? e.g. cosx
+		
+		Debug.Log ("dot product: " + dot_product);
+		
+		Vector3 binormal_1 = Vector3.Cross(path_center, Vector3.right).normalized;
+		Vector3 binormal_2 = Vector3.Cross(center, Vector3.right).normalized;
+		
+		Debug.DrawRay(path_center * Mathf.Cos (Mathf.PI / 2),  binormal_1 * Mathf.Sin(Mathf.PI / 2), Color.yellow); 
+		Debug.DrawRay(path_center * Mathf.Cos (Mathf.PI / 2), -binormal_1 * Mathf.Sin(Mathf.PI / 2), Color.yellow); 
+		
+		Debug.DrawRay(center * Mathf.Cos (radius),  binormal_2 * Mathf.Sin(radius), Color.green);
+		Debug.DrawRay(center * Mathf.Cos (radius), -binormal_2 * Mathf.Sin(radius), Color.green); 
+		
+		float a = (cr1 - cr2 * dot_product) / (1 - dot_product*dot_product); //FIXME: rename
+		float b = (cr2 - cr1 * dot_product) / (1 - dot_product*dot_product);
+		
+		Debug.Log ("a: " + a + ", b: " + b + "yo");
+		
+		Vector3 intersection_center = a*center + b*path_center;
+		
+		Debug.Log ("intersection_center: " + intersection_center);
+		Debug.DrawRay(intersection_center, Vector3.up, Color.blue);
+		
+		Vector3 binormal = Vector3.Cross(center, path_center); //TODO: CHECK: is this name right?
+		
+		Debug.Log ("binormal: " + binormal);
+		Debug.DrawRay(intersection_center, binormal, Color.red);
+		
+		float t = Mathf.Sqrt((1 - Vector3.Dot(intersection_center, intersection_center)) / Vector3.Dot(binormal, binormal)); //CONSIDER: rename?
+		
+		Debug.Log ("t: " + t);
+		
+		Vector3 intersection_1 = intersection_center + t*binormal;
+		Vector3 intersection_2 = intersection_center - t*binormal;
+		
+		Debug.Log ("intersection_1: " + intersection_1);
+		Debug.Log ("intersection_2: " + intersection_2);
+		
+		if(Vector3.Distance(begin, intersection_1) < Vector3.Distance(begin, intersection_2))
+		{
+			return intersection_1;
+		}
+		
+		return intersection_2;
+	}
+	
 	public static void Accelerate(ref float phi, ref float theta, ref float vertical_velocity, ref float horizontal_velocity, float gravity, float traction, float delta_time)
 	{
 		phi   += vertical_velocity   * delta_time / 2;
 		theta += horizontal_velocity * delta_time / 2 / Mathf.Sin(phi); //Assert: Sin(0) and Sin(180) must be un-reachable
-
+		
 		vertical_velocity   += gravity  * delta_time / 2;
 		horizontal_velocity += traction * delta_time; 
 		vertical_velocity   += gravity  * delta_time / 2;
-
+		
 		phi   += vertical_velocity   * delta_time / 2;
 		theta += horizontal_velocity * delta_time / 2 / Mathf.Sin(phi); //Assert: Sin(0) and Sin(180) must be un-reachable
 	}
-
+	
 	/*
 	public static void Accelerate(ref float phi, ref float theta, ref float vertical_velocity, ref float horizontal_velocity)
 	{

@@ -278,14 +278,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
-		Vector3 right  = Vector3.Cross(from, to);
-		Vector3 secant = Vector3.Cross(path_normal, right);
-		
-		if(Vector3.Dot(secant, from) < 0) secant *= -1; //TODO: check
-
-		secant.Normalize();
-
-		Vector3 intersection = Center(radius) + secant*Radius(radius); 
+		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal /*hypothesis: this is wrong*/, Radius(radius)); 
 
 		float x = Vector3.Dot(intersection, arc_left   ) / Radius(radius);
 		float y = Vector3.Dot(intersection, arc_left_normal) / Radius(radius);
