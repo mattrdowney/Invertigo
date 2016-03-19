@@ -31,6 +31,15 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public static int 										guid = 0; //TODO: remove this eventually
 
+	public float Angle(float radius)
+	{
+		Vector3 position   = Evaluate(Begin(radius));
+		Vector3 center     = Center(radius);
+		Vector3 reflection = Vector3.Reflect(position, center - position);
+
+		return Vector3.Angle(position - center, reflection - center) * Mathf.PI / 180;
+	}
+
 	public float Begin(float radius)
 	{
 		return 0; //FIXME: temporary
@@ -54,7 +63,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	public bool Contains(Vector3 pos, float radius)
 	{
 		bool bAboveGround = Vector3.Dot(pos - Center()      , path_normal) >= 0;
-		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0;
+		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0; //COM means center of mass
 
 		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
 		bool bLeftContains		   = Vector3.Dot(pos,  arc_left_normal  ) >= 0;
@@ -76,7 +85,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return boolean_list.Count(bIsTrue => bIsTrue); //count booleans that are true using Linq's .Count function
 	}
 
-	public optional<float> Distance(Vector3 to, Vector3 from, float radius)
+	public optional<float> Distance(Vector3 to, Vector3 from, float radius) //distance is Euclidean but is (guaranteed?) to be sorted correctly with the current assertions about speed vs player_radius
 	{
 		optional<float> intersection = Intersect(to, from, radius);
 
@@ -86,7 +95,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		{
 			float angle = intersection.data;
 			Vector3 new_position = Evaluate(angle);
-			return Vector3.Distance(from, new_position); //FIXME: Accidentally used Cartesian distance!
+			return (from - new_position).sqrMagnitude; //CONSIDER: does Cartesian distance matter?
 		}
 		
 		return new optional<float>();
@@ -134,7 +143,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right_normal*.1f);
 	}
 
-	void DrawRadial(float angle, float radius, Color color)
+	void DrawRadial(float angle, float radius, Color color) //CONSIDER: use DrawWireArc
 	{
 		UnityEditor.Handles.color = color;
 		UnityEditor.Handles.DrawLine(Evaluate(angle, 0), Evaluate(angle, radius)); 
@@ -278,7 +287,9 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
-		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal /*hypothesis: this is wrong*/, Radius(radius)); 
+		Debug.Log("Intersect radius: " + radius);
+
+		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal /*hypothesis: this is wrong*/, Angle(radius) / 2); 
 
 		float x = Vector3.Dot(intersection, arc_left   ) / Radius(radius);
 		float y = Vector3.Dot(intersection, arc_left_normal) / Radius(radius);
@@ -382,11 +393,11 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		// draw ceil path
 		DrawArc(0.05f, Color.white);
 
-		DrawRadial(Begin(0.05f), 0.05f, Color.red);
+		//DrawRadial(Begin(0.05f), 0.05f, Color.red);
 
-		DrawRadial(End(0.05f), 0.05f, Color.blue);
+		//DrawRadial(End(0.05f), 0.05f, Color.blue);
 
-		DrawDefault();
+		//DrawDefault();
 	}
 
 	public float Radius(float radius)

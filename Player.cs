@@ -21,7 +21,7 @@ public class Player : Character
 		detector = gameObject.GetComponent<CollisionDetector>();
 		state = null;
 
-		motor.radius = 0.1f;
+		motor.radius = this.GetComponent<SphereCollider>().radius * this.transform.localScale.x;
 	}
 
 	void FixedUpdate() //HACK: just trying to get this to work

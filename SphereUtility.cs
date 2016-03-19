@@ -16,44 +16,24 @@ public class SphereUtility
 		Vector3 z = z_axis *  Mathf.Sin(phi);
 		return x + y + z;
 	}
-	
-	public static Vector3 Intersection(float phi_1, float theta_1, float radius_1, float phi_2, float theta_2, float radius_2) //all credit: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
-	{
-		Vector3 sphere_center_1 = Position(Vector3.right, Vector3.up, Vector3.forward, phi_1, theta_1);
-		Vector3 sphere_center_2 = Position(Vector3.right, Vector3.up, Vector3.forward, phi_2, theta_2);
-		
-		float cr1 = Mathf.Cos(radius_1); //FIXME: Name
-		float cr2 = Mathf.Cos(radius_2);
-		
-		float dot_product = Vector3.Dot(sphere_center_1, sphere_center_2);
-		
-		float a = (cr1 - cr2 * dot_product) / (1 - dot_product*dot_product); //FIXME: rename
-		float b = (cr2 - cr1 * dot_product) / (1 - dot_product*dot_product);
-		
-		Vector3 intersection_center = a*sphere_center_1 + b*sphere_center_2;
-		
-		Vector3 binormal = Vector3.Cross(sphere_center_1, sphere_center_2); //TODO: CHECK: is this name right?
-		
-		float t = Mathf.Sqrt((1 - Vector3.Dot(intersection_center, intersection_center)) / Vector3.Dot(binormal, binormal)); //CONSIDER: rename?
-		
-		Vector3 intersection_1 = intersection_center + t*binormal;
-		Vector3 intersection_2 = intersection_center - t*binormal;
-		
-		return intersection_1; //HACK: return both or pick the correct point 
-	}
-	
+
+	/** TODO: aesthetically pleasing explanation
+	 * 
+	 */
 	public static Vector3 Intersection(Vector3 begin, Vector3 end, Vector3 center, float radius) //all credit: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
 		Vector3 path_center = -Vector3.Cross(begin, end).normalized;
 		
-		float cr1 = Mathf.Cos(radius); //FIXME: Name
-		float cr2 = Mathf.Cos(Mathf.PI/2);
+		float cos_r1 = Mathf.Cos(radius); 		//gives the distance that should be travelled along   "center"    to reach the origin of the sphere with radius "radius"
+		float cos_r2 = Mathf.Cos(Mathf.PI / 2); //gives the distance that should be travelled along "path_center" to reach the origin of the sphere with radius PI / 2
+
+		Debug.Log("radius: " + radius);
+
+		Debug.Log("cos_r1: " + cos_r1 + ", cos_r2: " + cos_r2);
 		
-		Debug.Log ("cr1: " + cr1 + ", cr2: " + cr2);
+		float cos_angle = Vector3.Dot(center, path_center); //the magnitude of center and path_center are 1, so |center||path_center|cos(angle) = center . path_center gives cos(angle)
 		
-		float dot_product = Vector3.Dot(center, path_center); //CONSIDER: rename? e.g. cosx
-		
-		Debug.Log ("dot product: " + dot_product);
+		Debug.Log("cos_angle: " + cos_angle);
 		
 		Vector3 binormal_1 = Vector3.Cross(path_center, Vector3.right).normalized;
 		Vector3 binormal_2 = Vector3.Cross(center, Vector3.right).normalized;
@@ -64,37 +44,37 @@ public class SphereUtility
 		Debug.DrawRay(center * Mathf.Cos (radius),  binormal_2 * Mathf.Sin(radius), Color.green);
 		Debug.DrawRay(center * Mathf.Cos (radius), -binormal_2 * Mathf.Sin(radius), Color.green); 
 		
-		float a = (cr1 - cr2 * dot_product) / (1 - dot_product*dot_product); //FIXME: rename
-		float b = (cr2 - cr1 * dot_product) / (1 - dot_product*dot_product);
+		float center_fraction = (cos_r1 - cos_r2 * cos_angle) / (1 - cos_angle*cos_angle); //FIXME: rename
+		float path_fraction   = (cos_r2 - cos_r1 * cos_angle) / (1 - cos_angle*cos_angle);
 		
-		Debug.Log ("a: " + a + ", b: " + b + "yo");
+		Debug.Log("center_fraction: " + center_fraction + ", path_fraction: " + path_fraction);
 		
-		Vector3 intersection_center = a*center + b*path_center;
+		Vector3 intersection_center = center_fraction*center + path_fraction*path_center;
 		
-		Debug.Log ("intersection_center: " + intersection_center);
+		Debug.Log("intersection_center: " + intersection_center);
 		Debug.DrawRay(intersection_center, Vector3.up, Color.blue);
 		
 		Vector3 binormal = Vector3.Cross(center, path_center); //TODO: CHECK: is this name right?
 		
-		Debug.Log ("binormal: " + binormal);
+		Debug.Log("binormal: " + binormal);
 		Debug.DrawRay(intersection_center, binormal, Color.red);
 		
-		float t = Mathf.Sqrt((1 - Vector3.Dot(intersection_center, intersection_center)) / Vector3.Dot(binormal, binormal)); //CONSIDER: rename?
+		float midpoint_distance = Mathf.Sqrt((1 - Vector3.Dot(intersection_center, intersection_center)) / Vector3.Dot(binormal, binormal)); //CONSIDER: rename?
 		
-		Debug.Log ("t: " + t);
+		Debug.Log("midpoint_distance: " + midpoint_distance);
 		
-		Vector3 intersection_1 = intersection_center + t*binormal;
-		Vector3 intersection_2 = intersection_center - t*binormal;
+		Vector3 intersection_1 = intersection_center + midpoint_distance*binormal;
+		Vector3 intersection_2 = intersection_center - midpoint_distance*binormal;
 		
-		Debug.Log ("intersection_1: " + intersection_1);
-		Debug.Log ("intersection_2: " + intersection_2);
+		Debug.Log("intersection_1: " + intersection_1);
+		Debug.Log("intersection_2: " + intersection_2);
 		
-		if(Vector3.Distance(begin, intersection_1) < Vector3.Distance(begin, intersection_2))
+		if(Vector3.Distance(begin, intersection_1) < Vector3.Distance(begin, intersection_2)) //NOTE: (to my knowledge) only works when the player can move at most player_radius units per frame
 		{
-			return intersection_1;
+			return intersection_1.normalized;
 		}
 		
-		return intersection_2;
+		return intersection_2.normalized;
 	}
 	
 	public static void Accelerate(ref float phi, ref float theta, ref float vertical_velocity, ref float horizontal_velocity, float gravity, float traction, float delta_time)
