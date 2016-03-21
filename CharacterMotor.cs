@@ -8,11 +8,11 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	[SerializeField] Vector3						_curPosition;
 	[SerializeField] Vector3						_prevPosition;
 	
-	[SerializeField] float							_phi;
-	[SerializeField] float							_theta;
+	[SerializeField] public float					phi;
+	[SerializeField] public float					theta;
 
-	[SerializeField] float							_vertical_velocity;
-	[SerializeField] float							_horizontal_velocity;
+	[SerializeField] public float					vertical_velocity;
+	[SerializeField] public float					horizontal_velocity;
 
 	[SerializeField] Vector3						_south;
 	[SerializeField] Vector3						_west;
@@ -28,7 +28,20 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	//TODO: make flags into delegater Queue<*fun()> https://social.msdn.microsoft.com/Forums/en-US/2c08a0d0-58e4-4df6-b6d3-75e785fff8a8/array-of-function-pointers?forum=csharplanguage
 
 	//ideally there should be three setters: position, velocity, and segment
-	
+
+	public float angle
+	{
+		get
+		{
+			return ground.data.angle;
+		}
+		set
+		{
+			ground.data.angle = value;
+			curPosition = ArcOfSphere.Evaluate(ref ground.data.angle, radius, ref ground.data.arc);
+		}
+	}
+
 	public Block block
 	{
 		get
@@ -53,8 +66,8 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 			if(ground.exists)
 			{
-				ground.data.right  = ground.data.arc.EvaluateRight (ground.data.t, 0); //FIXME: t should be angle
-				ground.data.normal = ground.data.arc.EvaluateNormal(ground.data.t, 0); //FIXME:
+				ground.data.right  = ground.data.arc.EvaluateRight (ground.data.angle, 0);
+				ground.data.normal = ground.data.arc.EvaluateNormal(ground.data.angle, 0);
 			}
 		}
 	}
@@ -129,19 +142,6 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
-	public float t
-	{
-		get
-		{
-			return ground.data.t;
-		}
-		set
-		{
-			ground.data.t = value;
-			curPosition = ArcOfSphere.Evaluate(ref ground.data.t, radius, ref ground.data.arc); //FIXME:
-		}
-	}
-
 	public Vector3 prevPosition
 	{
 		get { return _prevPosition; }
@@ -196,27 +196,16 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 			ground.data.arc 	= arc.data;
 			ground.data.block   = arc.data.GetComponentInParent<Block>();
-			//ground.data.t		= arc.data.Intersect(desiredPos, curPosition, radius).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
+			ground.data.angle	= arc.data.Intersect(desiredPos, prevPosition, radius).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
 
-			curPosition = ArcOfSphere.Evaluate(ref ground.data.t, radius, ref ground.data.arc); //FIXME:
+			curPosition = ArcOfSphere.Evaluate(ref ground.data.angle, radius, ref ground.data.arc);
 
-			ground.data.right	= arc.data.EvaluateRight (ground.data.t, radius); //FIXME: 
-			ground.data.normal	= arc.data.EvaluateNormal(ground.data.t, radius); //FIXME:
+			ground.data.right	= arc.data.EvaluateRight (ground.data.angle, radius); 
+			ground.data.normal	= arc.data.EvaluateNormal(ground.data.angle, radius);
 		}
 		else
 		{
 			ground = new optional<GroundInfo>();
 		}
-	}
-
-	public void Update()
-	{
-		input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")); //HACK: hardcoded and won't support AI
-
-		SphereUtility.Accelerate(ref _phi, ref _theta, ref _vertical_velocity, ref _horizontal_velocity, 0.01f, -input.x/100, Time.fixedDeltaTime);
-
-		transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, _phi, _theta);
-
-		curPosition = transform.position;
 	}
 }

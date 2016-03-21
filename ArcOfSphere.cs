@@ -31,14 +31,12 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public static int 										guid = 0; //TODO: remove this eventually
 
-	public float Angle(float radius)
+	public float AngularRadius(float radius)
 	{
-		Vector3 position   = Evaluate(Begin(radius));
-		Vector3 center     = Center(radius);
-		Vector3 reflection = Vector3.Reflect(position, center - position);
-
-		return Vector3.Angle(position - center, reflection - center) * Mathf.PI / 180;
+		return (angle_to_normal - radius_sign*radius)*2;
 	}
+
+	public float AngularRadius() { return AngularRadius(0); }
 
 	public float Begin(float radius)
 	{
@@ -94,7 +92,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		if(intersection.exists)
 		{
 			float angle = intersection.data;
-			Vector3 new_position = Evaluate(angle);
+			Vector3 new_position = Evaluate(angle, radius);
 			return (from - new_position).sqrMagnitude; //CONSIDER: does Cartesian distance matter?
 		}
 		
@@ -103,7 +101,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public ArcOfSphere DivideEdge(Vector3 division_point)
 	{
-		DebugUtility.Assert(Radius() != 0, "Trying to divide corner!");
+		DebugUtility.Assert(LengthRadius() != 0, "Trying to divide corner!");
 		
 		ArcOfSphere left_corner  = prev;
 		ArcOfSphere right_corner = next;
@@ -123,12 +121,12 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
-		UnityEditor.Handles.DrawWireArc(Center(radius), radius_sign*path_normal, arc_left*Radius(radius), arc_angle * 180 / Mathf.PI, Radius(radius));
+		UnityEditor.Handles.DrawWireArc(Center(radius), radius_sign*path_normal, arc_left*LengthRadius(radius), arc_angle * 180 / Mathf.PI, LengthRadius(radius));
 	}
 
 	void DrawDefault()
 	{
-		if(Radius() > 0) return;
+		if(LengthRadius() > 0) return;
 
 		UnityEditor.Handles.color = Color.cyan;
 		UnityEditor.Handles.DrawLine(Evaluate(Begin()), Evaluate(Begin()) + arc_left*.1f);
@@ -289,12 +287,14 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	{
 		Debug.Log("Intersect radius: " + radius);
 
-		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal /*hypothesis: this is wrong*/, Angle(radius) / 2); 
+		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius) / 2); 
 
-		float x = Vector3.Dot(intersection, arc_left   ) / Radius(radius);
-		float y = Vector3.Dot(intersection, arc_left_normal) / Radius(radius);
+		float x = Vector3.Dot(intersection, arc_left   ) / LengthRadius(radius); //TODO: optimize
+		float y = Vector3.Dot(intersection, arc_left_normal) / LengthRadius(radius);
 		
 		float angle = Mathf.Atan2(y,x);
+
+		Debug.DrawLine(Center(radius), Evaluate(angle, radius), Color.cyan);
 
 		if(angle < 0)
 		{
@@ -400,7 +400,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		//DrawDefault();
 	}
 
-	public float Radius(float radius)
+	public float LengthRadius(float radius)
 	{
 		Vector3 center   = Center(radius);
 		Vector3 position = Evaluate(Begin(), radius);
@@ -408,7 +408,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return (position - center).magnitude;
 	}
 
-	public float Radius() { return Radius(0); }
+	public float LengthRadius() { return LengthRadius(0); }
 
 	/** Create a AABB that perfectly contains a circular arc
 	 * 
@@ -455,7 +455,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public ArcOfSphere RemoveCorner()
 	{
-		DebugUtility.Assert(Radius() == 0, "Trying to remove edge!");
+		DebugUtility.Assert(LengthRadius() == 0, "Trying to remove edge!");
 
 		ArcOfSphere left_edge  = prev;
 		ArcOfSphere right_edge = next;

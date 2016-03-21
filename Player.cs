@@ -26,8 +26,16 @@ public class Player : Character
 
 	void FixedUpdate() //HACK: just trying to get this to work
 	{
+		Vector2 input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")); //HACK: hardcoded and won't support AI
+
 		if(!motor.grounded)
-		{
+		{	
+			SphereUtility.Accelerate(ref motor.phi, ref motor.theta, ref motor.vertical_velocity, ref motor.horizontal_velocity, 0.01f, -input.x/100, Time.fixedDeltaTime);
+			
+			transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, motor.phi, motor.theta);
+			
+			motor.curPosition = transform.position;
+
 			//Calculate collision information
 			optional<ArcOfSphere> arc = detector.ArcCast(motor.curPosition, motor.prevPosition, motor.radius);
 
@@ -37,7 +45,9 @@ public class Player : Character
 		}
 		else
 		{
+			motor.angle += input.x / 100;
 
+			transform.position = motor.segment.Evaluate(motor.angle, motor.radius);
 		}
 
 		//move left/right

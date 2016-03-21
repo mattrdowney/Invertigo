@@ -9,5 +9,5 @@ public class GroundInfo
 	public Vector3						normal;
 	public Vector3						right;
 	
-	public float						t;
+	public float						angle;
 }
