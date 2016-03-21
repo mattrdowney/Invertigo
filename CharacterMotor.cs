@@ -38,7 +38,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		set
 		{
 			ground.data.angle = value;
-			curPosition = ArcOfSphere.Evaluate(ref ground.data.angle, radius, ref ground.data.arc);
+			curPosition = ArcOfSphere.Evaluate(ref ground, radius);
 		}
 	}
 
@@ -77,6 +77,18 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		get
 		{
 			return ground.exists;
+		}
+	}
+
+	public float height
+	{
+		get
+		{
+			return ground.data.height;
+		}
+		set
+		{
+			ground.data.height = value;
 		}
 	}
 
@@ -197,8 +209,9 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 			ground.data.arc 	= arc.data;
 			ground.data.block   = arc.data.GetComponentInParent<Block>();
 			ground.data.angle	= arc.data.Intersect(desiredPos, prevPosition, radius).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
+			height				= arc.data.LengthRadius(radius);
 
-			curPosition = ArcOfSphere.Evaluate(ref ground.data.angle, radius, ref ground.data.arc);
+			curPosition = ArcOfSphere.Evaluate(ref ground, radius);
 
 			ground.data.right	= arc.data.EvaluateRight (ground.data.angle, radius); 
 			ground.data.normal	= arc.data.EvaluateNormal(ground.data.angle, radius);
@@ -207,5 +220,25 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		{
 			ground = new optional<GroundInfo>();
 		}
+	}
+
+	public void Move(Vector2 input)
+	{
+		if(grounded)
+		{
+			angle += input.x / height / 64;
+
+			transform.position = ArcOfSphere.Evaluate(ref ground, radius);
+		}
+		else
+		{
+			SphereUtility.Accelerate(ref phi, ref theta, ref vertical_velocity, ref horizontal_velocity, 0.01f, -input.x/100, Time.fixedDeltaTime);
+
+			transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, phi, theta).normalized;
+		}
+
+		if(grounded) Debug.Log (ground.data.height);
+
+		curPosition = transform.position;
 	}
 }

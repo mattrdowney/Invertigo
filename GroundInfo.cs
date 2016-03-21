@@ -10,4 +10,5 @@ public class GroundInfo
 	public Vector3						right;
 	
 	public float						angle;
+	public float						height;
 }

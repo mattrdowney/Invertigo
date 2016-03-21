@@ -170,24 +170,30 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 *  If the player would go outside of [Begin(radius), End(radius)],
 	 *  the arc should transfer control of the player to (prev, next) respectively
 	 */
-	public static Vector3 Evaluate(ref float angle, float radius, ref ArcOfSphere arc)
+	public static Vector3 Evaluate(ref optional<GroundInfo> ground, float radius) //FIXME: use >2 parameters to re-obtain readability
 	{
-		if(angle >= arc.End(radius))
+		if(ground.data.angle >= ground.data.arc.End(radius)) //TODO: cache (re-calculate End and Begin once)
 		{
-			angle -= arc.End(radius);
-			arc = arc.next;
-			angle += arc.Begin(radius);
-			return Evaluate(ref angle, radius, ref arc);
+			ground.data.angle -= ground.data.arc.End(radius); //FIXME: ground.data.IhateMyLife?
+			ground.data.angle *= ground.data.height;
+			ground.data.arc = ground.data.arc.next;
+			ground.data.height = ground.data.arc.LengthRadius(radius);
+			ground.data.angle /= ground.data.height;
+			ground.data.angle += ground.data.arc.Begin(radius);
+			return Evaluate(ref ground, radius);
 		}
-		if(angle < arc.Begin(radius)) //Consider: when was this an error; shame on me
+		if(ground.data.angle < ground.data.arc.Begin(radius))
 		{
-			angle -= arc.Begin(radius);
-			arc = arc.prev;
-			angle += arc.End(radius);
-			return Evaluate(ref angle, radius, ref arc);
+			ground.data.angle -= ground.data.arc.Begin(radius);
+			ground.data.angle *= ground.data.height;
+			ground.data.arc = ground.data.arc.prev;
+			ground.data.height = ground.data.arc.LengthRadius(radius);
+			ground.data.angle /= ground.data.height;
+			ground.data.angle += ground.data.arc.End(radius);
+			return Evaluate(ref ground, radius);
 		}
 		
-		return arc.Evaluate(angle);
+		return ground.data.arc.Evaluate(ground.data.angle, radius);
 	}
 
 	public Vector3 EvaluateNormal(float angle, float radius)
