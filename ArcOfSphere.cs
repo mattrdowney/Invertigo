@@ -87,8 +87,6 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	{
 		optional<float> intersection = Intersect(to, from, radius);
 
-		Debug.Log(intersection.exists);
-
 		if(intersection.exists)
 		{
 			float angle = intersection.data;
@@ -291,16 +289,12 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
-		Debug.Log("Intersect radius: " + radius);
-
 		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius) / 2); 
 
 		float x = Vector3.Dot(intersection, arc_left   ) / LengthRadius(radius); //TODO: optimize
 		float y = Vector3.Dot(intersection, arc_left_normal) / LengthRadius(radius);
 		
 		float angle = Mathf.Atan2(y,x);
-
-		Debug.DrawLine(Center(radius), Evaluate(angle, radius), Color.cyan);
 
 		if(angle < 0)
 		{

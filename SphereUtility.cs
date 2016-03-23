@@ -26,49 +26,24 @@ public class SphereUtility
 		
 		float cos_r1 = Mathf.Cos(radius); 		//gives the distance that should be travelled along   "center"    to reach the origin of the sphere with radius "radius"
 		float cos_r2 = Mathf.Cos(Mathf.PI / 2); //gives the distance that should be travelled along "path_center" to reach the origin of the sphere with radius PI / 2
-
-		Debug.Log("radius: " + radius);
-
-		Debug.Log("cos_r1: " + cos_r1 + ", cos_r2: " + cos_r2);
 		
 		float cos_angle = Vector3.Dot(center, path_center); //the magnitude of center and path_center are 1, so |center||path_center|cos(angle) = center . path_center gives cos(angle)
-		
-		Debug.Log("cos_angle: " + cos_angle);
 		
 		Vector3 binormal_1 = Vector3.Cross(path_center, Vector3.right).normalized;
 		Vector3 binormal_2 = Vector3.Cross(center, Vector3.right).normalized;
 		
-		Debug.DrawRay(path_center * Mathf.Cos (Mathf.PI / 2),  binormal_1 * Mathf.Sin(Mathf.PI / 2), Color.yellow); 
-		Debug.DrawRay(path_center * Mathf.Cos (Mathf.PI / 2), -binormal_1 * Mathf.Sin(Mathf.PI / 2), Color.yellow); 
-		
-		Debug.DrawRay(center * Mathf.Cos (radius),  binormal_2 * Mathf.Sin(radius), Color.green);
-		Debug.DrawRay(center * Mathf.Cos (radius), -binormal_2 * Mathf.Sin(radius), Color.green); 
-		
 		float center_fraction = (cos_r1 - cos_r2 * cos_angle) / (1 - cos_angle*cos_angle); //FIXME: rename
 		float path_fraction   = (cos_r2 - cos_r1 * cos_angle) / (1 - cos_angle*cos_angle);
-		
-		Debug.Log("center_fraction: " + center_fraction + ", path_fraction: " + path_fraction);
-		
+
 		Vector3 intersection_center = center_fraction*center + path_fraction*path_center;
-		
-		Debug.Log("intersection_center: " + intersection_center);
-		Debug.DrawRay(intersection_center, Vector3.up, Color.blue);
-		
+
 		Vector3 binormal = Vector3.Cross(center, path_center); //TODO: CHECK: is this name right?
-		
-		Debug.Log("binormal: " + binormal);
-		Debug.DrawRay(intersection_center, binormal, Color.red);
-		
+
 		float midpoint_distance = Mathf.Sqrt((1 - Vector3.Dot(intersection_center, intersection_center)) / Vector3.Dot(binormal, binormal)); //CONSIDER: rename?
-		
-		Debug.Log("midpoint_distance: " + midpoint_distance);
-		
+
 		Vector3 intersection_1 = intersection_center + midpoint_distance*binormal;
 		Vector3 intersection_2 = intersection_center - midpoint_distance*binormal;
-		
-		Debug.Log("intersection_1: " + intersection_1);
-		Debug.Log("intersection_2: " + intersection_2);
-		
+
 		if(Vector3.Distance(begin, intersection_1) < Vector3.Distance(begin, intersection_2)) //NOTE: (to my knowledge) only works when the player can move at most player_radius units per frame
 		{
 			return intersection_1.normalized;

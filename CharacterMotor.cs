@@ -61,8 +61,8 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 			_prevPosition = _curPosition;
 			_curPosition = value;
 
-			_south = FindSouth(_curPosition);
-			_west  = Vector3.Cross(_south, _curPosition);
+			_west  =  FindWest(_curPosition);
+			_south = -Vector3.Cross(_west, _curPosition).normalized;
 
 			if(ground.exists)
 			{
@@ -192,12 +192,12 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
-	public Vector3 FindSouth(Vector3 pos)
+	public Vector3 FindWest(Vector3 pos)
 	{
 		float xz = Mathf.Sqrt(pos.x*pos.x + pos.z*pos.z);
 		float xfactor = pos.x / (pos.x + pos.z);
 		float zfactor = 1f - xfactor;
-		return new Vector3(xfactor/pos.y, -1/xz, zfactor*pos.y); //TODO: check
+		return new Vector3(-xfactor/pos.y, 1/xz, -zfactor*pos.y).normalized; //TODO: check
 	}
 
 	public void Traverse(optional<ArcOfSphere> arc, Vector3 desiredPos)
@@ -237,8 +237,27 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 			transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, phi, theta).normalized;
 		}
 
-		if(grounded) Debug.Log (ground.data.height);
-
 		curPosition = transform.position;
+	}
+
+	public void Jump()
+	{
+		if(grounded)
+		{
+			phi   = Mathf.Acos(transform.position.y);
+			theta = Mathf.Atan2(transform.position.z, transform.position.x);
+
+			Vector3 normal = ground.data.arc.EvaluateNormal(ground.data.angle);
+
+			Debug.Log("normal: " + normal);
+			Debug.Log("South: " + South);
+			Debug.Log("West: " + West);
+
+			horizontal_velocity = 0.1f*Vector3.Dot(West, normal);
+			vertical_velocity   = 0.1f*Vector3.Dot(South, normal);
+
+
+			Traverse(new optional<ArcOfSphere>(), transform.position);
+		}
 	}
 }
