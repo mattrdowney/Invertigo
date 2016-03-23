@@ -33,7 +33,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 
 	public float AngularRadius(float radius)
 	{
-		return (angle_to_normal - radius_sign*radius)*2;
+		return angle_to_normal - radius_sign*radius;
 	}
 
 	public float AngularRadius() { return AngularRadius(0); }
@@ -50,7 +50,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	Vector3 Center(float radius)
 	{
-		return path_normal * Mathf.Cos(angle_to_normal - radius_sign*radius);
+		return path_normal * Mathf.Cos(AngularRadius(radius));
 	}
 
 	Vector3 Center() { return Center(0); }
@@ -58,7 +58,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	/** Determine if the character (represented by a point) is inside of a arc (extruded by the radius of the player)
 	 *  
 	 */
-	public bool Contains(Vector3 pos, float radius)
+	public bool Contains(Vector3 pos, float radius) //FIXME: corners
 	{
 		bool bAboveGround = Vector3.Dot(pos - Center()      , path_normal) >= 0;
 		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0; //COM means center of mass
@@ -157,7 +157,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public Vector3 Evaluate(float angle, float radius)
 	{
-		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, angle_to_normal - radius_sign*radius, angle);
+		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
 	}
 
 	public Vector3 Evaluate(float angle) { return Evaluate(angle, 0); }
@@ -198,16 +198,16 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		return ground.arc.Evaluate(ground.angle, radius);
 	}
 
-	public Vector3 EvaluateNormal(float angle, float radius)
+	public Vector3 EvaluateNormal(float angle, float radius) //FIXME: corners are inverted
 	{
-		return SphereUtility.Normal(arc_left, arc_left_normal, path_normal, angle_to_normal - radius_sign*radius, angle);
+		return SphereUtility.Normal(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
 	}
 
 	public Vector3 EvaluateNormal(float angle) { return EvaluateNormal(angle, 0); }
 
 	public Vector3 EvaluateRight(float angle, float radius)
 	{
-		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, angle_to_normal - radius_sign*radius, angle);
+		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, AngularRadius(radius), angle);
 	}
 
 	public Vector3 EvaluateRight(float angle) { return EvaluateRight(angle, 0); }
@@ -293,7 +293,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 */
 	public optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
-		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius) / 2); 
+		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius)); 
 
 		float x = Vector3.Dot(intersection, arc_left   ) / LengthRadius(radius); //TODO: optimize
 		float y = Vector3.Dot(intersection, arc_left_normal) / LengthRadius(radius);
@@ -397,11 +397,7 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 		// draw ceil path
 		DrawArc(0.05f, Color.white);
 
-		//DrawRadial(Begin(0.05f), 0.05f, Color.red);
-
-		//DrawRadial(End(0.05f), 0.05f, Color.blue);
-
-		//DrawDefault();
+		DrawDefault();
 	}
 
 	public float LengthRadius(float radius)
