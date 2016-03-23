@@ -44,9 +44,12 @@ public class Player : Character
 		if(!motor.grounded)
 		{	
 			//Calculate collision information
-			optional<ArcOfSphere> arc = detector.ArcCast(motor.curPosition, motor.prevPosition, motor.radius);
+			optional<ArcOfSphere> arc = detector.ArcCast(motor.current_position, motor.previous_position, motor.radius);
 
-			motor.Traverse(arc, motor.curPosition);
+			if(arc.exists)
+			{
+				motor.Traverse(arc.data, motor.current_position);
+			}
 		}
 		else if(Time.time - jump_request < 0.2f)
 		{

@@ -5,17 +5,14 @@ using System.Collections.Generic;
 [System.Serializable]
 public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: make Component
 {
-	[SerializeField] Vector3						_curPosition;
-	[SerializeField] Vector3						_prevPosition;
+	[SerializeField] Vector3						_current_position;
+	[SerializeField] Vector3						_previous_position;
 	
 	[SerializeField] public float					phi;
 	[SerializeField] public float					theta;
 
 	[SerializeField] public float					vertical_velocity;
 	[SerializeField] public float					horizontal_velocity;
-
-	[SerializeField] Vector3						_south;
-	[SerializeField] Vector3						_west;
 
 	optional<GroundInfo>							ground;
 
@@ -38,7 +35,15 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		set
 		{
 			ground.data.angle = value;
-			curPosition = ArcOfSphere.Evaluate(ref ground, radius);
+			current_position = ArcOfSphere.Evaluate(ground.data, radius);
+		}
+	}
+
+	public ArcOfSphere arc
+	{
+		get
+		{
+			return ground.data.arc;
 		}
 	}
 
@@ -50,25 +55,16 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
-	public Vector3 curPosition
+	public Vector3 current_position
 	{
 		get
 		{
-			return _curPosition;
+			return _current_position;
 		}
 		set //set must contain extra logic for gravity, normal, and right
 		{
-			_prevPosition = _curPosition;
-			_curPosition = value;
-
-			_south = FindSouth(_curPosition);
-			_west  = FindWest(_curPosition);
-
-			if(ground.exists)
-			{
-				ground.data.right  = ground.data.arc.EvaluateRight (ground.data.angle);
-				ground.data.normal = ground.data.arc.EvaluateNormal(ground.data.angle);
-			}
+			_previous_position = _current_position;
+			_current_position = value;
 		}
 	}
 
@@ -85,10 +81,6 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		get
 		{
 			return ground.data.height;
-		}
-		set
-		{
-			ground.data.height = value;
 		}
 	}
 
@@ -113,9 +105,8 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	{
 		get
 		{
-			return ground.data.normal;
+			return arc.EvaluateNormal(angle, radius);
 		}
-		//TODO: vector reject velocity onto normal as well, move to curPosition set
 	}
 
 	public float radius
@@ -134,15 +125,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	{
 		get
 		{
-			return ground.data.right;
-		}
-	}
-
-	public ArcOfSphere segment
-	{
-		get
-		{
-			return ground.data.arc;
+			return arc.EvaluateRight(angle, radius);
 		}
 	}
 
@@ -150,13 +133,13 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	{
 		get
 		{
-			return _south;
+			return FindSouth(current_position);
 		}
 	}
 
-	public Vector3 prevPosition
+	public Vector3 previous_position
 	{
-		get { return _prevPosition; }
+		get { return _previous_position; }
 	}
 
 	/** Horizontal (x) velocity is the distance travelled along the circumference of the intersection of the unit sphere and an xz plane.
@@ -188,11 +171,11 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	{
 		get
 		{
-			return _west;
+			return FindWest(current_position);
 		}
 	}
 
-	public Vector3 FindWest(Vector3 position)
+	Vector3 FindWest(Vector3 position)
 	{
 		//Assert position != Vector3.up or Vector3.down
 		return Vector3.Cross(Vector3.up, position).normalized;
@@ -205,26 +188,18 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		return Vector3.Cross(west, position).normalized;
 	}
 
-	public void Traverse(optional<ArcOfSphere> arc, Vector3 desiredPos)
+	public void Traverse(ArcOfSphere path, Vector3 desiredPos)
 	{
-		if(arc.exists)
-		{
-			ground = new GroundInfo();
+		ground = new GroundInfo();
 
-			ground.data.arc 	= arc.data;
-			ground.data.block   = arc.data.GetComponentInParent<Block>();
-			ground.data.angle	= arc.data.Intersect(desiredPos, prevPosition, radius).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
-			height				= arc.data.LengthRadius(radius);
+		ground.data.arc		= path;
+		ground.data.block	= path.GetComponentInParent<Block>();
+		ground.data.angle	= path.Intersect(desiredPos, previous_position, radius).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
+		ground.data.height	= path.LengthRadius(radius);
+		ground.data.begin   = path.Begin(radius);
+		ground.data.end		= path.End(radius);
 
-			curPosition = ArcOfSphere.Evaluate(ref ground, radius);
-
-			ground.data.right	= arc.data.EvaluateRight (ground.data.angle, radius); 
-			ground.data.normal	= arc.data.EvaluateNormal(ground.data.angle, radius);
-		}
-		else
-		{
-			ground = new optional<GroundInfo>();
-		}
+		current_position = ArcOfSphere.Evaluate(ground.data, radius);
 	}
 
 	public void Move(Vector2 input)
@@ -233,7 +208,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		{
 			angle += input.x / height / 64;
 
-			transform.position = ArcOfSphere.Evaluate(ref ground, radius);
+			transform.position = ArcOfSphere.Evaluate(ground.data, radius);
 		}
 		else
 		{
@@ -242,7 +217,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 			transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, phi, theta).normalized;
 		}
 
-		curPosition = transform.position;
+		current_position = transform.position;
 	}
 
 	public void Jump()
@@ -257,8 +232,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 			horizontal_velocity = -0.1f*Vector3.Dot(West, normal);
 			vertical_velocity   =  0.1f*Vector3.Dot(South, normal);
 
-
-			Traverse(new optional<ArcOfSphere>(), transform.position);
+			ground = new optional<GroundInfo>();
 		}
 	}
 }

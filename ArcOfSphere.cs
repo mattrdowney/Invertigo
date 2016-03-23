@@ -168,30 +168,34 @@ public class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of thi
 	 *  If the player would go outside of [Begin(radius), End(radius)],
 	 *  the arc should transfer control of the player to (prev, next) respectively
 	 */
-	public static Vector3 Evaluate(ref optional<GroundInfo> ground, float radius) //FIXME: use >2 parameters to re-obtain readability
+	public static Vector3 Evaluate(GroundInfo ground, float radius) //FIXME: use >2 parameters to re-obtain readability
 	{
-		if(ground.data.angle >= ground.data.arc.End(radius)) //TODO: cache (re-calculate End and Begin once)
+		if(ground.angle >= ground.end)
 		{
-			ground.data.angle -= ground.data.arc.End(radius); //FIXME: ground.data.IhateMyLife?
-			ground.data.angle *= ground.data.height;
-			ground.data.arc = ground.data.arc.next;
-			ground.data.height = ground.data.arc.LengthRadius(radius);
-			ground.data.angle /= ground.data.height;
-			ground.data.angle += ground.data.arc.Begin(radius);
-			return Evaluate(ref ground, radius);
+			ground.angle	-= ground.end; //FIXME: verbose, redundant, inelegant
+			ground.angle	*= ground.height;
+			ground.arc		 = ground.arc.next;
+			ground.height	 = ground.arc.LengthRadius(radius);
+			ground.angle	/= ground.height;
+			ground.begin	 = ground.arc.Begin(radius);
+			ground.end		 = ground.arc.End(radius);
+			ground.angle	+= ground.begin;
+			return Evaluate(ground, radius);
 		}
-		if(ground.data.angle < ground.data.arc.Begin(radius))
+		if(ground.angle < ground.begin)
 		{
-			ground.data.angle -= ground.data.arc.Begin(radius);
-			ground.data.angle *= ground.data.height;
-			ground.data.arc = ground.data.arc.prev;
-			ground.data.height = ground.data.arc.LengthRadius(radius);
-			ground.data.angle /= ground.data.height;
-			ground.data.angle += ground.data.arc.End(radius);
-			return Evaluate(ref ground, radius);
+			ground.angle	-= ground.begin;
+			ground.angle	*= ground.height;
+			ground.arc		 = ground.arc.prev;
+			ground.height	 = ground.arc.LengthRadius(radius);
+			ground.begin	 = ground.arc.Begin(radius);
+			ground.end		 = ground.arc.End(radius);
+			ground.angle	/= ground.height;
+			ground.angle	+= ground.end;
+			return Evaluate(ground, radius);
 		}
 		
-		return ground.data.arc.Evaluate(ground.data.angle, radius);
+		return ground.arc.Evaluate(ground.angle, radius);
 	}
 
 	public Vector3 EvaluateNormal(float angle, float radius)
