@@ -179,6 +179,8 @@ Error message and password prompt
 
 <li>Neutral Creatures</li>
 
+<li>Projectiles</li>
+
 <li>Protagonist</li>
 
 <li>Rolling Mode</li>
@@ -196,6 +198,10 @@ Error message and password prompt
 <li>Traps</li>
 
 <li>User Interface</li>
+
+<li>virtual reality</li>
+
+<li>Weapons</li>
 
 </ul>
 </p>
@@ -5946,7 +5952,7 @@ Error message and password prompt
 <div modified="20151022021925325" title="$:/state/tab-1749438307">
 <pre>$:/core/ui/ControlPanel/Info</pre>
 </div>
-<div list="GettingStarted [[Executive Summary]] Setting Story Characters Protagonist [[Level and Enviroment]] [[Spherical 2D Polygons]] [[Arc Of Sphere]] Gameplay Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
+<div list="GettingStarted [[Executive Summary]] Setting Story Characters [[Level and Enviroment]] Gameplay Weapons Projectiles [[virtual reality]] [[Static Mode]] [[Rolling Mode]] Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div created="20151022034820290" modified="20151022034835138" title="$:/temp/advancedsearch">
@@ -5966,8 +5972,8 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20151022031513354" modified="20151118161856876" title="$:/temp/search">
-<pre></pre>
+<div created="20151022031513354" modified="20160323165054157" title="$:/temp/search">
+<pre>static</pre>
 </div>
 <div author="JeremyRuston" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.9">
 <pre>{
@@ -6214,8 +6220,10 @@ Shadows—teleport behind the player.</pre>
 <div created="20151022021400190" modified="20151022021524099" tags="" title="Executive Summary">
 <pre>Stuff Stuff Stuff Stuff Stuff</pre>
 </div>
-<div created="20151022031708818" modified="20151118160956131" title="Game Controls">
+<div created="20151022031708818" modified="20160323170122502" title="Game Controls">
 <pre>Ideally, the Steam Controller or a mouse and keyboard would be used in Abaddon, since it allows the player to have a simple movement axis and a complex targeting axis.
+
+Other controllers, like the Wii-mote or Razer Hydra, could be far superior for targeting.
 
 The camera always drifts to target the player after the camera has been idle. Looking around in VR means looking away from the player, which is centered along the z-axis of the camera (forward).
 
@@ -6229,8 +6237,10 @@ On a [[True Ground]], the vertical and horizontal velocities will be equivalent 
 
 On a wall or ceiling, however, the horizontal magnitude will be different depending on whether or not the player is traveling left, right, or neither.</pre>
 </div>
-<div created="20151022024855978" modified="20151102034056468" title="Gameplay">
-<pre>The [[Protagonist]] must use puzzling, platforming, and [[Weapons]] to fight against the barrage of [[Traps]], [[Hazards]], [[Enemies]], [[Bosses]], and [[Puzzles]] before them.
+<div created="20151022024855978" modified="20160323164143149" title="Gameplay">
+<pre>Abaddon is a [[virtual reality]] game.
+
+The [[Protagonist]] must use puzzling, platforming, and [[Weapons]] to fight against the barrage of [[Traps]], [[Hazards]], [[Enemies]], [[Bosses]], and [[Puzzles]] before them.
 
 There are a number of [[Neutral Creatures]] that help along the way.
 
@@ -6238,7 +6248,7 @@ Additionally, the player must deal with a number of [[Block Types]] that restric
 
 There are a number of [[Interactable Objects]].
 
-Design decision #1: air strafing is possible when jumping from true floors (with respect to gravity).</pre>
+Design decision #1: air strafing is possible, but has the range [-1 + Vector3.Dot(west, normal), 1 + Vector3.Dot(west, normal)].</pre>
 </div>
 <div created="20151022025836181" modified="20151022025840189" title="Hazards">
 <pre>&quot;stalactites&quot; that can be shot</pre>
@@ -6280,6 +6290,17 @@ Since the game is in [[Spherical 2D]], level design becomes warped. The game tak
 Energy Jelly Fish—in the water level (aesthetic)
 
 Muon Clouds—light particles whizing across the screen (aesthetic)
+</pre>
+</div>
+<div created="20160323170239215" modified="20160323170843396" title="Projectiles">
+<pre>Unlike in Cartesian-coordinates, there will not be one type of projectile curvature.
+
+Major curvatures are:
+
+Same integration-based equations that a jumping character uses (similar to a grenade launcher in shooters).
+Great circles-based equations (similar to a sniper rifle in shooters).
+Nav-mesh following projectiles (similar to the Bombchu in Legend of Zelda).
+Constant delta_phi, delta_theta-based equations (might be the same as great-circle equation)
 </pre>
 </div>
 <div created="20151022023803520" modified="20160315095754100" title="Protagonist">
@@ -6391,6 +6412,32 @@ The story itself is an allegory for a person in an abusive relationship who is e
 The gun, similarly, will display ammo via a reverse Roy G. Biv ammo-thermometer, which will be red only when the player has no remaining clips. Each color will extinguish from the muzzle of the gun towards its shoulder.
 
 Dialogue, journal logs, and decision trees, if present, will be indicated using pop-ups that stop time. </pre>
+</div>
+<div created="20160323164233375" modified="20160323165903530" title="virtual reality">
+<pre>VR will be used in such a way that the player can view any portion of the map by turning their head to another area of the sphere. They can even tilt their head to get a different perspective.
+
+Abaddon (previously Invertigo) is disorienting for a reason, but there are several components that mitigate these factors. Namely:
+
+Stargazer theory -- If the player is looking at an object that is functionally infinitely far away (i.e. head translation (not rotation!) does not affect perspective), then the player never has to deal with nausea induced by mismatched balance against vision.
+
+Central Focus theory -- If the player is focusing on an object that is not rotating while everything else rotates, the player will be spared some nausea. This is useful during [[Rolling Mode]] when the camera turns while the player (barring animation) stays relatively constant.
+
+Jump cuts will be used in [[Rolling Mode]] to re-orient the camera with the horizon immediately rather than causing undue nausea.
+
+Things that will likely cause some nausea:
+
+Walking on lesser arcs
+
+Walking on arcs that are not along the equator.
+
+Walking on arcs that are not parallel with the equator.
+
+Jumping in [[Rolling Mode]] or close to the poles in [[Static Mode]].
+
+Travelling through the poles (however, this will be included at least once).</pre>
+</div>
+<div created="20160323170158603" modified="20160323170232452" title="Weapons">
+<pre>Weapons can be close-range or fire [[Projectiles]]</pre>
 </div>
 
 </div>
