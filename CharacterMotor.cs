@@ -61,13 +61,13 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 			_prevPosition = _curPosition;
 			_curPosition = value;
 
-			_west  =  FindWest(_curPosition);
-			_south = -Vector3.Cross(_west, _curPosition).normalized;
+			_south = FindSouth(_curPosition);
+			_west  = FindWest(_curPosition);
 
 			if(ground.exists)
 			{
-				ground.data.right  = ground.data.arc.EvaluateRight (ground.data.angle, 0);
-				ground.data.normal = ground.data.arc.EvaluateNormal(ground.data.angle, 0);
+				ground.data.right  = ground.data.arc.EvaluateRight (ground.data.angle);
+				ground.data.normal = ground.data.arc.EvaluateNormal(ground.data.angle);
 			}
 		}
 	}
@@ -192,12 +192,17 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
-	public Vector3 FindWest(Vector3 pos)
+	public Vector3 FindWest(Vector3 position)
 	{
-		float xz = Mathf.Sqrt(pos.x*pos.x + pos.z*pos.z);
-		float xfactor = pos.x / (pos.x + pos.z);
-		float zfactor = 1f - xfactor;
-		return new Vector3(-xfactor/pos.y, 1/xz, -zfactor*pos.y).normalized; //TODO: check
+		//Assert position != Vector3.up or Vector3.down
+		return Vector3.Cross(Vector3.up, position).normalized;
+	}
+
+	public Vector3 FindSouth(Vector3 position)
+	{
+		Vector3 west = FindWest(position);
+
+		return Vector3.Cross(west, position).normalized;
 	}
 
 	public void Traverse(optional<ArcOfSphere> arc, Vector3 desiredPos)
@@ -249,12 +254,8 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 			Vector3 normal = ground.data.arc.EvaluateNormal(ground.data.angle);
 
-			Debug.Log("normal: " + normal);
-			Debug.Log("South: " + South);
-			Debug.Log("West: " + West);
-
-			horizontal_velocity = 0.1f*Vector3.Dot(West, normal);
-			vertical_velocity   = 0.1f*Vector3.Dot(South, normal);
+			horizontal_velocity = -0.1f*Vector3.Dot(West, normal);
+			vertical_velocity   =  0.1f*Vector3.Dot(South, normal);
 
 
 			Traverse(new optional<ArcOfSphere>(), transform.position);
