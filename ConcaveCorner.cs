@@ -2,6 +2,6 @@
 using UnityEditor;
 using System.Collections;
 
-public class ConcaveCorner : ArcOfSphere
+/*public class ConcaveCorner : ArcOfSphere
 {
-}
+}*/

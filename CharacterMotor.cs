@@ -133,7 +133,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	{
 		get
 		{
-			return FindSouth(current_position);
+			return Vector3.Cross(West, current_position).normalized;
 		}
 	}
 
@@ -171,21 +171,9 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	{
 		get
 		{
-			return FindWest(current_position);
+			//Assert position != Vector3.up or Vector3.down
+			return Vector3.Cross(Vector3.up, current_position).normalized;
 		}
-	}
-
-	Vector3 FindWest(Vector3 position)
-	{
-		//Assert position != Vector3.up or Vector3.down
-		return Vector3.Cross(Vector3.up, position).normalized;
-	}
-
-	public Vector3 FindSouth(Vector3 position)
-	{
-		Vector3 west = FindWest(position);
-
-		return Vector3.Cross(west, position).normalized;
 	}
 
 	public void Traverse(ArcOfSphere path, Vector3 desiredPos)
@@ -212,7 +200,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 		else
 		{
-			SphereUtility.Accelerate(ref phi, ref theta, ref vertical_velocity, ref horizontal_velocity, 0.01f, -input.x/100, Time.fixedDeltaTime);
+			SphereUtility.Accelerate(ref phi, ref theta, ref vertical_velocity, ref horizontal_velocity, 0.03f, -input.x/10, Time.fixedDeltaTime);
 
 			transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, phi, theta).normalized;
 		}

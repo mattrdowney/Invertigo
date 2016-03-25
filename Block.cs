@@ -6,8 +6,6 @@ abstract public class Block : Component
 {
 	BlockMotor						motor;
 
-	static int						guid = 0;
-
 	public virtual Vector3 Evaluate(CharacterMotor charMotor)
 	{
 		return Vector3.zero;
@@ -25,9 +23,7 @@ abstract public class Block : Component
 
 		Undo.RegisterCreatedObjectUndo(obj, "Created block");
 		
-		obj.name = guid.ToString();
-		
-		guid++;
+		obj.name = "Shape";
 		
 		return obj;
 	}
