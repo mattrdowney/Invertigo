@@ -107,7 +107,7 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 
 		/** if we don't calculate per quadrant, calculations for an arc with angle 2*PI become ambiguous because left == right
 		 */ 
-		float quadrants = Mathf.Ceil(arc.AngularRadius()*2 / (Mathf.PI / 2f)); //maximum of 4, always integral, float for casting "left" and "right"
+		float quadrants = Mathf.Ceil(arc.End() / (Mathf.PI / 2f)); //maximum of 4, always integral, float for casting "left" and "right"
 		for(float quadrant = 0; quadrant < quadrants; ++quadrant)
 		{
 			float left  = arc.End()*( quadrant      / quadrants); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
@@ -163,10 +163,8 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 	 * 
 	 *  @param collider the box collider that will be altered to contain the ArcOfSphere
 	 */
-	protected void RecalculateAABB(ArcOfSphere arc)
+	protected static void RecalculateAABB(ArcOfSphere arc)
 	{
-		BoxCollider	collider = arc.GetComponent<BoxCollider>(); 
-
 		float x_min = MaxGradient(arc, Vector3.left   ).x;
 		float x_max = MaxGradient(arc, Vector3.right  ).x;
 		float y_min = MaxGradient(arc, Vector3.down   ).y;
@@ -175,10 +173,11 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 		float z_max = MaxGradient(arc, Vector3.forward).z;
 
 		arc.transform.position = new Vector3((x_max + x_min) / 2,
-		                    				 (y_max + y_min) / 2,
-		                            		 (z_max + z_min) / 2);
+		                    			 (y_max + y_min) / 2,
+		                            	 (z_max + z_min) / 2);
 
-		collider.size   = new Vector3(x_max - x_min, 
+		BoxCollider	collider = arc.GetComponent<BoxCollider>();
+		collider.size   = new Vector3(x_max - x_min,
 		                              y_max - y_min,
 		                              z_max - z_min);
 	}

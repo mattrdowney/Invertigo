@@ -22,12 +22,10 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 	[SerializeField] Vector3								arc_right_normal;
 	
 	[SerializeField] float									arc_angle; //the angle to sweep around the center.
-	[SerializeField] float									angle_to_normal;
-	[SerializeField] float									radius_sign;
 	
 	public override float AngularRadius(float radius)
 	{
-		return angle_to_normal - radius_sign*radius;
+		return radius;
 	}
 	
 	public override float Begin(float radius)
@@ -42,8 +40,8 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 
 	public override bool Contains(Vector3 pos, float radius)
 	{
-		bool bAboveGround = Vector3.Dot(pos - Center()      , path_normal) >= 0;
-		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0; //COM means center of mass
+		bool bAboveGround = Vector3.Dot(pos - Center(radius), path_normal) >= 0;
+		bool bBelowCOM	  = Vector3.Dot(pos - Center()      , path_normal) <= 0; //COM means center of mass
 		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
 
 		bool bLeftContains		   = Vector3.Dot(pos,  arc_left_normal  ) >= 0;
@@ -71,7 +69,7 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 	void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
-		UnityEditor.Handles.DrawWireArc(Center(radius), radius_sign*path_normal, arc_left*LengthRadius(radius), arc_angle * 180 / Mathf.PI, LengthRadius(radius));
+		UnityEditor.Handles.DrawWireArc(Center(radius), -path_normal, arc_left*LengthRadius(radius), arc_angle * 180 / Mathf.PI, LengthRadius(radius));
 	}
 	
 	void DrawDefault()
@@ -110,7 +108,7 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 	
 	public override Vector3 EvaluateNormal(float angle, float radius) //FIXME: corners are inverted
 	{
-		return SphereUtility.Normal(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
+		return -SphereUtility.Normal(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
 	}
 	
 	public override Vector3 EvaluateRight(float angle, float radius)
@@ -121,8 +119,6 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 	public void Initialize(ArcOfSphere left, ArcOfSphere right)
 	{
 		this.Save();
-		
-		radius_sign = -1;
 		
 		Vector3 path_center = right.Evaluate(right.Begin());
 
@@ -143,8 +139,8 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right edge - left edge, normal), 0),
 		//                    "ArcOfSphere: Initialize: failed assert");
 		
-		arc_left_normal  = -Vector3.Cross(arc_left , radius_sign*path_normal).normalized; //CHECK: probably right, but just in case
-		arc_right_normal =  Vector3.Cross(arc_right, radius_sign*path_normal).normalized;
+		arc_left_normal  = -Vector3.Cross(arc_left , -path_normal).normalized; //CHECK: probably right, but just in case
+		arc_right_normal =  Vector3.Cross(arc_right, -path_normal).normalized;
 		
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 		
@@ -153,9 +149,9 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 			arc_angle += Mathf.PI;
 		}
 		
-		angle_to_normal = Mathf.Acos(Mathf.Min(center.magnitude, 1)); //TODO: check
-		
 		RecalculateAABB(this);
+
+		this.Save();
 	}
 	
 	/** Find the point of collision as a parameterization of a circle.
