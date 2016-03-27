@@ -236,9 +236,6 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		
 		// draw ceil path
 		DrawArc(0.05f, Color.white);
-
-		DrawRadial(Begin(), .2f, Color.red);
-		DrawRadial(Begin(), .2f, Color.blue);
 		
 		DrawDefault();
 	}

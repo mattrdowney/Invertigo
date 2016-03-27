@@ -192,9 +192,16 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 	public void Move(Vector2 input)
 	{
-		if(grounded)
+		if(grounded) //FIXME: this entire if is JANK
 		{
-			angle += input.x / height / 64;
+			if(input.sqrMagnitude > 1) input.Normalize();
+
+			Transform camera = GameObject.Find("MainCamera").transform;
+
+			Vector3 input3D = new Vector3(input.x, input.y, 0f);
+			if(input3D.sqrMagnitude > 1) input3D.Normalize();
+
+			angle += Vector3.Dot(camera.rotation*input3D, right) / height / 64;
 
 			transform.position = ArcOfSphere.Evaluate(ground.data, radius);
 		}

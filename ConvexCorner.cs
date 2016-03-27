@@ -44,12 +44,11 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 		bool bBelowCOM	  = Vector3.Dot(pos - Center()      , path_normal) <= 0; //COM means center of mass
 		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
 
-		bool bLeftContains		   = Vector3.Dot(pos,  arc_left_normal  ) >= 0;
-		bool bRightContains		   = Vector3.Dot(pos, arc_right_normal) >= 0;
-		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
-		int  nOutOfThree		   = CountTrueBooleans(bLeftContains, bRightContains, bIsObtuse);
+		bool bLeftContains	= Vector3.Dot(pos,  arc_left_normal  ) >= 0;
+		bool bRightContains	= Vector3.Dot(pos, arc_right_normal) >= 0;
+		bool bCorrectAngle	= bLeftContains && bRightContains;
 		
-		return bIsAtCorrectElevation && nOutOfThree >= 2;
+		return bIsAtCorrectElevation && bCorrectAngle;
 	}
 	
 	public override optional<float> Distance(Vector3 to, Vector3 from, float radius) //distance is Euclidean but is (guaranteed?) to be sorted correctly with the current assertions about speed vs player_radius
@@ -106,14 +105,14 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
 	}
 	
-	public override Vector3 EvaluateNormal(float angle, float radius) //FIXME: corners are inverted
+	public override Vector3 EvaluateNormal(float angle, float radius)
 	{
 		return -SphereUtility.Normal(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
 	}
 	
 	public override Vector3 EvaluateRight(float angle, float radius)
 	{
-		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, AngularRadius(radius), angle);
+		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, Mathf.PI / 2 - AngularRadius(radius), angle);
 	}
 	
 	public void Initialize(ArcOfSphere left, ArcOfSphere right)
