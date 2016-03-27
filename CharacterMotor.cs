@@ -196,12 +196,12 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		{
 			if(input.sqrMagnitude > 1) input.Normalize();
 
-			Transform camera = GameObject.Find("MainCamera").transform;
+			Transform camera_transform = GameObject.Find("MainCamera").transform;
 
 			Vector3 input3D = new Vector3(input.x, input.y, 0f);
 			if(input3D.sqrMagnitude > 1) input3D.Normalize();
 
-			angle += Vector3.Dot(camera.rotation*input3D, right) / height / 64;
+			angle += Vector3.Dot(camera_transform.rotation*input3D, right) / height / 64;
 
 			transform.position = ArcOfSphere.Evaluate(ground.data, radius);
 		}
@@ -224,8 +224,13 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 			Vector3 normal = ground.data.arc.EvaluateNormal(ground.data.angle);
 
-			horizontal_velocity = -0.1f*Vector3.Dot(West, normal);
-			vertical_velocity   =  0.1f*Vector3.Dot(South, normal);
+			Transform camera_transform = GameObject.Find("MainCamera").transform;
+
+			Vector3 input3D = new Vector3(input.x, input.y, 0f);
+			if(input3D.sqrMagnitude > 1) input3D.Normalize();
+
+			horizontal_velocity = -0.1f*Vector3.Dot(West, normal) + -0.1f*Vector3.Dot(West, camera_transform.rotation*input3D);
+			vertical_velocity   =  0.1f*Vector3.Dot(South, normal) + 0.1f*Vector3.Dot(South, camera_transform.rotation*input3D);
 
 			ground = new optional<GroundInfo>();
 		}
