@@ -1,4 +1,4 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Abaddon : MonoBehaviour { }
+public class Invertigo : MonoBehaviour { }

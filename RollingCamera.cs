@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class RollingCamera : MonoBehaviour
+public class RollingCamera : InvertigoCamera
 {
 	Transform camera_transform;
 	CharacterMotor motor;

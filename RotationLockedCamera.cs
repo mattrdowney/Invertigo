@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class StaticCamera : AbaddonCamera
+public class RotationLockedCamera : InvertigoCamera
 {
 	Transform camera_transform;
 	CharacterMotor motor;
