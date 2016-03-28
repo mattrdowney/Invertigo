@@ -2,7 +2,7 @@
 using UnityEditor;
 using System.Collections;
 
-public static class AbaddonUtility
+public static class InvertigoUtility
 {
 	public static void Align(SceneView scene_view)
 	{

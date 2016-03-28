@@ -18,30 +18,35 @@ public class ArcOfSphereEditor : Editor
 			//self.prev.Initialize(stuffstuffstuff);
 			//self.next.Initialize(stuffstuffstuff);
 
-			//AbaddonUtility.Reattach(self.prev.prev, self.prev, self, self.next, self.next.next); //TODO: do I need 5 args?
+			//InvertigoUtility.Reattach(self.prev.prev, self.prev, self, self.next, self.next.next); //TODO: do I need 5 args?
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.M) //m, remove selected corner
 		{
-			SelectArc(self.RemoveCorner());
+			//SelectArc(self.RemoveCorner());
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Q) //q, place a new corner using LinkLeft at mouse cursor //Consider: delete, redundant
 		{
-			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
+			Vector3 click_point = InvertigoUtility.CursorCast(scene_view.camera, e.mousePosition);
 			
-			self.prev.DivideEdge(click_point);
+			//self.prev.DivideEdge(click_point);
 		}
 		else if(e.type == EventType.KeyDown && e.keyCode == KeyCode.E) //e, place a new corner using LinkRight at mouse cursor //Consider: delete, redundant
 		{
-			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
+			Vector3 click_point = InvertigoUtility.CursorCast(scene_view.camera, e.mousePosition);
 
-			self.next.DivideEdge(click_point);
+			//self.next.DivideEdge(click_point);
 		}
+	}
+
+	void OnDrawGizmos()
+	{
+
 	}
 
 	public void OnEnable()
 	{
 		self = target as ArcOfSphere;
-		if(self.Radius() == 0)
+		if(self.LengthRadius() == 0)
 		{
 			SceneView.onSceneGUIDelegate += CornerEditor;
 		}
@@ -65,9 +70,9 @@ public class ArcOfSphereEditor : Editor
 		
 		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space) //space, place corner at mouse position
 		{
-			Vector3 click_point = AbaddonUtility.CursorCast(scene_view.camera, e.mousePosition);
+			Vector3 click_point = InvertigoUtility.CursorCast(scene_view.camera, e.mousePosition);
 
-			self.DivideEdge(click_point);
+			//self.DivideEdge(click_point);
 
 			//Reattach()
 		}
