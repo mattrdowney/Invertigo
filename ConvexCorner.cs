@@ -7,11 +7,9 @@
 
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
-using System.Linq;
 
 [System.Serializable]
-public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this in production builds
+public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in production builds
 {	
 	[SerializeField] Vector3								path_normal;
 	
@@ -115,7 +113,7 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, Mathf.PI / 2 - AngularRadius(radius), angle);
 	}
 	
-	public void Initialize(ArcOfSphere left, ArcOfSphere right)
+	public override void Initialize(ArcOfSphere left, ArcOfSphere right)
 	{
 		this.Save();
 		
@@ -143,11 +141,6 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 		
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 		
-		if(Vector3.Dot(arc_left_normal, arc_right) <= 0)
-		{
-			arc_angle += Mathf.PI;
-		}
-		
 		RecalculateAABB(this);
 
 		this.Save();
@@ -159,21 +152,24 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 	 */
 	public override optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
-		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius)); 
+		optional<Vector3> intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius)); 
 		
-		float x = Vector3.Dot(intersection, arc_left   ) / LengthRadius(radius); //TODO: optimize
-		float y = Vector3.Dot(intersection, arc_left_normal) / LengthRadius(radius);
-		
-		float angle = Mathf.Atan2(y,x);
-		
-		if(angle < 0)
+		if(intersection.exists)
 		{
-			angle += 2*Mathf.PI;
-		}
-		
-		if(angle <= arc_angle)
-		{
-			return angle;
+			float x = Vector3.Dot(intersection.data, arc_left   )     / LengthRadius(radius); //TODO: optimize
+			float y = Vector3.Dot(intersection.data, arc_left_normal) / LengthRadius(radius);
+			
+			float angle = Mathf.Atan2(y,x);
+			
+			if(angle < 0)
+			{
+				angle += 2*Mathf.PI;
+			}
+			
+			if(angle <= arc_angle)
+			{
+				return angle;
+			}
 		}
 		return new optional<float>();
 	}
@@ -188,6 +184,8 @@ public class ConvexCorner /* : Component*/ : ArcOfSphere //TODO: get rid of this
 	
 	private void OnDrawGizmos() //TODO: get rid of this in production builds //It's tedious that I can't just put this in the editor code
 	{
+		return;
+
 		// draw floor path
 		DrawArc(0.0f, Color.black);
 		

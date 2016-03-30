@@ -27,5 +27,4 @@ abstract public class Enemy : Character {
 //grapple demon, changes grapple points on the map to force the player to think on their feet while dodging
 //field demon, changes gravity in one of (4?) directions to push the player into attacks
 //wall demon, one attack splits the enemy into two that eventually rejoin, only way to dodge is to go to the ceiling and drop down
-//hidden, piranha, fucking huge
-//hidden, plasma "metroid",
+//hidden, huge piranha

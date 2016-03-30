@@ -20,7 +20,7 @@ public class SphereUtility
 	/** TODO: aesthetically pleasing explanation
 	 * 
 	 */
-	public static Vector3 Intersection(Vector3 begin, Vector3 end, Vector3 center, float radius) //all credit: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
+	public static optional<Vector3> Intersection(Vector3 begin, Vector3 end, Vector3 center, float radius) //all credit: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
 		Vector3 path_center = -Vector3.Cross(begin, end).normalized;
 		

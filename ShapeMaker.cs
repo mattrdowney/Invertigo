@@ -9,23 +9,32 @@ public class ShapeMaker
 		Edge edge1 = Edge.StartEdge(block_transform, left_edge, right_edge);
 		Edge edge2 = Edge.LinkRight(edge1, left_edge);
 
-		ConvexCorner corner1 = ConvexCorner.Spawn(edge1, edge2);
-		ConvexCorner corner2 = ConvexCorner.Spawn(edge2, edge1);
+		ConvexCorner corner1 = ConvexCorner.Spawn(edge1, edge2); //could be concave
+		ConvexCorner corner2 = ConvexCorner.Spawn(edge2, edge1); //ditto
 
 		return edge2;
 	}
 
 	public static Edge DivideEdge(Edge edge, Vector3 division_point)
 	{
-		ConvexCorner left_corner  = edge.prev as ConvexCorner; //FIXME: logic after this regarding nullity
-		ConvexCorner right_corner = edge.next as ConvexCorner;
+		Corner left_corner  = edge.prev as Corner; //FIXME: logic after this regarding nullity
+		Corner right_corner = edge.next as Corner;
 
 		Edge edge2 = Edge.LinkRight(left_corner, division_point);
 
 		edge.Initialize(division_point, edge.Evaluate(edge.End()));
 
-		ArcOfSphere corner = ConvexCorner.Spawn(edge2, edge);
-		
+		Corner corner;
+
+		if(Edge.IsConvex(edge, edge2))
+		{
+			corner = ConvexCorner.Spawn(edge2, edge);
+		}
+		else
+		{
+			corner = ConcaveCorner.Spawn(edge2, edge);
+		}
+
 		left_corner .Initialize(left_corner .prev, left_corner .next);
 		right_corner.Initialize(right_corner.prev, right_corner.next);
 		

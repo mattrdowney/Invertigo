@@ -188,23 +188,31 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 	 */
 	public override optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
-		Vector3 intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius)); 
+		optional<Vector3> intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius)); 
 		
-		float x = Vector3.Dot(intersection, arc_left   ) / LengthRadius(radius); //TODO: optimize
-		float y = Vector3.Dot(intersection, arc_left_normal) / LengthRadius(radius);
-		
-		float angle = Mathf.Atan2(y,x);
-		
-		if(angle < 0)
+		if(intersection.exists)
 		{
-			angle += 2*Mathf.PI;
-		}
-		
-		if(angle <= arc_angle)
-		{
-			return angle;
+			float x = Vector3.Dot(intersection.data, arc_left   )     / LengthRadius(radius); //TODO: optimize
+			float y = Vector3.Dot(intersection.data, arc_left_normal) / LengthRadius(radius);
+			
+			float angle = Mathf.Atan2(y,x);
+			
+			if(angle < 0)
+			{
+				angle += 2*Mathf.PI;
+			}
+			
+			if(angle <= arc_angle)
+			{
+				return angle;
+			}
 		}
 		return new optional<float>();
+	}
+
+	public static bool IsConvex(Edge left, Edge right)
+	{
+		return Vector3.Dot(left.EvaluateNormal(left.End()), right.EvaluateRight(right.Begin())) > 0;
 	}
 	
 	public override float LengthRadius(float radius)
@@ -237,7 +245,7 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		// draw ceil path
 		DrawArc(0.05f, Color.white);
 		
-		DrawDefault();
+		//DrawDefault();
 	}
 
 	public override void Save()
