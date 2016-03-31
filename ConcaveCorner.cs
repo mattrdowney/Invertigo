@@ -105,7 +105,7 @@ public class ConcaveCorner : Corner
 	
 	public override Vector3 EvaluateRight(float angle, float radius)
 	{
-		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, Mathf.PI / 2 - AngularRadius(radius), angle);
+		return Vector3.Slerp(-arc_left_normal, arc_right_normal, angle);
 	}
 	
 	public override void Initialize(ArcOfSphere left, ArcOfSphere right)

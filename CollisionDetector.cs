@@ -2,6 +2,11 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+//CONSIDER: use CapsuleCollider! imprecise but pretty badass
+//CONSIDER2: use expanded CapsuleCollider to account for curvature!
+//CONSIDER3: use AABB going from position1 to position2 //preferred //YESH no frame speed limit!
+//NOTA BENE: CONSIDER3 has a bug! fix it with (well-optimized) math or logic
+
 public class CollisionDetector : MonoBehaviour
 {
 	List<ArcOfSphere>	colliders;
@@ -56,3 +61,14 @@ public class CollisionDetector : MonoBehaviour
 		return closest; //charMotor.Traverse(closest, desiredPos, curPosition);
 	}
 }
+
+/*stating the obvious:
+
+If I can make a cool space partioning scheme for angular space that would allow for average log(n) time for a true ArcCast against all geometry, that would be godly.
+Making a true ArcCastAll would be amazing as well. One that can take multiple rotations and lesser circles into account and return a list of all collisions
+...and how many times they happen and in what order
+ArcCast would use SphereUtility.Intersection with optional<Vector3>
+
+There really needs to be a distinction between Triggers and Colliders, although I can probably just make another class for that
+
+ */

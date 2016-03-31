@@ -9,6 +9,7 @@ public class SphereUtility
 		Vector3 z = z_axis * Mathf.Cos(phi);
 		return x + y + z;
 	}
+
 	public static Vector3 Normal(Vector3 x_axis, Vector3 y_axis, Vector3 z_axis, float phi, float theta)
 	{
 		Vector3 x = x_axis * -Mathf.Cos(phi) * Mathf.Cos(theta);
@@ -22,14 +23,16 @@ public class SphereUtility
 	 */
 	public static optional<Vector3> Intersection(Vector3 begin, Vector3 end, Vector3 center, float radius) //all credit: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
 	{
-		Vector3 path_center = -Vector3.Cross(begin, end).normalized;
+		//TODO: make optional!
+
+		Vector3 path_center = -Vector3.Cross(begin, end).normalized; //TODO: optional<Vector3>: make sure the two centers are at most radius1 + radius2 apart
 		
 		float cos_r1 = Mathf.Cos(radius); 		//gives the distance that should be travelled along   "center"    to reach the origin of the sphere with radius "radius"
 		float cos_r2 = Mathf.Cos(Mathf.PI / 2); //gives the distance that should be travelled along "path_center" to reach the origin of the sphere with radius PI / 2
 		
 		float cos_angle = Vector3.Dot(center, path_center); //the magnitude of center and path_center are 1, so |center||path_center|cos(angle) = center . path_center gives cos(angle)
 		
-		Vector3 binormal_1 = Vector3.Cross(path_center, Vector3.right).normalized;
+		Vector3 binormal_1 = Vector3.Cross(path_center, Vector3.right).normalized; //TODO: optional here I think
 		Vector3 binormal_2 = Vector3.Cross(center, Vector3.right).normalized;
 		
 		float center_fraction = (cos_r1 - cos_r2 * cos_angle) / (1 - cos_angle*cos_angle); //FIXME: rename

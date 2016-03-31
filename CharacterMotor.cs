@@ -24,7 +24,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 	//TODO: make flags into delegater Queue<*fun()> https://social.msdn.microsoft.com/Forums/en-US/2c08a0d0-58e4-4df6-b6d3-75e785fff8a8/array-of-function-pointers?forum=csharplanguage
 
-	//ideally there should be three setters: position, velocity, and segment
+	//ideally there should be ~3 setters: position, velocity, and segment
 
 	public float angle
 	{
@@ -61,10 +61,18 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		{
 			return _current_position;
 		}
-		set //set must contain extra logic for gravity, normal, and right
+		set
 		{
 			_previous_position = _current_position;
 			_current_position = value;
+		}
+	}
+
+	public Vector3 East
+	{
+		get
+		{
+			return Vector3.Cross(Vector3.up, current_position).normalized;;
 		}
 	}
 
@@ -109,6 +117,14 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
+	public Vector3 North
+	{
+		get
+		{
+			return -South;
+		}
+	}
+
 	public float radius
 	{
 		get
@@ -133,7 +149,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	{
 		get
 		{
-			return Vector3.Cross(West, current_position).normalized;
+			return Vector3.Cross(East, current_position).normalized;
 		}
 	}
 
@@ -167,12 +183,12 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}*/
 
-	public Vector3 West
+	public Vector3 West //lol skrub, can u even math?
 	{
 		get
 		{
 			//Assert position != Vector3.up or Vector3.down
-			return Vector3.Cross(Vector3.up, current_position).normalized;
+			return -East;
 		}
 	}
 
@@ -194,22 +210,26 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	{
 		if(grounded) //FIXME: this entire if is JANK
 		{
-			if(input.sqrMagnitude > 1) input.Normalize();
+			if(input.sqrMagnitude > 1) input.Normalize(); 
 
-			Transform camera_transform = GameObject.Find("MainCamera").transform;
+			Transform camera_transform = GameObject.Find("MainCamera").transform; //FIXME: JANK
 
-			Vector3 input3D = new Vector3(input.x, input.y, 0f);
+			Vector3 input3D = new Vector3(input.x, input.y, 0f); //FIXME: JANK
 			if(input3D.sqrMagnitude > 1) input3D.Normalize();
 
-			angle += /*Vector3.Dot(camera_transform.rotation*input3D, right)*/ input.x / height / 64;
+			angle += Vector3.Dot(camera_transform.rotation*input3D, right) / height / 64;
 
 			transform.position = ArcOfSphere.Evaluate(ground.data, radius);
+
+			transform.rotation = Quaternion.LookRotation(transform.position, arc.EvaluateNormal(angle, radius));
 		}
 		else
 		{
 			SphereUtility.Accelerate(ref phi, ref theta, ref vertical_velocity, ref horizontal_velocity, 0.03f, -input.x/10, Time.fixedDeltaTime);
 
 			transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, phi, theta).normalized;
+
+			transform.rotation = Quaternion.LookRotation(transform.position, -South);
 		}
 
 		current_position = transform.position;
@@ -224,13 +244,13 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 			Vector3 normal = ground.data.arc.EvaluateNormal(ground.data.angle);
 
-			Transform camera_transform = GameObject.Find("MainCamera").transform;
+			Transform camera_transform = GameObject.Find("MainCamera").transform; //FIXME: JANK
 
 			Vector3 input3D = new Vector3(input.x, input.y, 0f);
 			if(input3D.sqrMagnitude > 1) input3D.Normalize();
 
-			horizontal_velocity = -0.1f*Vector3.Dot(West, normal) + -0.1f*Vector3.Dot(West, camera_transform.rotation*input3D);
-			vertical_velocity   =  0.1f*Vector3.Dot(South, normal) + 0.1f*Vector3.Dot(South, camera_transform.rotation*input3D);
+			horizontal_velocity = -0.1f*Vector3.Dot(East , normal) + -0.1f*Vector3.Dot(East , camera_transform.rotation*input3D);
+			vertical_velocity   = -0.1f*Vector3.Dot(North, normal) + -0.1f*Vector3.Dot(North, camera_transform.rotation*input3D);
 
 			ground = new optional<GroundInfo>();
 		}
