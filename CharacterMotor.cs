@@ -201,7 +201,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 			Vector3 input3D = new Vector3(input.x, input.y, 0f);
 			if(input3D.sqrMagnitude > 1) input3D.Normalize();
 
-			angle += Vector3.Dot(camera_transform.rotation*input3D, right) / height / 64;
+			angle += /*Vector3.Dot(camera_transform.rotation*input3D, right)*/ input.x / height / 64;
 
 			transform.position = ArcOfSphere.Evaluate(ground.data, radius);
 		}

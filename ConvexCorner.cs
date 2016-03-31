@@ -184,7 +184,7 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 	
 	private void OnDrawGizmos() //TODO: get rid of this in production builds //It's tedious that I can't just put this in the editor code
 	{
-		return;
+		//return;
 
 		// draw floor path
 		DrawArc(0.0f, Color.black);

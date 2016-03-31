@@ -29,9 +29,13 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		return angle_to_normal - radius;
 	}
 	
-	public override float Begin(float radius)
+	public override float Begin(float radius) //TODO: optimize, avoid recursion if convenient
 	{
-		return 0; //FIXME: temporary
+		if(radius == 0) return 0; //CRISIS AVERTED: FIXME tho: 'tis JANK as fuck
+
+		Vector3 left = prev.Evaluate(prev.End(radius), radius);
+		Vector3 right = Evaluate(0, radius);
+		return Vector3.Angle(left, right) * Mathf.PI / 180;
 	}
 	
 	protected override Vector3 Center(float radius)
@@ -70,7 +74,7 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 	void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
-		UnityEditor.Handles.DrawWireArc(Center(radius), path_normal, arc_left*LengthRadius(radius), arc_angle * 180 / Mathf.PI, LengthRadius(radius));
+		UnityEditor.Handles.DrawWireArc(Center(radius), path_normal, Evaluate(Begin(radius), radius) - Center(radius), (End(radius) - Begin(radius)) * 180 / Mathf.PI, LengthRadius(radius));
 	}
 	
 	void DrawDefault()
@@ -94,9 +98,13 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		UnityEditor.Handles.DrawLine(Evaluate(angle, 0), Evaluate(angle, radius)); 
 	}
 	
-	public override float End(float radius)
+	public override float End(float radius) //TODO: optimize, avoid recursion if convenient
 	{
-		return arc_angle; //FIXME: duct tape solution; doesn't take variable player height into account for concave edges
+		if(radius == 0) return arc_angle; //CRISIS AVERTED: FIXME tho: 'tis JANK as fuck
+
+		Vector3 left = Evaluate(arc_angle, radius);
+		Vector3 right = next.Evaluate(next.Begin(radius), radius);
+		return arc_angle - Vector3.Angle(left, right) * Mathf.PI / 180;
 	}
 	
 	/** return the position of the player based on the circular path
@@ -212,7 +220,7 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 
 	public static bool IsConvex(Edge left, Edge right)
 	{
-		return Vector3.Dot(left.EvaluateNormal(left.End()), right.EvaluateRight(right.Begin())) > 0;
+		return Vector3.Dot(left.EvaluateNormal(left.End()), right.EvaluateRight(right.Begin())) < 0;
 	}
 	
 	public override float LengthRadius(float radius)

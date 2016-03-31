@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEditor;
 
 public class ShapeMaker
 {
@@ -9,8 +10,8 @@ public class ShapeMaker
 		Edge edge1 = Edge.StartEdge(block_transform, left_edge, right_edge);
 		Edge edge2 = Edge.LinkRight(edge1, left_edge);
 
-		ConvexCorner corner1 = ConvexCorner.Spawn(edge1, edge2); //could be concave
-		ConvexCorner corner2 = ConvexCorner.Spawn(edge2, edge1); //ditto
+		Corner corner1 = SpawnCorner(edge1, edge2, null);
+		Corner corner2 = SpawnCorner(edge2, edge1, null);
 
 		return edge2;
 	}
@@ -24,21 +25,38 @@ public class ShapeMaker
 
 		edge.Initialize(division_point, edge.Evaluate(edge.End()));
 
-		Corner corner;
+		SpawnCorner(edge2, edge, null);
+		SpawnCorner(left_corner.prev as Edge, left_corner.next as Edge, left_corner);
+		SpawnCorner(right_corner.prev as Edge, right_corner.next as Edge, right_corner);
+		
+		return edge;
+	}
 
-		if(Edge.IsConvex(edge, edge2))
+	public static Corner SpawnCorner(Edge left, Edge right, Corner old)
+	{
+		if(old)
 		{
-			corner = ConvexCorner.Spawn(edge2, edge);
+			Undo.DestroyObjectImmediate(old.gameObject);
+		}
+
+		Corner result;
+
+		if(Edge.IsConvex(left, right))
+		{
+			result = ConvexCorner.Spawn(left, right);
 		}
 		else
 		{
-			corner = ConcaveCorner.Spawn(edge2, edge);
+			result = ConcaveCorner.Spawn(left, right);
 		}
 
-		left_corner .Initialize(left_corner .prev, left_corner .next);
-		right_corner.Initialize(right_corner.prev, right_corner.next);
-		
-		return edge;
+		result.Initialize(left, right);
+
+		result.Save();
+		left.Save();
+		right.Save();
+
+		return result;
 	}
 
 	/*public ArcOfSphere RemoveCorner()

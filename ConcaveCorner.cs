@@ -27,7 +27,7 @@ public class ConcaveCorner : Corner
 	
 	protected override Vector3 Center(float radius)
 	{
-		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, radius, arc_angle/2);
+		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, radius/Mathf.Cos(arc_angle/2), arc_angle/2); //wow, I can't believe it was really cos(angle/2)
 	}
 	
 	public override bool Contains(Vector3 pos, float radius)
@@ -60,7 +60,8 @@ public class ConcaveCorner : Corner
 	void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
-		UnityEditor.Handles.DrawWireArc(Center(radius), -Center(radius), arc_left*LengthRadius(radius), arc_angle * 180 / Mathf.PI, LengthRadius(radius));
+		float height = Vector3.Distance(next.Evaluate(next.Begin(radius)), Evaluate(End(radius),radius));
+		UnityEditor.Handles.DrawWireArc(Center(radius), -Center(radius), prev.Evaluate(prev.End(radius), radius) - Center(radius), arc_angle * 180 / Mathf.PI, height);
 	}
 	
 	void DrawDefault()
@@ -99,7 +100,7 @@ public class ConcaveCorner : Corner
 	
 	public override Vector3 EvaluateNormal(float angle, float radius)
 	{
-		return -SphereUtility.Normal(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
+		return Vector3.Slerp(arc_left, arc_right, angle/arc_angle);
 	}
 	
 	public override Vector3 EvaluateRight(float angle, float radius)
@@ -130,8 +131,8 @@ public class ConcaveCorner : Corner
 		//DebugUtility.Assert(Mathf.Approximately(Vector3.Dot(right edge - left edge, normal), 0),
 		//                    "ArcOfSphere: Initialize: failed assert");
 		
-		arc_left_normal  = -Vector3.Cross(arc_left , -path_normal).normalized; //CHECK: probably right, but just in case
-		arc_right_normal =  Vector3.Cross(arc_right, -path_normal).normalized;
+		arc_left_normal  =  Vector3.Cross(arc_left , -path_normal).normalized; //CHECK: probably right, but just in case
+		arc_right_normal = -Vector3.Cross(arc_right, -path_normal).normalized;
 		
 		arc_angle = Vector3.Angle(arc_left, arc_right) * Mathf.PI / 180;
 		
@@ -170,22 +171,16 @@ public class ConcaveCorner : Corner
 	
 	public override float LengthRadius(float radius)
 	{
-		Vector3 center   = Center(radius);
-		Vector3 position = Evaluate(Begin(), radius);
+		Vector3 CoM   = Center(radius);
+		Vector3 floor = Center();
 		
-		return (position - center).magnitude;
+		return (CoM - floor).magnitude;
 	}
 	
 	private void OnDrawGizmos() //TODO: get rid of this in production builds //It's tedious that I can't just put this in the editor code
-	{
-		// draw floor path
-		DrawArc(0.0f, Color.black);
-		
-		// draw CoM path
-		DrawArc(0.025f, Color.grey);
-		
-		// draw ceil path
-		DrawArc(0.05f, Color.white);
+	{	
+		// draw Floor path
+		DrawArc(0.025f, Color.black);
 		
 		DrawDefault();
 	}
