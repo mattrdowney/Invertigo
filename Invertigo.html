@@ -43,7 +43,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 " />
 <link id="faviconLink" rel="shortcut icon" href="favicon.ico">
-<title>Abaddon — A 2D gravity-manipulation platformer with VR support</title>
+<title>Invertigo — A 2D gravity-manipulation platformer with VR support</title>
 <!--~~ This is a Tiddlywiki file. The points of interest in the file are marked with this pattern ~~--><!--~~ Raw markup ~~-->
 
 </head>
@@ -145,7 +145,7 @@ Error message and password prompt
 
 <li>$:/themes/tiddlywiki/vanilla</li>
 
-<li>Abaddon</li>
+<li>2D VR</li>
 
 <li>Arc Of Sphere</li>
 
@@ -171,11 +171,11 @@ Error message and password prompt
 
 <li>Interactable Objects</li>
 
+<li>Invertigo</li>
+
 <li>Jumping</li>
 
 <li>Level and Enviroment</li>
-
-<li>Neo Australia</li>
 
 <li>Neutral Creatures</li>
 
@@ -5940,8 +5940,8 @@ Error message and password prompt
 <div created="20151022015941521" modified="20151022020007359" title="$:/SiteSubtitle">
 <pre>A 2D gravity-manipulation platformer with VR support</pre>
 </div>
-<div created="20151022015932166" modified="20151022015933288" title="$:/SiteTitle">
-<pre>Abaddon</pre>
+<div created="20151022015932166" modified="20160401070235972" title="$:/SiteTitle">
+<pre>Invertigo</pre>
 </div>
 <div modified="20151022034833170" title="$:/state/tab--1498284803">
 <pre>$:/core/ui/AdvancedSearch/System</pre>
@@ -5952,7 +5952,7 @@ Error message and password prompt
 <div modified="20151022021925325" title="$:/state/tab-1749438307">
 <pre>$:/core/ui/ControlPanel/Info</pre>
 </div>
-<div list="GettingStarted [[Executive Summary]] Setting Story Characters [[Level and Enviroment]] Gameplay Weapons Projectiles [[virtual reality]] [[Static Mode]] [[Rolling Mode]] Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
+<div list="Protagonist Jumping [[Camera Control]] GettingStarted [[Executive Summary]] Setting Invertigo Story Characters [[Level and Enviroment]] Gameplay [[virtual reality]] [[2D VR]] Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div created="20151022034820290" modified="20151022034835138" title="$:/temp/advancedsearch">
@@ -5972,8 +5972,8 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20151022031513354" modified="20160323165054157" title="$:/temp/search">
-<pre>static</pre>
+<div created="20151022031513354" modified="20160401072352266" title="$:/temp/search">
+<pre></pre>
 </div>
 <div author="JeremyRuston" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.9">
 <pre>{
@@ -6080,10 +6080,20 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20151022030438066" modified="20151102033655959" title="Abaddon">
-<pre>Outdated:
+<div created="20160401070819290" modified="20160401072122894" title="2D VR">
+<pre>There are two major types of 2D VR that I am aware of:
 
-Abaddon is a science fiction puzzle platformer with action elements. The gameplay takes place on the inside of a spaceship that is transporting ten million prisoners to [[Neo Australia]]. The ship contains no security guards and is monitored solely by computer AI. The game culminates in the ship hurling towards a nearby star, whereupon the [[Protagonist]] of the story saves the day.</pre>
+180 degree 2D VR
+
+Imagine draping a large table cloth (which represents a 2D level) over a small sphere. The taught portions of the cloth (a hemisphere) represent the camera viewport. Works well with top-down exploration games.
+
+360 degree 2D VR
+
+The camera is floating immobile in outer space and can rotate to view new sections of the map. Works well with 3D puzzle games and top-down games and the &quot;shell genre&quot;.
+
+The two major genres that work with 2D VR are top-downs and platformers, although other genres might be able to work (e.g. fighting games).
+
+I really want Team17 to make a 2D VR game with procedural destruction using arcs (instead of texels).</pre>
 </div>
 <div created="20151022062041822" modified="20160315100550884" title="Arc Of Sphere">
 <pre>An Arc Of Sphere (AoS) is any arc that can traverse the surface of a unit sphere.
@@ -6103,8 +6113,8 @@ Lower vertices--the two vertices that create the floor plane. They are the same 
 [[Circle of a Sphere|https://en.wikipedia.org/wiki/Circle_of_a_sphere]]
 [[Small Circle|http://mathworld.wolfram.com/SmallCircle.html]]</pre>
 </div>
-<div created="20151022031603191" modified="20160315100754939" title="Art">
-<pre>The art style of [[Abaddon]] will be scalable vector graphics (.svg format) projected onto a sphere with recolored outline graphics to indicate health and ammo.
+<div created="20151022031603191" modified="20160401072149477" title="Art">
+<pre>The art style of [[Invertigo]] will be scalable vector graphics (.svg format) projected onto a sphere with recolored outline graphics to indicate health and ammo.
 
 The game will use a blood thermometer effect (human healthbar) to make the player bleed upwards from their feet while taking damage.
 
@@ -6170,8 +6180,8 @@ hidden, plasma &quot;metroid&quot;,
 hidden, Versor—creates vortexes through which it may travel, can travel unimpeded through walls, one hit kill.
 </pre>
 </div>
-<div created="20151118163019373" modified="20151118163107510" title="Camera Control">
-<pre>There are two camera modes for [[Abaddon]]: [[Static Mode]] and [[Rolling Mode]]</pre>
+<div created="20151118163019373" modified="20160401072305386" title="Camera Control">
+<pre>There are two camera modes for [[Invertigo]]: [[Static Mode]] and [[Rolling Mode]]</pre>
 </div>
 <div created="20151022030135893" modified="20151022030145624" title="Characters">
 <pre>[[Protagonist]]
@@ -6220,8 +6230,8 @@ Shadows—teleport behind the player.</pre>
 <div created="20151022021400190" modified="20151022021524099" tags="" title="Executive Summary">
 <pre>Stuff Stuff Stuff Stuff Stuff</pre>
 </div>
-<div created="20151022031708818" modified="20160323170122502" title="Game Controls">
-<pre>Ideally, the Steam Controller or a mouse and keyboard would be used in Abaddon, since it allows the player to have a simple movement axis and a complex targeting axis.
+<div created="20151022031708818" modified="20160401072208270" title="Game Controls">
+<pre>Ideally, the Steam Controller or a mouse and keyboard would be used in Invertigo, since it allows the player to have a simple movement axis and a complex targeting axis.
 
 Other controllers, like the Wii-mote or Razer Hydra, could be far superior for targeting.
 
@@ -6237,8 +6247,8 @@ On a [[True Ground]], the vertical and horizontal velocities will be equivalent 
 
 On a wall or ceiling, however, the horizontal magnitude will be different depending on whether or not the player is traveling left, right, or neither.</pre>
 </div>
-<div created="20151022024855978" modified="20160323164143149" title="Gameplay">
-<pre>Abaddon is a [[virtual reality]] game.
+<div created="20151022024855978" modified="20160401070743513" title="Gameplay">
+<pre>Invertigo is a [[virtual reality]] game.
 
 The [[Protagonist]] must use puzzling, platforming, and [[Weapons]] to fight against the barrage of [[Traps]], [[Hazards]], [[Enemies]], [[Bosses]], and [[Puzzles]] before them.
 
@@ -6264,25 +6274,25 @@ Elevators—metallic!
 
 Conveyor Belts—carry different objects (e.g. barrels)</pre>
 </div>
-<div created="20151118161006087" modified="20151118163007572" title="Jumping">
+<div created="20151022030438066" modified="20160401070535821" title="Invertigo">
+<pre>Invertigo is a science-fiction puzzle platformer with action elements.</pre>
+</div>
+<div created="20151118161006087" modified="20160401072315385" title="Jumping">
 <pre>Jumping, like in most games, is instantaneous. This creates a number of problems including:
 
 [[Camera Control]]
 
 [[Air Strafing]]
 
-While camera rolling is a huge part of movement in [[Abaddon]], it cannot be a part of normal jumping because it would induce more nausea than walking around the edges of a polygon. In the case of jumping, the player would need a ground (stationary object) to be able to make sense of what is happening, so jump cutting is preferable.
+While camera rolling is a huge part of movement in [[Invertigo]], it cannot be a part of normal jumping because it would induce more nausea than walking around the edges of a polygon. In the case of jumping, the player would need a ground (stationary object) to be able to make sense of what is happening, so jump cutting is preferable.
 
 Unlike most games, jumping is not triggered by pressing the space bar, but by releasing the spacebar. Pressing and holding the space bar will shift the camera's orientation so that it aligns with gravity.
 </pre>
 </div>
-<div created="20151022030936058" modified="20151022031240615" title="Level and Enviroment">
-<pre>The levels in [[Abaddon]] are [[Spherical 2D]], which means that if the player were placed at the origin of a unit-sphere the level design would be the painting on the walls of the unit-sphere.
+<div created="20151022030936058" modified="20160401070718219" title="Level and Enviroment">
+<pre>The levels in [[Invertigo]] are [[Spherical 2D]], which means that if the player were placed at the origin of a unit-sphere the level design would be the painting on the walls of the unit-sphere.
 
 Since the game is in [[Spherical 2D]], level design becomes warped. The game takes cues from [[Spherical Geometry]] to allow complex [[Spherical 2D Polygons]].</pre>
-</div>
-<div created="20151102033702158" modified="20151102033754990" title="Neo Australia">
-<pre>this was never actually a thing, it is merely a working concept that helps me focus on the details that matter (I'm not too fond of story-centric games).</pre>
 </div>
 <div created="20151022041404135" modified="20151022041433485" title="Neutral Creatures">
 <pre>Gravity biomes—push the player upwards
@@ -6303,8 +6313,8 @@ Nav-mesh following projectiles (similar to the Bombchu in Legend of Zelda).
 Constant delta_phi, delta_theta-based equations (might be the same as great-circle equation)
 </pre>
 </div>
-<div created="20151022023803520" modified="20160315095754100" title="Protagonist">
-<pre>The protagonist is a long-haired gender-neutral character in [[Abaddon]]. Aside from their hair, flat chest, and curvelessness, the iconic trait that defines them is a series of scars (or, perhaps, tattoos) along their legs: burgundy tallies of the number of days they have been imprisoned.
+<div created="20151022023803520" modified="20160401072324903" title="Protagonist">
+<pre>The protagonist is a long-haired gender-neutral character in [[Invertigo]]. Aside from their hair, flat chest, and curvelessness, the iconic trait that defines them is a series of scars (or, perhaps, tattoos) along their legs: burgundy tallies of the number of days they have been imprisoned.
 
 The protagonist is the most unique character in the game because they are the only character that is three-dimensional. The model is tessellated and the material is made from an infinite resolution .svg to give them a symbolic depth that is infinite as opposed to the two-dimensional levels and enemies.</pre>
 </div>
@@ -6313,16 +6323,16 @@ The protagonist is the most unique character in the game because they are the on
 
 In the air, the camera is gravity-aligned, so movement right will move [[East]], while moving left will move [[West]]. Thus air movement in Rolling Mode simplifies to [[Static Mode]].</pre>
 </div>
-<div created="20151022030752961" modified="20151022042538083" title="Setting">
-<pre>[[Abaddon]] takes place at an ambiguous year inside a prison vessel that is transporting millions to a new planet.
+<div created="20151022030752961" modified="20160401070643281" title="Setting">
+<pre>[[Invertigo]] takes place at an ambiguous year inside a prison vessel that is transporting millions to a new planet.
 
-There are multiple settings for Abaddon, in order of their appearance:	
+There are multiple settings for Invertigo, in order of their appearance:	
 
 1) The spaceship and its modest artificial gravity traveling along the gradient from the [[North Pole]] to the [[South Pole]]
 
 2) High gravity rooms used for muscle training in deep space; these are able to change the direction of gravity into any arbitrary direction.
 
-3) The core of the centrifuge, which is circular.
+3) The core of the centrifuge, which is spherical.
 
 4) Normal physics, time trial escape
 
@@ -6331,8 +6341,8 @@ There are multiple settings for Abaddon, in order of their appearance:
 6) Zero-gravity environments not linked to the centrifuge, player receives one-hit-kills (due to explosive decompression).
 </pre>
 </div>
-<div created="20151022031321697" modified="20160315112417345" title="Sound and Music">
-<pre>The music in [[Abaddon]] will typically be sparse noise amidst frequent silence. The music will alternate between unnerving and frantic, with moments of resolution towards the end.
+<div created="20151022031321697" modified="20160401072146736" title="Sound and Music">
+<pre>The music in [[Invertigo]] will typically be sparse noise amidst frequent silence. The music will alternate between unnerving and frantic, with moments of resolution towards the end.
 
 Potential titles:
 
@@ -6396,8 +6406,8 @@ Collisions are only defined in a sector from the ground protruded up one half th
 
 This happens regardless of whether or not the player is in the air or grounded (in contrast to [[Rolling Mode]]).</pre>
 </div>
-<div created="20151022022023733" modified="20151022023750238" title="Story">
-<pre>[[Abaddon]] follows the perspective of a long-haired gender-ambiguous prisoner being transported through space on a prison vessel. The [[Protagonist]] wakes up in a state of confusion in the middle of a ship-wide prison break and must travel through a series of levels that progress towards the core of the space ship, defeat the final boss (the [[Core Demon]]) and flee from the collapsing vessel.
+<div created="20151022022023733" modified="20160401070704588" title="Story">
+<pre>[[Invertigo]] follows the perspective of a long-haired gender-ambiguous prisoner being transported through space on a prison vessel. The [[Protagonist]] wakes up in a state of confusion in the middle of a ship-wide prison break and must travel through a series of levels that progress towards the core of the space ship, defeat the final boss (the [[Core Demon]]) and flee from the collapsing vessel.
 
 The story itself is an allegory for a person in an abusive relationship who is empowered to confront and break up with their partner.</pre>
 </div>
@@ -6406,17 +6416,17 @@ The story itself is an allegory for a person in an abusive relationship who is e
 
 (indestructible?) enemies that gravitate towards grounded enemies on same surface, slow down otherwise</pre>
 </div>
-<div created="20151022033408540" modified="20151102034740449" title="User Interface">
-<pre>The user-interface in [[Abaddon]] is minimalist, using a red rim-shader blood-thermometer effect to indicate damage. The player can receive [[impact damage]] and [[bleed damage]], but can only be killed by impact damage. When a player cannot take any more damage without dying, the [[Protagonist]] will flash red.
+<div created="20151022033408540" modified="20160401072159081" title="User Interface">
+<pre>The user-interface in [[Invertigo]] is minimalist, using a red rim-shader blood-thermometer effect to indicate damage. The player can receive [[impact damage]] and [[bleed damage]], but can only be killed by impact damage. When a player cannot take any more damage without dying, the [[Protagonist]] will flash red.
 
 The gun, similarly, will display ammo via a reverse Roy G. Biv ammo-thermometer, which will be red only when the player has no remaining clips. Each color will extinguish from the muzzle of the gun towards its shoulder.
 
 Dialogue, journal logs, and decision trees, if present, will be indicated using pop-ups that stop time. </pre>
 </div>
-<div created="20160323164233375" modified="20160323165903530" title="virtual reality">
-<pre>VR will be used in such a way that the player can view any portion of the map by turning their head to another area of the sphere. They can even tilt their head to get a different perspective.
+<div created="20160323164233375" modified="20160401072229423" title="virtual reality">
+<pre>[[2D VR]] will be used in such a way that the player can view any portion of the map by turning their head to another area of the sphere. They can even tilt their head to get a different perspective.
 
-Abaddon (previously Invertigo) is disorienting for a reason, but there are several components that mitigate these factors. Namely:
+Invertigo is disorienting for a reason, but there are several components that mitigate these factors. Namely:
 
 Stargazer theory -- If the player is looking at an object that is functionally infinitely far away (i.e. head translation (not rotation!) does not affect perspective), then the player never has to deal with nausea induced by mismatched balance against vision.
 
