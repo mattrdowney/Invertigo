@@ -50,9 +50,9 @@ public static class InvertigoUtility
 
 		float desired_phi = Mathf.Asin(-position.y) + Mathf.PI/2;
 
-		for(float row = 0; row <= 2*rows; ++row) //going over with off by one errors won't ruin the program...
+		for(float row = 0; row <= rows + 1; ++row) //going over with off by one errors won't ruin the program...
 		{
-			float temp_phi = Mathf.Asin(Mathf.Cos(Mathf.PI*row/2/rows)) + Mathf.PI/2;
+			float temp_phi = Mathf.Asin(Mathf.Cos(Mathf.PI*row/(rows+1))) + Mathf.PI/2;
 			float error = Mathf.Abs(Mathf.DeltaAngle(desired_phi * Mathf.Rad2Deg, temp_phi * Mathf.Rad2Deg));
 			float old_error = Mathf.Abs(Mathf.DeltaAngle(desired_phi * Mathf.Rad2Deg, phi * Mathf.Rad2Deg));
 
@@ -64,9 +64,9 @@ public static class InvertigoUtility
 
 		float desired_theta = Mathf.Atan2(position.z, position.x);
 
-		for(float column = 0; column < columns; ++column) //... but going under is bad
+		for(float column = 0; column < columns*2; ++column) //... but going under is bad
 		{
-			float temp_theta = column/columns*2*Mathf.PI;
+			float temp_theta = column/columns*Mathf.PI;
 			float error = Mathf.Abs(Mathf.DeltaAngle(desired_theta * Mathf.Rad2Deg, temp_theta * Mathf.Rad2Deg));
 			float old_error = Mathf.Abs(Mathf.DeltaAngle(desired_theta * Mathf.Rad2Deg, theta * Mathf.Rad2Deg));
 
