@@ -5,7 +5,7 @@ using System.Collections;
 [CustomEditor (typeof(Invertigo))] //http://code.tutsplus.com/tutorials/how-to-add-your-own-tools-to-unitys-editor--active-10047
 public class InvertigoEditor : Editor
 {
-	Invertigo									self;
+	Invertigo								self;
 
 	Vector3									first_click_point;
 
@@ -18,6 +18,11 @@ public class InvertigoEditor : Editor
 		if(e.type == EventType.KeyDown && e.keyCode == KeyCode.Space)
 		{
 			Vector3 click_point = InvertigoUtility.CursorCast(scene_view.camera, e.mousePosition);
+
+			if(e.shift)
+			{
+				click_point = InvertigoUtility.CursorCast(scene_view.camera, e.mousePosition, self.rows, self.columns);
+			}
 
 			if(!edge)
 			{
@@ -47,8 +52,16 @@ public class InvertigoEditor : Editor
 		{
 			SceneView.onSceneGUIDelegate -= Edit;
 			SceneView.onSceneGUIDelegate += Create;
+			
+			if(Event.current.shift)
+			{
+				first_click_point = InvertigoUtility.CursorCast(scene_view.camera, Event.current.mousePosition, self.rows, self.columns);
+			}
+			else
+			{
+				first_click_point = InvertigoUtility.CursorCast(scene_view.camera, Event.current.mousePosition);
+			}
 
-			first_click_point = InvertigoUtility.CursorCast(scene_view.camera, Event.current.mousePosition);
 
 			Debug.Log("Switching to Create");
 			InvertigoUtility.Align(scene_view);

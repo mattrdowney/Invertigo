@@ -38,6 +38,49 @@ public static class InvertigoUtility
 		return cam.ScreenPointToRay(new Vector3(mousePos.x, cam.pixelHeight - mousePos.y, cam.nearClipPlane)).direction;
 	}
 
+	public static Vector3 CursorCast(Camera cam, Vector2 mousePos, int rows, int columns)
+	{
+		return Snap(CursorCast(cam, mousePos), rows, columns);
+	}
+
+	static Vector3 Snap(Vector3 position, float rows, float columns)
+	{
+		float phi = 0;
+		float theta = 0;
+
+		float desired_phi = Mathf.Asin(-position.y) + Mathf.PI/2;
+
+		for(float row = 0; row <= 2*rows; ++row) //going over with off by one errors won't ruin the program...
+		{
+			float temp_phi = Mathf.Asin(Mathf.Cos(Mathf.PI*row/2/rows)) + Mathf.PI/2;
+			float error = Mathf.Abs(Mathf.DeltaAngle(desired_phi * Mathf.Rad2Deg, temp_phi * Mathf.Rad2Deg));
+			float old_error = Mathf.Abs(Mathf.DeltaAngle(desired_phi * Mathf.Rad2Deg, phi * Mathf.Rad2Deg));
+
+			if(error < old_error)
+			{
+				phi = temp_phi;
+			}
+		}
+
+		float desired_theta = Mathf.Atan2(position.z, position.x);
+
+		for(float column = 0; column < columns; ++column) //... but going under is bad
+		{
+			float temp_theta = column/columns*2*Mathf.PI;
+			float error = Mathf.Abs(Mathf.DeltaAngle(desired_theta * Mathf.Rad2Deg, temp_theta * Mathf.Rad2Deg));
+			float old_error = Mathf.Abs(Mathf.DeltaAngle(desired_theta * Mathf.Rad2Deg, theta * Mathf.Rad2Deg));
+
+			if(error < old_error)
+			{
+				theta = temp_theta;
+			}
+		}
+
+		Debug.Log("phi: " + phi + " theta: " + theta + " dphi: " + desired_phi + " dtheta: " + desired_theta);
+
+		return SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, phi, theta);
+	}
+
 	public static void RotateLeft(SceneView scene_view)
 	{
 		Transform yawTrans = GameObject.Find("/PivotYaw").transform;
