@@ -121,13 +121,12 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 	 *  If the player would go outside of [Begin(radius), End(radius)],
 	 *  the arc should transfer control of the player to (prev, next) respectively
 	 */
-	
-	public override Vector3 EvaluateNormal(float angle, float radius) //FIXME: corners are inverted
+	public override Vector3 EvaluateNormal(float angle, float radius)
 	{
-		return SphereUtility.Normal(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
-	}
+        return Vector3.Slerp(arc_left, arc_right, angle / arc_angle) * Mathf.Cos(AngularRadius(radius)) + path_normal * Mathf.Sin(AngularRadius(radius)); //TODO: optimize?
+    }
 	
-	public override Vector3 EvaluateRight(float angle, float radius)
+	public override Vector3 EvaluateRight(float angle, float radius) //TODO: optimize
 	{
 		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, AngularRadius(radius), angle);
 	}

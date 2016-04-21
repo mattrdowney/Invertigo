@@ -10,7 +10,32 @@ public class SphereUtility
 		return x + y + z;
 	}
 
-	public static Vector3 Normal(Vector3 x_axis, Vector3 y_axis, Vector3 z_axis, float phi, float theta)
+    public static Vector3 Position(float phi, float theta) //specialization of above function
+    {
+        Vector3 result = new Vector3();
+
+        result.x = Mathf.Sin(phi) * Mathf.Cos(theta);
+        result.y = Mathf.Sin(phi) * Mathf.Sin(theta);
+        result.z = Mathf.Cos(phi);
+
+        return result;
+    }
+
+    public static Vector3 Position(Vector2 spherical_position) { return Position(spherical_position.x, spherical_position.y); }
+
+    public static Vector2 SphericalPosition(Vector3 cartesian_vector)
+    {
+        if(Mathf.Abs(cartesian_vector.sqrMagnitude - 1f) < 1e-6) cartesian_vector.Normalize();
+
+        float phi = Mathf.Acos(cartesian_vector.y);
+        float theta = Mathf.Atan2(cartesian_vector.z, cartesian_vector.x);
+
+        return new Vector2(phi, theta);
+    }
+
+    public static Vector2 SphericalPosition(float x, float y, float z) { return SphericalPosition(new Vector3(x, y, z)); }
+
+    public static Vector3 Normal(Vector3 x_axis, Vector3 y_axis, Vector3 z_axis, float phi, float theta)
 	{
 		Vector3 x = x_axis * -Mathf.Cos(phi) * Mathf.Cos(theta);
 		Vector3 y = y_axis * -Mathf.Cos(phi) * Mathf.Sin(theta);
@@ -25,13 +50,24 @@ public class SphereUtility
 	{
 		//TODO: make optional!
 
-		Vector3 path_center = -Vector3.Cross(begin, end).normalized; //TODO: optional<Vector3>: make sure the two centers are at most radius1 + radius2 apart
-		
-		float cos_r1 = Mathf.Cos(radius); 		//gives the distance that should be travelled along   "center"    to reach the origin of the sphere with radius "radius"
+		Vector3 path_center = -Vector3.Cross(begin, end).normalized;
+
+        /*if (Vector3.SqrDistance(center, path_center) > radius*radius + Mathf.Sqrt(1+1)*Mathf.Sqrt(1+1) || //TODO: optional<Vector3>: make sure the two centers are at most radius1 + radius2 apart
+            center == path_center || center == -path_center)
+        {
+            return new optional<Vector3>();
+        }*/ //FIXME: JANK, unreadable, erroneous, disgusting
+
+        float cos_r1 = Mathf.Cos(radius); 		//gives the distance that should be travelled along   "center"    to reach the origin of the sphere with radius "radius"
 		float cos_r2 = Mathf.Cos(Mathf.PI / 2); //gives the distance that should be travelled along "path_center" to reach the origin of the sphere with radius PI / 2
 		
 		float cos_angle = Vector3.Dot(center, path_center); //the magnitude of center and path_center are 1, so |center||path_center|cos(angle) = center . path_center gives cos(angle)
-		
+
+        if (Mathf.Abs(cos_angle) >= 1f - 1e-6f) //podal or antipodal points have 0, 1, or infinite intersection points
+        { //EW: magic numbers
+            return new optional<Vector3>();
+        }
+
 		Vector3 binormal_1 = Vector3.Cross(path_center, Vector3.right).normalized; //TODO: optional here I think
 		Vector3 binormal_2 = Vector3.Cross(center, Vector3.right).normalized;
 		

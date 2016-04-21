@@ -59,7 +59,7 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 	 *  If the player would go outside of [Begin(radius), End(radius)],
 	 *  the arc should transfer control of the player to (prev, next) respectively
 	 */
-	public static Vector3 Evaluate(GroundInfo ground, float radius) //FIXME: use >2 parameters to re-obtain readability
+	public static Vector3 Evaluate(GroundInfo ground, float radius)
 	{
 		if(ground.angle >= ground.end)
 		{
@@ -173,8 +173,8 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 		float z_max = MaxGradient(arc, Vector3.forward).z;
 
 		arc.transform.position = new Vector3((x_max + x_min) / 2,
-		                    			 (y_max + y_min) / 2,
-		                            	 (z_max + z_min) / 2);
+		                    			 	 (y_max + y_min) / 2,
+		                            	 	 (z_max + z_min) / 2);
 
 		BoxCollider	collider = arc.GetComponent<BoxCollider>();
 		collider.size   = new Vector3(x_max - x_min,

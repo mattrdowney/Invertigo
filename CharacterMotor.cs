@@ -239,7 +239,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	{
 		if(grounded)
 		{
-			phi   = Mathf.Acos(transform.position.y);
+			phi   = Mathf.Acos(transform.position.y); //TODO: Transform2sD.SphericalPosition
 			theta = Mathf.Atan2(transform.position.z, transform.position.x);
 
 			Vector3 normal = ground.data.arc.EvaluateNormal(ground.data.angle);

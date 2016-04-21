@@ -2,10 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-//CONSIDER: use CapsuleCollider! imprecise but pretty badass
-//CONSIDER2: use expanded CapsuleCollider to account for curvature!
-//CONSIDER3: use AABB going from position1 to position2 //preferred //YESH no frame speed limit!
-//NOTA BENE: CONSIDER3 has a bug! fix it with (well-optimized) math or logic
+//CONSIDER: use AABB going from position1 to position2 //no frame speed limit!
+//NOTA BENE: has a bug! fix it with (well-optimized) math or logic
 
 public class CollisionDetector : MonoBehaviour
 {
@@ -26,7 +24,7 @@ public class CollisionDetector : MonoBehaviour
 		}
 	}
 
-	//step 0.5: Character Controller removes the observed SphericalIsoscelesTriangle to a vector in OnCollisionEnter...
+	//step 0.5: Character Controller removes the observed SphericalIsoscelesTriangle from a vector in OnCollisionEnter...
 	void OnCollisionExit(Collision collisions)
 	{
 		foreach(ContactPoint col in collisions.contacts)

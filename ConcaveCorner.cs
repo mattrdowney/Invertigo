@@ -103,8 +103,8 @@ public class ConcaveCorner : Corner
 		return Vector3.Slerp(arc_left, arc_right, angle/arc_angle);
 	}
 	
-	public override Vector3 EvaluateRight(float angle, float radius)
-	{
+	public override Vector3 EvaluateRight(float angle, float radius) //TODO: optimize
+    {
 		return Vector3.Slerp(-arc_left_normal, arc_right_normal, angle);
 	}
 	
