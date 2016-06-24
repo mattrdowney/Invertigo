@@ -100,7 +100,7 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 	 */
 	public override Vector3 Evaluate(float angle, float radius)
 	{
-		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
+		return SphereUtility.SphereToCartesian(new Vector2(AngularRadius(radius), angle), arc_left, arc_left_normal, path_normal);
 	}
 	
 	public override Vector3 EvaluateNormal(float angle, float radius)
@@ -111,7 +111,7 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 
     public override Vector3 EvaluateRight(float angle, float radius) //TODO: optimize
     {
-		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, Mathf.PI / 2 - AngularRadius(radius), angle);
+		return SphereUtility.SphereToCartesian(new Vector2(Mathf.PI / 2 - AngularRadius(radius), angle), arc_left_normal, -arc_left, path_normal);
 	}
 	
 	public override void Initialize(ArcOfSphere left, ArcOfSphere right)

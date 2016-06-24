@@ -4,7 +4,7 @@ using System.Collections;
 public class Invertigo : MonoBehaviour
 {
 	public int rows = 15; //equator drawn when rows is odd
-	public int columns = 8; //RENAME?: misleading //always draws 2*columns lines from the North to South pole
+	public int columns = 16; //RENAME?: misleading //always draws 2*columns lines from the North to South pole
 
 	void OnDrawGizmos()
 	{

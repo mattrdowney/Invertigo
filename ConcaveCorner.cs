@@ -27,7 +27,7 @@ public class ConcaveCorner : Corner
 	
 	protected override Vector3 Center(float radius)
 	{
-		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, radius/Mathf.Cos(arc_angle/2), arc_angle/2); //wow, I can't believe it was really cos(angle/2)
+		return SphereUtility.SphereToCartesian(new Vector2(radius / Mathf.Cos(arc_angle / 2), arc_angle / 2), arc_left, arc_left_normal, path_normal); //wow, I can't believe it was really cos(angle/2)
 	}
 	
 	public override bool Contains(Vector3 pos, float radius)

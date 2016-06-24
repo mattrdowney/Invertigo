@@ -2,46 +2,39 @@
 
 public class SphereUtility
 {
-	public static Vector3 Position(Vector3 x_axis, Vector3 y_axis, Vector3 z_axis, float phi, float theta)
-	{
-		Vector3 x = x_axis * Mathf.Sin(phi) * Mathf.Cos(theta);
-		Vector3 y = y_axis * Mathf.Sin(phi) * Mathf.Sin(theta);
-		Vector3 z = z_axis * Mathf.Cos(phi);
-		return x + y + z;
-	}
-
-    public static Vector3 Position(float phi, float theta) //specialization of above function
+    public static Vector3 SphereToCartesian(Vector2 phi_theta)
     {
         Vector3 result = new Vector3();
 
-        result.x = Mathf.Sin(phi) * Mathf.Cos(theta);
-        result.y = Mathf.Sin(phi) * Mathf.Sin(theta);
-        result.z = Mathf.Cos(phi);
+        result.x = Mathf.Sin(phi_theta.x) * Mathf.Cos(phi_theta.y);
+        result.y = Mathf.Cos(phi_theta.x);  //NOTE: y/z swapped because unity has weird axes
+        result.z = Mathf.Sin(phi_theta.x) * Mathf.Sin(phi_theta.y);
 
         return result;
     }
 
-    public static Vector3 Position(Vector2 spherical_position) { return Position(spherical_position.x, spherical_position.y); }
+    public static Vector3 SphereToCartesian(Vector2 phi_theta, Vector3 x_axis, Vector3 y_axis, Vector3 z_axis)
+	{
+        Vector3 base_position = SphereToCartesian(phi_theta);
 
-    public static Vector2 SphericalPosition(Vector3 cartesian_vector)
+        Vector3 result = new Vector3();
+   
+        result  = x_axis * base_position.x;
+		result += y_axis * base_position.z;  //NOTE: y/z swapped because unity has weird axes
+        result += z_axis * base_position.y; 
+
+        return result;
+	}
+
+    public static Vector2 CartesianToSphere(Vector3 cartesian_vector)
     {
-        if(Mathf.Abs(cartesian_vector.sqrMagnitude - 1f) < 1e-6) cartesian_vector.Normalize();
+        DebugUtility.Assert(Mathf.Abs(cartesian_vector.sqrMagnitude - 1f) < 1e-6, "Cartesian vector was not normalized when passed in");
 
         float phi = Mathf.Acos(cartesian_vector.y);
         float theta = Mathf.Atan2(cartesian_vector.z, cartesian_vector.x);
 
         return new Vector2(phi, theta);
     }
-
-    public static Vector2 SphericalPosition(float x, float y, float z) { return SphericalPosition(new Vector3(x, y, z)); }
-
-    public static Vector3 Normal(Vector3 x_axis, Vector3 y_axis, Vector3 z_axis, float phi, float theta)
-	{
-		Vector3 x = x_axis * -Mathf.Cos(phi) * Mathf.Cos(theta);
-		Vector3 y = y_axis * -Mathf.Cos(phi) * Mathf.Sin(theta);
-		Vector3 z = z_axis *  Mathf.Sin(phi);
-		return x + y + z;
-	}
 
 	/** TODO: aesthetically pleasing explanation
 	 * 
@@ -168,7 +161,7 @@ public class SphereUtility
 		// 1/(vel_y*pos_y + 2*vel_y*pos_y*pos_y)*Integral(a,b)[(vel_y + vel_y*pos_y)*E(x)]]d_x
 
 		//this, the way I see it now, is a way of weighting the distribution,
-		// sort of like how you can get the moment of inertia by Integral(a,b)[Mass(x)*DistanceFromCenter(x)]dx
+		// sort of like how you can get the moment of inertia by Integral(a,b)[Mass(x)*DistanceFromCenter(x)]dx/TotalMass
 
 		//I need a probability distribution function that generates the fraction of time spent in a given position during freefall...
 		// while the original equation might be it, I sort of doubt it.

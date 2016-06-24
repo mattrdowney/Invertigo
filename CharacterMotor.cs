@@ -227,9 +227,8 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		{
 			SphereUtility.Accelerate(ref phi, ref theta, ref vertical_velocity, ref horizontal_velocity, 0.03f, -input.x/10, Time.fixedDeltaTime);
 
-			transform.position = SphereUtility.Position(Vector3.right, Vector3.forward, Vector3.up, phi, theta).normalized;
-
-			transform.rotation = Quaternion.LookRotation(transform.position, -South);
+			transform.position = SphereUtility.SphereToCartesian(new Vector2(phi, theta));
+			transform.rotation = Quaternion.LookRotation(transform.position, North);
 		}
 
 		current_position = transform.position;

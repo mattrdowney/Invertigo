@@ -112,7 +112,7 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 	 */
 	public override Vector3 Evaluate(float angle, float radius)
 	{
-		return SphereUtility.Position(arc_left, arc_left_normal, path_normal, AngularRadius(radius), angle);
+		return SphereUtility.SphereToCartesian(new Vector2(AngularRadius(radius), angle), arc_left, arc_left_normal, path_normal);
 	}
 	
 	/** return the position of the player based on the circular path
@@ -128,7 +128,7 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 	
 	public override Vector3 EvaluateRight(float angle, float radius) //TODO: optimize
 	{
-		return SphereUtility.Position(arc_left_normal, -arc_left, path_normal, AngularRadius(radius), angle);
+		return SphereUtility.SphereToCartesian(new Vector2(AngularRadius(radius), angle), arc_left_normal, -arc_left, path_normal);
 	}
 	
 	/** Recompute the orientation of a SphericalIsoscelesarc

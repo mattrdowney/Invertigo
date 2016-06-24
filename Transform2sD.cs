@@ -4,7 +4,7 @@ using System.Collections;
 [RequireComponent(typeof(Transform))]
 public class Transform2sD : MonoBehaviour
 {
-    public Transform self { get; private set; }
+    Transform self;
 
 	// Use this for initialization
 	void Start ()
@@ -16,11 +16,11 @@ public class Transform2sD : MonoBehaviour
     {
         get
         {
-            return SphereUtility.SphericalPosition(self.position);
+            return SphereUtility.CartesianToSphere(self.position);
         }
         set
         {
-            self.position = SphereUtility.Position(value);
+            self.position = SphereUtility.SphereToCartesian(value);
             self.LookAt(self.position);
         }
     }
