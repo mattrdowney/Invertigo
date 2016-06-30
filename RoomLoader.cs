@@ -3,47 +3,21 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
-static class RoomLoader //use Strategy Pattern
+class RoomLoader : MonoBehaviour //use Strategy Pattern
 {
-    enum MaxRooms { kInfinite = -1, kTwo = 2 };
+    IRoomLoader strategy;
 
-    static MaxRooms room_limit;
-
-
-
-    static Dictionary<int, GameObject> loaded_rooms;
-    static Dictionary<int, AsyncOperation> loading_rooms;
-
-	static void EnterNexus(Nexus connection)
+    public void Start()
     {
-        if (room_limit == MaxRooms.kTwo)
-        {
-            GameObject last_room = loaded_rooms[connection.near_id];
-            loaded_rooms.Clear();
-            loaded_rooms.Add(connection.near_id, last_room);
-            if (!loading_rooms.ContainsKey(connection.far_id))
-            {
-                AsyncOperation request = SceneManager.LoadSceneAsync(connection.far_id, LoadSceneMode.Additive);
-                request.allowSceneActivation = true;
-                loading_rooms.Add(connection.far_id, request);
-            }
-        }
+        strategy = new BasicRoomLoader();
+
+        strategy.Setup();
+
+        StartCoroutine(Wait());
     }
 
-    static void EnterRoom(Nexus connection)
+    IEnumerator Wait()
     {
-        UpdateThreads();
-        //if()
-    }
-
-    static void UpdateThreads()
-    {
-        foreach(AsyncOperation thread in loading_rooms.Values)
-        {
-            if(thread.isDone)
-            {
-                //thread.
-            }
-        }
+        yield return new WaitUntil(() => strategy.IsDone());
     }
 }
