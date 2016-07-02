@@ -3,20 +3,33 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
-class RoomLoader : MonoBehaviour //use Strategy Pattern
+abstract class RoomLoader : MonoBehaviour //use Strategy Pattern //FIXME: Entire file is JANK
 {
-    IRoomLoader strategy;
-
     int initial_level = 1;
+
+    // Static singleton instance //all credit for Singleton pattern to http://clearcutgames.net/home/?p=437
+    private static RoomLoader instance;
+
+    // Static singleton property
+    public static RoomLoader Instance
+    {
+        // Here we use the ?? operator, to return 'instance' if 'instance' does not equal null
+        // otherwise we assign instance to a new component and return that
+        get { return instance ?? (instance = new GameObject("RoomLoader").AddComponent<BasicRoomLoader>()); }
+    }
 
     public void Start()
     {
-        strategy = new BasicRoomLoader();
-
-        strategy.Setup();
+        Setup();
 
         StartCoroutine(Wait());
     }
+
+    public abstract void EnterPortal(Portal link);
+    public abstract void ExitNexus(Nexus connection);
+    public abstract void Interpolate();
+    public abstract bool IsDone();
+    public abstract void Setup();
 
     private void LoadRoom(int level)
     {
@@ -35,7 +48,7 @@ class RoomLoader : MonoBehaviour //use Strategy Pattern
 
     IEnumerator Wait()
     {
-        yield return new WaitUntil(() => strategy.IsDone());
+        yield return new WaitUntil(() => IsDone());
 
         LoadRoom(initial_level);
 

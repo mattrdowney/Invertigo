@@ -3,29 +3,29 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
-class SingleRoomLoader : IRoomLoader
+class SingleRoomLoader : RoomLoader
 {
-    public void EnterNexus(Nexus connection)
+    public override void EnterPortal(Portal link)
     {
 
     }
 
-    public void EnterRoom(Nexus connection)
+    public override void ExitNexus(Nexus connection)
     {
 
     }
 
-    public void Interpolate()
+    public override void Interpolate()
     {
 
     }
 
-    public bool IsDone()
+    public override bool IsDone()
     {
         return true;
     }
 
-    public void Setup()
+    public override void Setup()
     {
 
     }

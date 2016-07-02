@@ -3,26 +3,26 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
-class BasicRoomLoader : IRoomLoader
+class BasicRoomLoader : RoomLoader
 {
     Queue<AsyncOperation> level_requests;
 
-    public void EnterNexus(Nexus connection)
+    public override void EnterPortal(Portal link)
     {
 
     }
 
-    public void EnterRoom(Nexus connection)
+    public override void ExitNexus(Nexus connection)
     {
 
     }
 
-    public void Interpolate()
+    public override void Interpolate()
     {
 
     }
 
-    public bool IsDone()
+    public override bool IsDone()
     {
         while(level_requests.Count != 0)
         {
@@ -45,7 +45,7 @@ class BasicRoomLoader : IRoomLoader
         return true;
     }
 
-    public void Setup()
+    public override void Setup()
     {
         Debug.Log("Setup begin");
 
