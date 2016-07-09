@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 class DoubleRoomLoader : RoomLoader
 {
-    public override void EnterPortal(Portal link)
+    public void EnterPortal(Portal link)
     {
        /*GameObject last_room = loaded_rooms[connection.near_id];
        loaded_rooms.Clear();
@@ -16,16 +16,6 @@ class DoubleRoomLoader : RoomLoader
            request.allowSceneActivation = true;
            loading_rooms.Add(connection.far_id, request);
        }*/
-    }
-
-    public override void ExitNexus(Nexus connection)
-    {
-
-    }
-
-    public override void Interpolate()
-    {
-
     }
 
     public override bool IsDone()

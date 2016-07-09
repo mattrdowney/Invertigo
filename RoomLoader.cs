@@ -20,30 +20,41 @@ abstract class RoomLoader : MonoBehaviour //use Strategy Pattern //FIXME: Entire
 
     public void Start()
     {
+        if(instance)
+        {
+            Debug.Log("Fatal Err0r");
+        }
+        else
+        {
+            instance = this;
+        }
+
         Setup();
 
         StartCoroutine(Wait());
     }
 
-    public abstract void EnterPortal(Portal link);
-    public abstract void ExitNexus(Nexus connection);
-    public abstract void Interpolate();
     public abstract bool IsDone();
     public abstract void Setup();
 
-    private void LoadRoom(int level)
+    private void ToggleRoom(int level, bool state)
     {
         GameObject root = GameObject.Find("/" + level.ToString());
 
-        root.SetActiveRecursively(true);
+        for (int child_id = 0; child_id < root.transform.childCount; child_id++)
+        {
+            root.transform.GetChild(child_id).gameObject.SetActive(state);
+        } 
     }
 
-    private void UnloadRoom(int level)
+    public void LoadRoom(int level)
     {
-        GameObject root = GameObject.Find("/" + level.ToString());
+        ToggleRoom(level, true);
+    }
 
-        root.SetActiveRecursively(false); // make all objects stop updating inside room
-        root.SetActive(true); //keep the root object loaded so it can be found with GameObject.Find
+    public void UnloadRoom(int level)
+    {
+        ToggleRoom(level, false);
     }
 
     IEnumerator Wait()
