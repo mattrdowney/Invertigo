@@ -15,6 +15,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 	[SerializeField] public float					horizontal_velocity;
 
 	optional<GroundInfo>							ground;
+    optional<Nexus>                                 connection;
 
 	Dictionary<string, float>						flags; //XXX: Strategy Pattern?
 
@@ -24,7 +25,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 	//TODO: make flags into delegater Queue<*fun()> https://social.msdn.microsoft.com/Forums/en-US/2c08a0d0-58e4-4df6-b6d3-75e785fff8a8/array-of-function-pointers?forum=csharplanguage
 
-	//ideally there should be ~3 setters: position, velocity, and segment
+	//ideally there should be ~4 setters: position, velocity, segment, Nexus
 
 	public float angle
 	{
@@ -109,6 +110,14 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
+    public bool limbo
+    {
+        get
+        {
+            return connection.exists;
+        }
+    }
+
 	public Vector3 normal
 	{
 		get
@@ -183,7 +192,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}*/
 
-	public Vector3 West //lol skrub, can u even math?
+	public Vector3 West
 	{
 		get
 		{
@@ -206,7 +215,19 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		current_position = ArcOfSphere.Evaluate(ground.data, radius);
 	}
 
-	public void Move(Vector2 input)
+    public void EnterNexus(Nexus _connection)
+    {
+        connection = _connection;
+        this.GetComponent<SphereCollider>().enabled = false; //TODO: UNJANKIFY
+        ground = new optional<GroundInfo>();
+    }
+
+    public void ExitNexus()
+    {
+        connection = new optional<Nexus>();
+    }
+
+    public void Move(Vector2 input)
 	{
 		if(grounded) //FIXME: this entire if is JANK
 		{
@@ -223,6 +244,10 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 			transform.rotation = Quaternion.LookRotation(transform.position, arc.EvaluateNormal(angle, radius));
 		}
+        else if(limbo)
+        {
+            connection.data.Move(Input.GetAxis("Vertical"), this);
+        }
 		else
 		{
 			SphereUtility.Accelerate(ref phi, ref theta, ref vertical_velocity, ref horizontal_velocity, 0.03f, -input.x/10, Time.fixedDeltaTime);

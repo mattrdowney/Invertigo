@@ -41,7 +41,7 @@ public class Player : Character
 
 		motor.Move(input);
 
-		if(!motor.grounded)
+		if(!motor.grounded && !motor.limbo)
 		{	
 			//Calculate collision information
 			optional<ArcOfSphere> arc = detector.ArcCast(motor.current_position, motor.previous_position, motor.radius);
@@ -51,7 +51,7 @@ public class Player : Character
 				motor.Traverse(arc.data, motor.current_position);
 			}
 		}
-		else if(Time.time - jump_request < 0.2f)
+		else if(motor.grounded && Time.time - jump_request < 0.2f)
 		{
 			motor.Jump();
 			jump_request = -100;
