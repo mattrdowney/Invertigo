@@ -218,7 +218,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
     public void EnterNexus(Nexus _connection)
     {
         connection = _connection;
-        this.GetComponent<SphereCollider>().enabled = false; //TODO: UNJANKIFY
+        this.GetComponent<CollisionDetector>().Deactivate(); //TODO: UNJANKIFY?
         ground = new optional<GroundInfo>();
     }
 
@@ -229,7 +229,11 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
     public void Move(Vector2 input)
 	{
-		if(grounded) //FIXME: this entire if is JANK
+        if (limbo)
+        {
+            connection.data.Move(Input.GetAxis("Vertical"), this);
+        }
+        else if (grounded) //FIXME: this entire if is JANK
 		{
 			if(input.sqrMagnitude > 1) input.Normalize(); 
 
@@ -244,10 +248,6 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
 			transform.rotation = Quaternion.LookRotation(transform.position, arc.EvaluateNormal(angle, radius));
 		}
-        else if(limbo)
-        {
-            connection.data.Move(Input.GetAxis("Vertical"), this);
-        }
 		else
 		{
 			SphereUtility.Accelerate(ref phi, ref theta, ref vertical_velocity, ref horizontal_velocity, 0.03f, -input.x/10, Time.fixedDeltaTime);

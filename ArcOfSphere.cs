@@ -100,59 +100,112 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 	public void LinkBlock(Transform block_transform) { Undo.SetTransformParent(this.transform, block_transform, "Link arc to block"); }
 	public void LinkBlock(ArcOfSphere other) { LinkBlock(other.gameObject.transform.parent); }
 
-	protected static Vector3 MaxGradient(ArcOfSphere arc, Vector3 desired)
+	public Vector3 ClosestPoint(Vector3 point) //TODO: eliminate code duplication with MaxGradient //HACK: may not work in all or even most cases
 	{
-		Vector3 max_gradient = Vector3.zero;
-		float max_product = Mathf.NegativeInfinity;
+		Vector3 closest_point = Vector3.zero;
+		float min_distance = Mathf.Infinity;
 
 		/** if we don't calculate per quadrant, calculations for an arc with angle 2*PI become ambiguous because left == right
 		 */ 
-		float quadrants = Mathf.Ceil(arc.End() / (Mathf.PI / 2f)); //maximum of 4, always integral, float for casting "left" and "right"
+		float quadrants = Mathf.Ceil(this.End() / (Mathf.PI / 2f)); //maximum of 4, always integral, float for casting "left" and "right"
 		for(float quadrant = 0; quadrant < quadrants; ++quadrant)
 		{
-			float left  = arc.End()*( quadrant      / quadrants); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
-			float right = arc.End()*((quadrant + 1) / quadrants); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
+			float left  = this.End()*( quadrant      / quadrants); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
+			float right = this.End()*((quadrant + 1) / quadrants); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
 			
-			float left_product  = Vector3.Dot(arc.Evaluate(left) , desired); //find the correlation factor between left and the desired direction
-			float right_product = Vector3.Dot(arc.Evaluate(right), desired);
+			float left_distance  = (this.Evaluate(left) - point).sqrMagnitude; //find the correlation factor between left and the desired direction
+			float right_distance = (this.Evaluate(right) - point).sqrMagnitude;
 
 			/** this is basically a binary search
 			 * 
-			 *  1) take the left and right vectors and compute their dot products with the desired direction.
-			 *  2) take the lesser dot product and ignore that half of the remaining arc
+			 *  1) take the left and right vectors and compute the (squared) distance between the desired point.
+			 *  2) take the larger distance and ignore that half of the remaining arc
 			 */
 			for(int iteration = 0; iteration < 8*sizeof(float); ++iteration) //because we are dealing with floats, more precision could help (or hurt?)
 			{
 				float midpoint = (left + right) / 2;
-				if(left_product < right_product) //is the right vector closer to the desired direction?
-				{
-					left = midpoint; //throw out the left half if the right vector is closer
-					left_product = Vector3.Dot(arc.Evaluate(left), desired);
-				}
-				else
+				if(right_distance > left_distance) //is the right vector further from the desired point?
 				{
 					right = midpoint; //throw out the right half if the left vector is closer
-					right_product = Vector3.Dot(arc.Evaluate(right), desired);
-				}
+                    right_distance = (this.Evaluate(right) - point).sqrMagnitude;
+                }
+				else
+				{
+					left = midpoint; //throw out the left half if the right vector is closer
+                    left_distance  = (this.Evaluate(left) - point).sqrMagnitude;
+                }
 			}
 			
-			/** figure out if this quadrant contains a larger gradient
+			/** figure out if this quadrant contains a closer point
 			 */
-			if(max_product < right_product)
+			if(min_distance > right_distance)
 			{
-				max_gradient = arc.Evaluate(right);
-				max_product = right_product;
+				closest_point = this.Evaluate(right);
+				min_distance = right_distance;
 			}
-			if(max_product < left_product)
+			if(min_distance > left_distance)
 			{
-				max_gradient = arc.Evaluate(left);
-				max_product = left_product;
+                closest_point = this.Evaluate(left);
+                min_distance = left_distance;
 			}
 		}
-		return max_gradient;
+        Debug.Log((closest_point - point).magnitude);
+		return closest_point;
 	}
 
-	public abstract float LengthRadius(float radius);
+    protected static Vector3 MaxGradient(ArcOfSphere arc, Vector3 desired)
+    {
+        Vector3 max_gradient = Vector3.zero;
+        float max_product = Mathf.NegativeInfinity;
+
+        /** if we don't calculate per quadrant, calculations for an arc with angle 2*PI become ambiguous because left == right
+		 */
+        float quadrants = Mathf.Ceil(arc.End() / (Mathf.PI / 2f)); //maximum of 4, always integral, float for casting "left" and "right"
+        for (float quadrant = 0; quadrant < quadrants; ++quadrant)
+        {
+            float left = arc.End() * (quadrant / quadrants); //get beginning of quadrant i.e. 0.00,0.25,0.50,0.75
+            float right = arc.End() * ((quadrant + 1) / quadrants); //get    end    of quadrant i.e. 0.25,0.50,0.75,1.00
+
+            float left_product = Vector3.Dot(arc.Evaluate(left), desired); //find the correlation factor between left and the desired direction
+            float right_product = Vector3.Dot(arc.Evaluate(right), desired);
+
+            /** this is basically a binary search
+			 * 
+			 *  1) take the left and right vectors and compute their dot products with the desired direction.
+			 *  2) take the lesser dot product and ignore that half of the remaining arc
+			 */
+            for (int iteration = 0; iteration < 8 * sizeof(float); ++iteration) //because we are dealing with floats, more precision could help (or hurt?)
+            {
+                float midpoint = (left + right) / 2;
+                if (left_product < right_product) //is the right vector closer to the desired direction?
+                {
+                    left = midpoint; //throw out the left half if the right vector is closer
+                    left_product = Vector3.Dot(arc.Evaluate(left), desired);
+                }
+                else
+                {
+                    right = midpoint; //throw out the right half if the left vector is closer
+                    right_product = Vector3.Dot(arc.Evaluate(right), desired);
+                }
+            }
+
+            /** figure out if this quadrant contains a larger gradient
+			 */
+            if (max_product < right_product)
+            {
+                max_gradient = arc.Evaluate(right);
+                max_product = right_product;
+            }
+            if (max_product < left_product)
+            {
+                max_gradient = arc.Evaluate(left);
+                max_product = left_product;
+            }
+        }
+        return max_gradient;
+    }
+
+    public abstract float LengthRadius(float radius);
 	public float LengthRadius() { return LengthRadius(0); }
 
 	/** Create a AABB that perfectly contains a circular arc

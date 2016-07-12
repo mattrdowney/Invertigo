@@ -11,22 +11,30 @@ public class Corridor : Nexus
 
         if(interpolation_distance < 0)
         {
-            motor.GetComponent<SphereCollider>().enabled = true;
-            Destroy(this.gameObject);
-            motor.ExitNexus();
+            ExitNexus(motor);
         }
         else if(interpolation_distance > 10f)
         {
             RoomLoader.Instance.UnloadRoom(near_id);
             RoomLoader.Instance.LoadRoom(far_id);
-            motor.GetComponent<SphereCollider>().enabled = true;
-            Destroy(this.gameObject);
-            motor.ExitNexus();
+            ExitNexus(motor);
         }
     }
 
-    protected override void ExitNexus(CharacterMotor motor)
+    protected override void ExitNexus(CharacterMotor motor) //JANK naming scheme (Note: motor.ExitNexus())
     {
-        //TODO:
+        //TODO: check if function is complete
+        motor.ExitNexus();
+
+        CollisionDetector detector = motor.GetComponent<CollisionDetector>();
+        detector.Activate();
+        optional<ArcOfSphere> closest_arc = detector.BaloonCast(motor.current_position, motor.radius + 0.01f); //FIXME: magic number
+        if(!closest_arc.exists)
+        {
+            Debug.Log("Something is very wrong here");
+        }
+        motor.Traverse(closest_arc.data, closest_arc.data.ClosestPoint(motor.current_position));
+
+        Destroy(this.gameObject);
     }
 }

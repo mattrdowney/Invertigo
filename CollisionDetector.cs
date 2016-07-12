@@ -12,6 +12,7 @@ public class CollisionDetector : MonoBehaviour
 	void Awake()
 	{
 		colliders = new List<ArcOfSphere>();
+        Activate();
 	}
 
 	//step 0: Character Controller adds the observed SphericalIsoscelesTriangle to a vector in OnCollisionEnter...
@@ -25,14 +26,43 @@ public class CollisionDetector : MonoBehaviour
 	}
 
 	//step 0.5: Character Controller removes the observed SphericalIsoscelesTriangle from a vector in OnCollisionEnter...
-	void OnCollisionExit(Collision collisions)
+	void OnCollisionExit(Collision collisions) //FIXME: not deleting
 	{
 		foreach(ContactPoint col in collisions.contacts)
 		{
 			ArcOfSphere arc = col.otherCollider.gameObject.GetComponent<ArcOfSphere>();
-			if(arc) colliders.Remove(arc);
+            if(arc)
+            {
+                colliders.Remove(arc);
+            }
 		}
 	}
+
+    public void Activate()
+    {
+        SphereCollider region = GetComponent<SphereCollider>();
+        Collider[] arc_objects = Physics.OverlapSphere(region.transform.position + region.center, region.radius);
+
+        foreach(Collider arc_object in arc_objects)
+        {
+            ArcOfSphere arc = arc_object.gameObject.GetComponent<ArcOfSphere>();
+            if (arc)
+            {
+                colliders.Add(arc);
+            }
+        }
+
+        region.enabled = true;
+    }
+
+    public void Deactivate()
+    {
+        SphereCollider region = GetComponent<SphereCollider>();
+
+        colliders.Clear();
+
+        region.enabled = false;
+    }
 
 	public optional<ArcOfSphere> ArcCast(Vector3 desired_position, Vector3 curPos, float radius) //Not actually a true ArcCast, I'm not planned on spending 3 months on R&D'ing it either
 	{
@@ -58,6 +88,31 @@ public class CollisionDetector : MonoBehaviour
 		//step 4: the player moves in contact with the object and performs camera transitions accordingly if there was a collision.
 		return closest; //charMotor.Traverse(closest, desiredPos, curPosition);
 	}
+
+    public optional<ArcOfSphere> BaloonCast(Vector3 desired_position, float max_radius) //TODO: see if ArcCast can be combined to reduce redundancy //HACK: may not work for all or even most cases
+    {
+        optional<ArcOfSphere> closest = new optional<ArcOfSphere>();
+        optional<Vector3> closest_point = new optional<Vector3>();
+
+        //Step 1: go through each colliding arc
+        foreach (ArcOfSphere arc in colliders)
+        {
+            //step 2: ask the block if a collision actually occuring in Spherical coordinates
+            if (arc.Contains(desired_position, max_radius))
+            {
+                //step 3: if a collision is happening, find the closest collision point and compare it to the closest so far
+                Vector3 point = arc.ClosestPoint(desired_position);
+                if (!closest_point.exists || (point - desired_position).sqrMagnitude < (closest_point.data - desired_position).sqrMagnitude)
+                {
+                    closest_point = point;
+                    closest = arc;
+                }
+            }
+        }
+
+        //step 4: the player moves in contact with the object and performs camera transitions accordingly if there was a collision.
+        return closest;
+    }
 }
 
 /*stating the obvious:

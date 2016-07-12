@@ -11,14 +11,17 @@ public class Door : Portal
         if(System.Math.Sign(Input.GetAxis("Vertical")) == direction)
         {
             CharacterMotor motor = other.gameObject.GetComponent<CharacterMotor>();
-            EnterPortal(motor);
+
+            if(motor.grounded)
+            {
+                EnterPortal(motor);
+            }
         }
     }
 
     public override void EnterPortal(CharacterMotor motor)
     {
         GameObject instance = GameObject.Instantiate(Resources.Load("CorridorPrefab")) as GameObject;
-        Debug.Log(instance.name);
         Nexus result = instance.GetComponent<Corridor>();
         result.near_id = this.near_id;
         result.far_id  = this.far_id;
