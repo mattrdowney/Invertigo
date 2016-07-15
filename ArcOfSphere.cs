@@ -89,17 +89,23 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 		return ground.arc.Evaluate(ground.angle, radius);
 	}
 
-	public abstract Vector3 EvaluateNormal(float angle, float radius);
+    public abstract optional<float> CartesianToRadial(Vector3 position);
+
+    public abstract Vector3 EvaluateNormal(float angle, float radius);
 	public Vector3 EvaluateNormal(float angle) { return EvaluateNormal(angle, 0); }
 
 	public abstract Vector3 EvaluateRight(float angle, float radius);
 	public Vector3 EvaluateRight(float angle) { return EvaluateRight(angle, 0); }
 
-	public abstract optional<float> Intersect(Vector3 to, Vector3 from, float radius);
+    /** Find the point of collision with an arc.
+     */
+    public optional<Vector3> Intersect(Vector3 to, Vector3 from, float radius) { return SphereUtility.Intersection(from, to, Center(), AngularRadius(radius)); }
 
-	public void LinkBlock(Transform block_transform) { Undo.SetTransformParent(this.transform, block_transform, "Link arc to block"); }
+
+    public void LinkBlock(Transform block_transform) { Undo.SetTransformParent(this.transform, block_transform, "Link arc to block"); }
 	public void LinkBlock(ArcOfSphere other) { LinkBlock(other.gameObject.transform.parent); }
 
+    //CONSIDER: Can you "inversion of control" ClosestPoint and MaxGradient?
 	public Vector3 ClosestPoint(Vector3 point) //TODO: eliminate code duplication with MaxGradient //HACK: may not work in all or even most cases
 	{
 		Vector3 closest_point = Vector3.zero;
@@ -149,7 +155,7 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
                 min_distance = left_distance;
 			}
 		}
-        Debug.Log((closest_point - point).magnitude);
+        Debug.Log((closest_point - point).magnitude); //FIXME: precision issue? (maybe due to not setting position after leaving corridor)
 		return closest_point;
 	}
 

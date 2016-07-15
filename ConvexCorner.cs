@@ -31,12 +31,32 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		return 0;
 	}
 
-	protected override Vector3 Center(float radius)
+    public override optional<float> CartesianToRadial(Vector3 position) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
+    {
+        float x = Vector3.Dot(position, arc_left);
+        float y = Vector3.Dot(position, arc_left_normal);
+
+        float angle = Mathf.Atan2(y, x);
+
+        if (angle < 0)
+        {
+            angle += 2 * Mathf.PI;
+        }
+
+        if (angle <= arc_angle)
+        {
+            return angle;
+        }
+
+        return new optional<float>();
+    }
+
+    protected override Vector3 Center(float radius)
 	{
 		return path_normal * Mathf.Cos(AngularRadius(radius));
 	}
 
-	public override bool Contains(Vector3 pos, float radius)
+    public override bool Contains(Vector3 pos, float radius)
 	{
 		bool bAboveGround = Vector3.Dot(pos - Center(radius), path_normal) >= 0;
 		bool bBelowCOM	  = Vector3.Dot(pos - Center()      , path_normal) <= 0; //COM means center of mass
@@ -51,9 +71,16 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 	
 	public override optional<float> Distance(Vector3 to, Vector3 from, float radius) //distance is Euclidean but is (guaranteed?) to be sorted correctly with the current assertions about speed vs player_radius
 	{
-		optional<float> intersection = Intersect(to, from, radius);
-		
-		if(intersection.exists)
+        optional<Vector3> point = Intersect(from, to, radius);
+
+        optional<float> intersection = new optional<float>();
+
+        if (point.exists)
+        {
+            intersection = CartesianToRadial(point.data);
+        }
+
+        if (intersection.exists)
 		{
 			float angle = intersection.data;
 			Vector3 new_position = Evaluate(angle, radius);
@@ -146,36 +173,8 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 
 		this.Save();
 	}
-	
-	/** Find the point of collision as a parameterization of a circle.
-	 *  
-	 *  Thoughts: projecting all points onto the plane defined by normal "path_forward" would make the math simple-ish
-	 */
-	public override optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
-	{
-		optional<Vector3> intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius)); 
-		
-		if(intersection.exists)
-		{
-			float x = Vector3.Dot(intersection.data, arc_left   )     / LengthRadius(radius); //TODO: optimize
-			float y = Vector3.Dot(intersection.data, arc_left_normal) / LengthRadius(radius);
-			
-			float angle = Mathf.Atan2(y,x);
-			
-			if(angle < 0)
-			{
-				angle += 2*Mathf.PI;
-			}
-			
-			if(angle <= arc_angle)
-			{
-				return angle;
-			}
-		}
-		return new optional<float>();
-	}
-	
-	public override float LengthRadius(float radius)
+
+    public override float LengthRadius(float radius)
 	{
 		Vector3 center   = Center(radius);
 		Vector3 position = Evaluate(Begin(), radius);
@@ -188,15 +187,15 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		//return;
 
 		// draw floor path
-		DrawArc(0.0f, Color.black);
+		//DrawArc(0.0f, Color.black);
 		
 		// draw CoM path
-		DrawArc(0.025f, Color.grey);
+		//DrawArc(0.025f, Color.grey);
 		
 		// draw ceil path
-		DrawArc(0.05f, Color.white);
+		//DrawArc(0.05f, Color.white);
 		
-		DrawDefault();
+		//DrawDefault();
 	}
 
 	public override void Save()

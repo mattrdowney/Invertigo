@@ -64,7 +64,8 @@ public class CollisionDetector : MonoBehaviour
         region.enabled = false;
     }
 
-	public optional<ArcOfSphere> ArcCast(Vector3 desired_position, Vector3 curPos, float radius) //Not actually a true ArcCast, I'm not planned on spending 3 months on R&D'ing it either
+    //CONSIDER: Can you "inversion of control" ArcCast and BaloonCast?
+    public optional<ArcOfSphere> ArcCast(Vector3 desired_position, Vector3 curPos, float radius) //Not actually a true ArcCast, I'm not planned on spending 3 months on R&D'ing it either
 	{
 		optional<ArcOfSphere> closest = new optional<ArcOfSphere>();
 		optional<float> closest_distance = new optional<float>();

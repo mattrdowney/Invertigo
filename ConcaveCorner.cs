@@ -24,8 +24,28 @@ public class ConcaveCorner : Corner
 	{
 		return 0;
 	}
-	
-	protected override Vector3 Center(float radius)
+
+    public override optional<float> CartesianToRadial(Vector3 position) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
+    {
+        float x = Vector3.Dot(position, arc_left);
+        float y = Vector3.Dot(position, arc_left_normal);
+
+        float angle = Mathf.Atan2(y, x);
+
+        if (angle < 0)
+        {
+            angle += 2 * Mathf.PI;
+        }
+
+        if (angle <= arc_angle)
+        {
+            return angle;
+        }
+
+        return new optional<float>();
+    }
+
+    protected override Vector3 Center(float radius)
 	{
 		return SphereUtility.SphereToCartesian(new Vector2(radius / Mathf.Cos(arc_angle / 2), arc_angle / 2), arc_left, arc_left_normal, path_normal); //wow, I can't believe it was really cos(angle/2)
 	}
@@ -45,7 +65,15 @@ public class ConcaveCorner : Corner
 	
 	public override optional<float> Distance(Vector3 to, Vector3 from, float radius) //distance is Euclidean but is (guaranteed?) to be sorted correctly with the current assertions about speed vs player_radius
 	{
-		optional<float> intersection = Intersect(to, from, radius);
+        optional<Vector3> point = SphereUtility.Intersection(from, to, Center(radius), AngularRadius(radius));
+
+
+        optional<float> intersection = new optional<float>();
+
+        if(point.exists)
+        {
+            intersection = CartesianToRadial(point.data);
+        }
 		
 		if(intersection.exists)
 		{
@@ -140,36 +168,8 @@ public class ConcaveCorner : Corner
 		
 		this.Save();
 	}
-	
-	/** Find the point of collision as a parameterization of a circle.
-	 *  
-	 *  Thoughts: projecting all points onto the plane defined by normal "path_forward" would make the math simple-ish
-	 */
-	public override optional<float> Intersect(Vector3 to, Vector3 from, float radius) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
-	{
-		optional<Vector3> intersection = SphereUtility.Intersection(from, to, path_normal, AngularRadius(radius)); 
 
-		if(intersection.exists)
-		{
-			float x = Vector3.Dot(intersection.data, arc_left   )     / LengthRadius(radius); //TODO: optimize
-			float y = Vector3.Dot(intersection.data, arc_left_normal) / LengthRadius(radius);
-			
-			float angle = Mathf.Atan2(y,x);
-			
-			if(angle < 0)
-			{
-				angle += 2*Mathf.PI;
-			}
-			
-			if(angle <= arc_angle)
-			{
-				return angle;
-			}
-		}
-		return new optional<float>();
-	}
-	
-	public override float LengthRadius(float radius)
+    public override float LengthRadius(float radius)
 	{
 		Vector3 CoM   = Center(radius);
 		Vector3 floor = Center();
@@ -182,7 +182,7 @@ public class ConcaveCorner : Corner
 		// draw Floor path
 		DrawArc(0.025f, Color.black);
 		
-		DrawDefault();
+		//DrawDefault();
 	}
 	
 	public override void Save()

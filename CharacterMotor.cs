@@ -201,18 +201,28 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
-	public void Traverse(ArcOfSphere path, Vector3 desiredPos)
+	public void Traverse(ArcOfSphere path, Vector3 desiredPos) //I don't like these parameters, they can be fixed //I don't like that this is public, it should be private and exposed via a generic move option if possible
 	{
 		ground = new GroundInfo();
 
 		ground.data.arc		= path;
 		ground.data.block	= path.GetComponentInParent<Block>();
-		ground.data.angle	= path.Intersect(desiredPos, previous_position, radius).data; //NOTE: must be guaranteed to exist by calling function for this to work (e.g. Collision Detector :: Update)
 		ground.data.height	= path.LengthRadius(radius);
 		ground.data.begin   = path.Begin(radius);
 		ground.data.end		= path.End(radius);
 
-		current_position = ArcOfSphere.Evaluate(ground.data, radius);
+        optional<float> interpolation_factor = path.CartesianToRadial(path.ClosestPoint(desiredPos));
+
+        if(interpolation_factor.exists)
+        {
+            ground.data.angle = interpolation_factor.data;
+        }
+        else
+        {
+            Debug.Log("Critical Failure: Traverse's interpolation factor doesn't exist!");
+            ground.data.angle = 0;
+        }
+        current_position = ArcOfSphere.Evaluate(ground.data, radius);
 	}
 
     public void EnterNexus(Nexus _connection)
@@ -229,11 +239,11 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
     public void Move(Vector2 input)
 	{
-        if (limbo)
+        if (limbo) //FEATURE: enable movement (grounded and aerial) in limbo
         {
             connection.data.Move(Input.GetAxis("Vertical"), this);
         }
-        else if (grounded) //FIXME: this entire if is JANK
+        else if (grounded) //FIXME: this entire block if it is JANK //spelling -_-'
 		{
 			if(input.sqrMagnitude > 1) input.Normalize(); 
 

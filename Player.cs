@@ -46,9 +46,23 @@ public class Player : Character
 			//Calculate collision information
 			optional<ArcOfSphere> arc = detector.ArcCast(motor.current_position, motor.previous_position, motor.radius);
 
+            if (!arc.exists)
+            {
+                arc = detector.BaloonCast(motor.current_position, motor.radius);
+            }
+
 			if(arc.exists)
 			{
-				motor.Traverse(arc.data, motor.current_position);
+                optional<Vector3> collision_point = arc.data.Intersect(motor.current_position, motor.previous_position, motor.radius);
+
+                if (collision_point.exists)
+                {
+                    motor.Traverse(arc.data, collision_point.data);
+                }
+                else
+                {
+                    Debug.Log("Didn't collide?");
+                }
 			}
 		}
 		else if(motor.grounded && Time.time - jump_request < 0.2f)
