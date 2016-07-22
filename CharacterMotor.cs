@@ -110,7 +110,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
-    public bool limbo
+    public bool between_levels
     {
         get
         {
@@ -142,7 +142,8 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 		set
 		{
-			_radius = value;
+            this.transform.localScale = new Vector3(value, value, value);
+            _radius = value * 0.5f /*this.GetComponent<SphereCollider>().radius*/;
 		}
 	}
 
@@ -239,7 +240,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
     public void Move(Vector2 input)
 	{
-        if (limbo) //FEATURE: enable movement (grounded and aerial) in limbo
+        if (between_levels) //FEATURE: enable movement (grounded and aerial) in between_levels
         {
             connection.data.Move(Input.GetAxis("Vertical"), this);
         }

@@ -4,10 +4,14 @@ using System.Collections;
 public class Corridor : Nexus
 {
     public float interpolation_distance;
+    public float start_size, end_size;
 
     public override void Move(float delta, CharacterMotor motor)
     {
         interpolation_distance += delta*direction*Time.deltaTime;
+
+        float exponent = Mathf.Clamp01(interpolation_distance * interpolation_distance / 100);
+        motor.radius = Mathf.Pow(start_size, 1 - exponent) * Mathf.Pow(end_size, exponent);
 
         if(interpolation_distance < 0)
         {

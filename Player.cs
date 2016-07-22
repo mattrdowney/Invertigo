@@ -23,7 +23,7 @@ public class Player : Character
 		detector = gameObject.GetComponent<CollisionDetector>();
 		state = null;
 
-		motor.radius = this.GetComponent<SphereCollider>().radius * this.transform.localScale.x;
+        motor.radius = 0.05f;
 		jump_request = -100;
 	}
 
@@ -41,7 +41,7 @@ public class Player : Character
 
 		motor.Move(input);
 
-		if(!motor.grounded && !motor.limbo)
+		if(!motor.grounded && !motor.between_levels)
 		{	
 			//Calculate collision information
 			optional<ArcOfSphere> arc = detector.ArcCast(motor.current_position, motor.previous_position, motor.radius);

@@ -3,7 +3,7 @@ using System.Collections;
 
 public static class Globals
 {
-	public static float radius = 0.5f;
+	public static float radius = 0.025f; // * (64^2) / (x^2) for rooms other than room64
 
     //8 subdivisions latitude (final BOSS)
     //+16 subdivisions (final corridor)
