@@ -25,6 +25,10 @@ public class Door : Portal
     {
         GameObject instance = GameObject.Instantiate(Resources.Load("CorridorPrefab")) as GameObject;
         Corridor result = instance.GetComponent<Corridor>();
+        Vector3 up = motor.arc.EvaluateNormal(motor.angle);
+        Vector3 forward = motor.arc.Evaluate(motor.angle);
+        result.up = up;
+        result.forward = forward;
         result.near_id = this.near_id;
         result.far_id  = this.far_id;
         result.direction = this.direction;

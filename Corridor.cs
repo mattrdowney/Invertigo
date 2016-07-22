@@ -6,12 +6,17 @@ public class Corridor : Nexus
     public float interpolation_distance;
     public float start_size, end_size;
 
+    public Vector3 up, forward;
+
     public override void Move(float delta, CharacterMotor motor)
     {
         interpolation_distance += delta*direction*Time.deltaTime;
 
-        float exponent = Mathf.Clamp01(interpolation_distance * interpolation_distance / 100);
+        float exponent = Mathf.Clamp01(interpolation_distance / 10);
         motor.radius = Mathf.Pow(start_size, 1 - exponent) * Mathf.Pow(end_size, exponent);
+
+        Vector2 phi_theta = new Vector2(motor.radius, 0f);
+        motor.transform.position = SphereUtility.SphereToCartesian(phi_theta, up, up, forward);
 
         if(interpolation_distance < 0)
         {

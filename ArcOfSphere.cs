@@ -91,6 +91,9 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 
     public abstract optional<float> CartesianToRadial(Vector3 position);
 
+    public virtual Vector3 EvaluateLeft(float angle, float radius) { return -EvaluateRight(angle, radius); }
+    public Vector3 EvaluateLeft(float angle) { return EvaluateLeft(angle, 0); }
+
     public abstract Vector3 EvaluateNormal(float angle, float radius);
 	public Vector3 EvaluateNormal(float angle) { return EvaluateNormal(angle, 0); }
 

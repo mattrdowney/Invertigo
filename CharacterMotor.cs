@@ -48,7 +48,15 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
-	public Block block
+    public bool between_levels
+    {
+        get
+        {
+            return connection.exists;
+        }
+    }
+
+    public Block block
 	{
 		get
 		{
@@ -110,11 +118,11 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		}
 	}
 
-    public bool between_levels
+    public Vector3 left
     {
         get
         {
-            return connection.exists;
+            return arc.EvaluateLeft(angle, radius);
         }
     }
 
@@ -253,7 +261,14 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 			Vector3 input3D = new Vector3(input.x, input.y, 0f); //FIXME: JANK
 			if(input3D.sqrMagnitude > 1) input3D.Normalize();
 
-			angle += Vector3.Dot(camera_transform.rotation*input3D, right) / height / 64; //FIXME: slight math error here-ish
+            float left_product  = Vector3.Dot(camera_transform.rotation * input3D, left);
+            float right_product = Vector3.Dot(camera_transform.rotation * input3D, right);
+            float product = left_product;
+            if(Mathf.Abs(right_product) > Mathf.Abs(left_product))
+            {
+                product = right_product;
+            }
+            angle += -product / height / 64; //FIXME: slight math error here-ish
 
 			transform.position = ArcOfSphere.Evaluate(ground.data, radius);
 
