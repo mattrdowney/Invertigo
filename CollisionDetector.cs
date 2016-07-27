@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 public class CollisionDetector : MonoBehaviour
 {
-	List<ArcOfSphere>	colliders;
+	public List<ArcOfSphere>	colliders;
 
 	void Awake()
 	{
@@ -15,35 +15,35 @@ public class CollisionDetector : MonoBehaviour
         Activate();
 	}
 
-	//step 0: Character Controller adds the observed SphericalIsoscelesTriangle to a vector in OnCollisionEnter...
-	void OnCollisionEnter(Collision collisions)
+    //step 0: Character Controller adds the observed SphericalIsoscelesTriangle to a vector in OnTriggerEnter...
+    void OnTriggerEnter(Collider col) //idk why I did collision, tbh
 	{
-		foreach(ContactPoint col in collisions.contacts)
-		{
-			ArcOfSphere arc = col.otherCollider.gameObject.GetComponent<ArcOfSphere>();
-			if(arc && !colliders.Contains(arc)) colliders.Add(arc);
-		}
+		ArcOfSphere arc = col.gameObject.GetComponent<ArcOfSphere>();
+        if (arc && !colliders.Contains(arc))
+        {
+            colliders.Add(arc);
+        }
 	}
 
-	//step 0.5: Character Controller removes the observed SphericalIsoscelesTriangle from a vector in OnCollisionEnter...
-	void OnCollisionExit(Collision collisions) //FIXME: not deleting
-	{
-		foreach(ContactPoint col in collisions.contacts)
-		{
-			ArcOfSphere arc = col.otherCollider.gameObject.GetComponent<ArcOfSphere>();
-            if(arc)
-            {
-                colliders.Remove(arc);
-            }
-		}
+    //step 0.5: Character Controller removes the observed SphericalIsoscelesTriangle from a vector in OnTriggerExit...
+    void OnTriggerExit(Collider col) //FIXME: not deleting
+    {
+		ArcOfSphere arc = col.gameObject.GetComponent<ArcOfSphere>();
+        if(arc)
+        {
+            colliders.Remove(arc);
+        }
 	}
 
     public void Activate()
     {
         SphereCollider region = GetComponent<SphereCollider>();
-        Collider[] arc_objects = Physics.OverlapSphere(region.transform.position + region.center, region.radius);
 
-        foreach(Collider arc_object in arc_objects)
+        Collider[] arc_objects = Physics.OverlapSphere(region.transform.position + region.center, region.transform.localScale.x * region.radius);
+
+        region.enabled = true;
+
+        foreach (Collider arc_object in arc_objects)
         {
             ArcOfSphere arc = arc_object.gameObject.GetComponent<ArcOfSphere>();
             if (arc)
@@ -51,20 +51,18 @@ public class CollisionDetector : MonoBehaviour
                 colliders.Add(arc);
             }
         }
-
-        region.enabled = true;
     }
 
     public void Deactivate()
     {
         SphereCollider region = GetComponent<SphereCollider>();
 
-        colliders.Clear();
-
         region.enabled = false;
+
+        colliders.Clear();
     }
 
-    //CONSIDER: Can you "inversion of control" ArcCast and BaloonCast?
+    //CONSIDER: Can you "inversion of control" ArcCast and BalloonCast?
     public optional<ArcOfSphere> ArcCast(Vector3 desired_position, Vector3 curPos, float radius) //Not actually a true ArcCast, I'm not planned on spending 3 months on R&D'ing it either
 	{
 		optional<ArcOfSphere> closest = new optional<ArcOfSphere>();
@@ -90,7 +88,7 @@ public class CollisionDetector : MonoBehaviour
 		return closest; //charMotor.Traverse(closest, desiredPos, curPosition);
 	}
 
-    public optional<ArcOfSphere> BaloonCast(Vector3 desired_position, float max_radius) //TODO: see if ArcCast can be combined to reduce redundancy //HACK: may not work for all or even most cases
+    public optional<ArcOfSphere> BalloonCast(Vector3 desired_position, float max_radius) //TODO: see if ArcCast can be combined to reduce redundancy //HACK: may not work for all or even most cases
     {
         optional<ArcOfSphere> closest = new optional<ArcOfSphere>();
         optional<Vector3> closest_point = new optional<Vector3>();

@@ -33,26 +33,21 @@ public class Player : Character
 		{
 			jump_request = Time.time;
 		}
-	}
 
-	void FixedUpdate() //HACK: just trying to get this to work
-	{
-		Vector2 input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")); //HACK: hardcoded and won't support AI
+        if (!motor.grounded && !motor.between_levels) //TODO: "Location 1": optimize w/ "Location 2" 
+        {
+            //Calculate collision information
+            optional<ArcOfSphere> arc = detector.ArcCast(motor.current_position, motor.previous_position, motor.radius);
 
-		motor.Move(input);
-
-		if(!motor.grounded && !motor.between_levels)
-		{	
-			//Calculate collision information
-			optional<ArcOfSphere> arc = detector.ArcCast(motor.current_position, motor.previous_position, motor.radius);
-
-            if (!arc.exists)
+            /*if (!arc.exists)
             {
-                arc = detector.BaloonCast(motor.current_position, motor.radius);
-            }
+                arc = detector.BalloonCast(motor.current_position, motor.radius);
+            }*/
 
-			if(arc.exists)
-			{
+            if (arc.exists)
+            {
+                Debug.Log("happening");
+
                 optional<Vector3> collision_point = arc.data.Intersect(motor.current_position, motor.previous_position, motor.radius);
 
                 if (collision_point.exists)
@@ -63,20 +58,59 @@ public class Player : Character
                 {
                     Debug.Log("Didn't collide?");
                 }
-			}
-		}
-		else if(motor.grounded && Time.time - jump_request < 0.2f)
-		{
-			motor.Jump();
-			jump_request = -100;
-		}
+            }
+        }
+        else if (motor.grounded && Time.time - jump_request < 0.2f)
+        {
+            motor.Jump();
+            jump_request = -100;
+        }
+    }
 
-		//move left/right
-		motor.input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis ("Vertical"));
+	void FixedUpdate() //HACK: just trying to get this to work
+	{
+        if (!motor.grounded && !motor.between_levels) //TODO: "Location 2": optimize w/ "Location 1" 
+        {
+            //Calculate collision information
+            optional<ArcOfSphere> arc = detector.ArcCast(motor.current_position, motor.previous_position, motor.radius);
 
-		//figure out position for next frame and move there
-		//charMotor.Move(/*AI-Info*/);
-	}
+            /*if (!arc.exists)
+            {
+                arc = detector.BalloonCast(motor.current_position, motor.radius);
+            }*/
+
+            if (arc.exists)
+            {
+                Debug.Log("happening");
+
+                optional<Vector3> collision_point = arc.data.Intersect(motor.current_position, motor.previous_position, motor.radius);
+
+                if (collision_point.exists)
+                {
+                    motor.Traverse(arc.data, collision_point.data);
+                }
+                else
+                {
+                    Debug.Log("Didn't collide?");
+                }
+            }
+        }
+        else if (motor.grounded && Time.time - jump_request < 0.2f)
+        {
+            motor.Jump();
+            jump_request = -100;
+        }
+
+        //move left/right
+        motor.input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis ("Vertical"));
+
+        //figure out position for next frame and move there
+        //charMotor.Move(/*AI-Info*/);
+
+        Vector2 input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")); //HACK: hardcoded and won't support AI
+
+        motor.Move(input); //Note: must be last; FixedUpdate happens right before collisions are calculated, and we need the information for ArcCast to be as recent as possible.
+    }
 	
 	public void Move(CharacterMotor charMotor)
 	{

@@ -74,6 +74,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		{
 			_previous_position = _current_position;
 			_current_position = value;
+            transform.position = _current_position; //seriously?
 		}
 	}
 
@@ -263,12 +264,16 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 
             float left_product  = Vector3.Dot(camera_transform.rotation * input3D, left);
             float right_product = Vector3.Dot(camera_transform.rotation * input3D, right);
-            float product = left_product;
-            if(Mathf.Abs(right_product) > Mathf.Abs(left_product))
+            float product = -Mathf.Abs(left_product);
+            if (right_product > left_product)
             {
-                product = right_product;
+                product = +Mathf.Abs(right_product);
             }
-            angle += -product / height / 64; //FIXME: slight math error here-ish
+            if (right_product < 0 && left_product < 0)
+            {
+                product = 0;
+            }
+            angle += product / height / 64; //FIXME: slight math error here-ish
 
 			transform.position = ArcOfSphere.Evaluate(ground.data, radius);
 

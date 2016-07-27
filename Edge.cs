@@ -69,12 +69,14 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0; //COM means center of mass
 		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
 
-		bool bLeftContains		   = Vector3.Dot(pos,  arc_left_normal  ) >= 0;
+		bool bLeftContains		   = Vector3.Dot(pos, arc_left_normal ) >= 0;
 		bool bRightContains		   = Vector3.Dot(pos, arc_right_normal) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
 		int  nOutOfThree		   = CountTrueBooleans(bLeftContains, bRightContains, bIsObtuse);
 		
-		return bIsAtCorrectElevation && nOutOfThree >= 2;
+        bool result = bIsAtCorrectElevation && nOutOfThree >= 2;
+        Debug.Log("Above ground: " + bAboveGround + " Below COM: " + bBelowCOM + " Left contains: " + bLeftContains + " Right contains: " + bRightContains + " Obtuse: " + bIsObtuse);
+        return result;
 	}
 	
 	public override optional<float> Distance(Vector3 to, Vector3 from, float radius) //distance is Euclidean but is (guaranteed?) to be sorted correctly with the current assertions about speed vs player_radius

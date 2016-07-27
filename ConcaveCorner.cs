@@ -136,7 +136,7 @@ public class ConcaveCorner : Corner
 		return arc_right_normal;
 	}
 
-    public virtual Vector3 EvaluateLeft(float angle, float radius)
+    public override Vector3 EvaluateLeft(float angle, float radius)
     {
         return arc_left_normal;
     }

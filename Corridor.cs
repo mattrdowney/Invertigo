@@ -37,7 +37,7 @@ public class Corridor : Nexus
 
         CollisionDetector detector = motor.GetComponent<CollisionDetector>();
         detector.Activate();
-        optional<ArcOfSphere> closest_arc = detector.BaloonCast(motor.current_position, motor.radius + 0.01f); //FIXME: magic number
+        optional<ArcOfSphere> closest_arc = detector.BalloonCast(motor.current_position, motor.radius + 0.01f); //FIXME: magic number
         if(!closest_arc.exists)
         {
             Debug.Log("Something is very wrong here");
