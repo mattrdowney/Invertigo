@@ -102,7 +102,14 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 
     /** Find the point of collision with an arc.
      */
-    public optional<Vector3> Intersect(Vector3 to, Vector3 from, float radius) { return SphereUtility.Intersection(from, to, Center(), AngularRadius(radius)); }
+    public optional<Vector3> Intersect(Vector3 to, Vector3 from, float radius)
+    {
+        optional<Vector3> result = SphereUtility.Intersection(from, to, Pole(), AngularRadius(radius));
+        Debug.DrawRay(from, Vector3.up, Color.red);
+        Debug.DrawRay(result.data, Vector3.up, Color.green);
+        Debug.DrawRay(to, Vector3.up, Color.blue);
+        return result;
+    }
 
 
     public void LinkBlock(Transform block_transform) { Undo.SetTransformParent(this.transform, block_transform, "Link arc to block"); }
@@ -162,6 +169,9 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 		return closest_point;
 	}
 
+    public abstract float LengthRadius(float radius);
+	public float LengthRadius() { return LengthRadius(0); }
+
     protected static Vector3 MaxGradient(ArcOfSphere arc, Vector3 desired)
     {
         Vector3 max_gradient = Vector3.zero;
@@ -214,10 +224,9 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
         return max_gradient;
     }
 
-    public abstract float LengthRadius(float radius);
-	public float LengthRadius() { return LengthRadius(0); }
+    protected abstract Vector3 Pole();
 
-	/** Create a AABB that perfectly contains a circular arc
+    /** Create a AABB that perfectly contains a circular arc
 	 * 
 	 *  TODO: detailed description and math link
 	 * 
@@ -225,7 +234,7 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 	 * 
 	 *  @param collider the box collider that will be altered to contain the ArcOfSphere
 	 */
-	protected static void RecalculateAABB(ArcOfSphere arc)
+    protected static void RecalculateAABB(ArcOfSphere arc)
 	{
 		float x_min = MaxGradient(arc, Vector3.left   ).x;
 		float x_max = MaxGradient(arc, Vector3.right  ).x;

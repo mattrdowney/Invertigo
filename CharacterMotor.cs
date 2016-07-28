@@ -73,8 +73,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		set
 		{
 			_previous_position = _current_position;
-			_current_position = value;
-            transform.position = _current_position; //seriously?
+            _current_position = transform.position = value; //seriously?
 		}
 	}
 
@@ -221,7 +220,7 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
 		ground.data.begin   = path.Begin(radius);
 		ground.data.end		= path.End(radius);
 
-        optional<float> interpolation_factor = path.CartesianToRadial(path.ClosestPoint(desiredPos));
+        optional<float> interpolation_factor = path.CartesianToRadial(desiredPos);
 
         if(interpolation_factor.exists)
         {
@@ -275,39 +274,42 @@ public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: ma
             }
             angle += product / height / 64; //FIXME: slight math error here-ish
 
-			transform.position = ArcOfSphere.Evaluate(ground.data, radius);
+			current_position = ArcOfSphere.Evaluate(ground.data, radius);
 
-			transform.rotation = Quaternion.LookRotation(transform.position, arc.EvaluateNormal(angle, radius));
+			transform.rotation = Quaternion.LookRotation(current_position, arc.EvaluateNormal(angle, radius));
 		}
 		else
 		{
 			SphereUtility.Accelerate(ref phi, ref theta, ref vertical_velocity, ref horizontal_velocity, 0.03f, -input.x/10, Time.fixedDeltaTime);
 
-			transform.position = SphereUtility.SphereToCartesian(new Vector2(phi, theta));
-			transform.rotation = Quaternion.LookRotation(transform.position, North);
+			current_position = SphereUtility.SphereToCartesian(new Vector2(phi, theta));
+			transform.rotation = Quaternion.LookRotation(current_position, North);
 		}
-
-		current_position = transform.position;
 	}
 
 	public void Jump()
 	{
 		if(grounded)
 		{
-			phi   = Mathf.Acos(transform.position.y); //TODO: Transform2sD.SphericalPosition
-			theta = Mathf.Atan2(transform.position.z, transform.position.x);
+            Vector3 normal = ground.data.arc.EvaluateNormal(ground.data.angle);
 
-			Vector3 normal = ground.data.arc.EvaluateNormal(ground.data.angle);
+            phi   = Mathf.Acos(current_position.y); //TODO: Transform2sD.SphericalPosition
+			theta = Mathf.Atan2(current_position.z, current_position.x); //FIXME: magic numbers
 
 			Transform camera_transform = GameObject.Find("MainCamera").transform; //FIXME: JANK
 
 			Vector3 input3D = new Vector3(input.x, input.y, 0f);
+            input3D = camera_transform.rotation * input3D;
+            input3D = Vector3.ProjectOnPlane(input3D, normal);
+
 			if(input3D.sqrMagnitude > 1) input3D.Normalize();
 
-			horizontal_velocity = -0.1f*Vector3.Dot(East , normal) + -0.1f*Vector3.Dot(East , camera_transform.rotation*input3D);
-			vertical_velocity   = -0.1f*Vector3.Dot(North, normal) + -0.1f*Vector3.Dot(North, camera_transform.rotation*input3D);
+			horizontal_velocity = -0.1f*Vector3.Dot(East , normal) + -0.1f*Vector3.Dot(East , input3D);
+			vertical_velocity   = -0.1f*Vector3.Dot(North, normal) + -0.1f*Vector3.Dot(North, input3D);
 
 			ground = new optional<GroundInfo>();
+
+            current_position = (current_position + normal * 1e-6f).normalized;
 		}
 	}
 }

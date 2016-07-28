@@ -39,15 +39,8 @@ public class Player : Character
             //Calculate collision information
             optional<ArcOfSphere> arc = detector.ArcCast(motor.current_position, motor.previous_position, motor.radius);
 
-            /*if (!arc.exists)
-            {
-                arc = detector.BalloonCast(motor.current_position, motor.radius);
-            }*/
-
             if (arc.exists)
             {
-                Debug.Log("happening");
-
                 optional<Vector3> collision_point = arc.data.Intersect(motor.current_position, motor.previous_position, motor.radius);
 
                 if (collision_point.exists)
@@ -74,15 +67,8 @@ public class Player : Character
             //Calculate collision information
             optional<ArcOfSphere> arc = detector.ArcCast(motor.current_position, motor.previous_position, motor.radius);
 
-            /*if (!arc.exists)
-            {
-                arc = detector.BalloonCast(motor.current_position, motor.radius);
-            }*/
-
             if (arc.exists)
             {
-                Debug.Log("happening");
-
                 optional<Vector3> collision_point = arc.data.Intersect(motor.current_position, motor.previous_position, motor.radius);
 
                 if (collision_point.exists)
@@ -109,7 +95,8 @@ public class Player : Character
 
         Vector2 input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")); //HACK: hardcoded and won't support AI
 
-        motor.Move(input); //Note: must be last; FixedUpdate happens right before collisions are calculated, and we need the information for ArcCast to be as recent as possible.
+        motor.Move(input); //Note: must be last; FixedUpdate happens right before collisions are calculated, and we need the information for ArcCast to be as recent as possible. see graph: http://docs.unity3d.com/Manual/ExecutionOrder.html
+        Debug.Log(Time.time + " " + motor.grounded);
     }
 	
 	public void Move(CharacterMotor charMotor)

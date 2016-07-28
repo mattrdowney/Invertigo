@@ -27,6 +27,8 @@ public class ConcaveCorner : Corner
 
     public override optional<float> CartesianToRadial(Vector3 position) //TODO: FIXME: UNJANKIFY //CHECK: the math could be harder than this //CONSIDER: http://gis.stackexchange.com/questions/48937/how-to-calculate-the-intersection-of-2-circles
     {
+        position -= Center();
+
         float x = Vector3.Dot(position, arc_left);
         float y = Vector3.Dot(position, arc_left_normal);
 
@@ -66,8 +68,6 @@ public class ConcaveCorner : Corner
 	public override optional<float> Distance(Vector3 to, Vector3 from, float radius) //distance is Euclidean but is (guaranteed?) to be sorted correctly with the current assertions about speed vs player_radius
 	{
         optional<Vector3> point = SphereUtility.Intersection(from, to, Center(radius), AngularRadius(radius));
-
-
         optional<float> intersection = new optional<float>();
 
         if(point.exists)
@@ -189,8 +189,13 @@ public class ConcaveCorner : Corner
 		
 		//DrawDefault();
 	}
-	
-	public override void Save()
+
+    protected override Vector3 Pole()
+    {
+        return path_normal;
+    }
+
+    public override void Save()
 	{
 		base.Save();
 		Undo.RecordObject(this, "Save concave corner");

@@ -45,6 +45,9 @@ public class SphereUtility
 
 		Vector3 path_center = -Vector3.Cross(begin, end).normalized;
 
+        Debug.DrawRay(center, Vector3.right * radius, Color.white);
+        Debug.DrawLine(path_center, Vector3.zero, Color.gray);
+
         /*if (Vector3.SqrDistance(center, path_center) > radius*radius + Mathf.Sqrt(1+1)*Mathf.Sqrt(1+1) || //TODO: optional<Vector3>: make sure the two centers are at most radius1 + radius2 apart
             center == path_center || center == -path_center)
         {
