@@ -64,9 +64,11 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		bool bBelowCOM	  = Vector3.Dot(pos - Center()      , path_normal) <= 0; //COM means center of mass
 		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
 
-		bool bLeftContains	= Vector3.Dot(pos,  arc_left_normal  ) >= 0;
+		bool bLeftContains  = Vector3.Dot(pos,  arc_left_normal  ) >= 0;
 		bool bRightContains	= Vector3.Dot(pos, arc_right_normal) >= 0;
-		bool bCorrectAngle	= bLeftContains && bRightContains;
+		bool bCorrectAngle  = bLeftContains && bRightContains;
+
+        Debug.Log("above: " + bAboveGround + " below: " + bBelowCOM + " left: " + bLeftContains + " right: " + bRightContains);
 
         return bIsAtCorrectElevation && bCorrectAngle;
 	}

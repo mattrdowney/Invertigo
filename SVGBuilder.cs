@@ -9,26 +9,25 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
     static StreamWriter writer;
     static bool first;
 
-	void Start ()
+	public void Start ()
     {
         WriteHeader();
 	}
 
-    void OnDestroy()
+    public void OnDestroy()
     {
         WriteFooter();
     }
 
-    public static void BeginPoint()
+    public static void BeginShape()
     {
         first = true;
         writer.Write("\t<path d=\"");
     }
 
-    public static void SetPoint(float x, float y)
+    public static void SetPoint(Vector2 UV)
     {
-        x *= 1000;
-        y *= 1000;
+        UV *= 1000;
 
         if (first)
         {
@@ -40,12 +39,12 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
             writer.Write(" L ");
         }
 
-        writer.Write(x + " " + y);
+        writer.Write(UV.x + " " + UV.y);
     }
 
-    public static void EndPoint()
+    public static void EndShape()
     {
-        writer.Write("\"/>\n");
+        writer.Write("\"/>\n\n\n");
     }
 
     static void WriteHeader()

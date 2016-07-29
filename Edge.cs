@@ -75,6 +75,8 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		bool bRightContains		   = Vector3.Dot(pos, arc_right_normal) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
 		int  nOutOfThree		   = CountTrueBooleans(bLeftContains, bRightContains, bIsObtuse);
+
+        Debug.Log("above: " + bAboveGround + " below: " + bBelowCOM + " left: " + bLeftContains + " right: " + bRightContains + " obtuse: " + bIsObtuse);
 		
         return bIsAtCorrectElevation && nOutOfThree >= 2;
 	}

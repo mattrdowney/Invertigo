@@ -165,7 +165,6 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
                 min_distance = left_distance;
 			}
 		}
-        Debug.Log((closest_point - point).magnitude); //FIXME: precision issue? (maybe due to not setting position after leaving corridor)
 		return closest_point;
 	}
 

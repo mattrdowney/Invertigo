@@ -61,8 +61,10 @@ public class ConcaveCorner : Corner
 		bool bLeftContains	= Vector3.Dot(pos,  arc_left_normal  ) >= 0;
 		bool bRightContains	= Vector3.Dot(pos, arc_right_normal) >= 0;
 		bool bCorrectAngle	= bLeftContains && bRightContains;
-		
-		return bIsAtCorrectElevation && bCorrectAngle;
+
+        Debug.Log("above: " + bAboveGround + " below: " + bBelowCOM + " left: " + bLeftContains + " right: " + bRightContains);
+
+        return bIsAtCorrectElevation && bCorrectAngle;
 	}
 	
 	public override optional<float> Distance(Vector3 to, Vector3 from, float radius) //distance is Euclidean but is (guaranteed?) to be sorted correctly with the current assertions about speed vs player_radius

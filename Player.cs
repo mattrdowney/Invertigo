@@ -96,7 +96,6 @@ public class Player : Character
         Vector2 input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")); //HACK: hardcoded and won't support AI
 
         motor.Move(input); //Note: must be last; FixedUpdate happens right before collisions are calculated, and we need the information for ArcCast to be as recent as possible. see graph: http://docs.unity3d.com/Manual/ExecutionOrder.html
-        Debug.Log(Time.time + " " + motor.grounded);
     }
 	
 	public void Move(CharacterMotor charMotor)
