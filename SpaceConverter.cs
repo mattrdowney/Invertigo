@@ -9,7 +9,7 @@ public class SpaceConverter
         return spherical / sum;
     }
 
-    public static Vector2 OctahedronToUV(Vector3 octahedral)
+    public static Vector2 OctahedronToUV(Vector3 octahedral) // since this is essentially editor code, there might not be any need to optimize this
     {
         Vector2 UV;
         Vector2 xPivot, yPivot, zPivot;

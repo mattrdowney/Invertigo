@@ -1,20 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Octahedron
+public class Octahedron : MonoBehaviour
 {
-    static optional<Mesh> mesh;
+    public void Start()
+    {
+        this.GetComponent<MeshFilter>().mesh = OctahedronMesh();
+    }
+
+    static optional<Mesh> octahedron;
 
 	public static Mesh OctahedronMesh()
     {
-        if (mesh.exists)
+        if (octahedron.exists)
         {
-            return mesh.data;
+            return octahedron.data;
         }
         else
         {
-            mesh = new Mesh();
-            Mesh octahedron = mesh.data; // FIXME?
+            octahedron = new Mesh();
 
             Vector3[] verts = new Vector3[9];
             Vector2[] uvs   = new Vector2[9];
@@ -40,24 +44,24 @@ public class Octahedron
             uvs[7] = new Vector2(0.0f, 0.0f); // down
             uvs[8] = new Vector2(1.0f, 0.0f); // down
 
-            tris[0]  = 0; tris[1]  = 2; tris[2]  = 1; //+x, +y, +z
-            tris[3]  = 0; tris[4]  = 3; tris[5]  = 2; //-x, +y, +z
-            tris[6]  = 0; tris[7]  = 4; tris[8]  = 3; //-x, +y, -z
-            tris[9]  = 0; tris[10] = 1; tris[11] = 4; //+x, +y, -z
-            tris[12] = 5; tris[13] = 1; tris[14] = 2; //+x, -y, +z
-            tris[15] = 6; tris[16] = 2; tris[17] = 3; //-x, -y, +z
-            tris[18] = 7; tris[19] = 3; tris[20] = 4; //-x, -y, -z
-            tris[21] = 8; tris[22] = 4; tris[23] = 1; //+x, -y, -z
+            tris[0]  = 0; tris[1]  = 1; tris[2]  = 2; //+x, +y, +z
+            tris[3]  = 0; tris[4]  = 2; tris[5]  = 3; //-x, +y, +z
+            tris[6]  = 0; tris[7]  = 3; tris[8]  = 4; //-x, +y, -z
+            tris[9]  = 0; tris[10] = 4; tris[11] = 1; //+x, +y, -z
+            tris[12] = 5; tris[13] = 2; tris[14] = 1; //+x, -y, +z
+            tris[15] = 6; tris[16] = 3; tris[17] = 2; //-x, -y, +z
+            tris[18] = 7; tris[19] = 4; tris[20] = 3; //-x, -y, -z
+            tris[21] = 8; tris[22] = 1; tris[23] = 4; //+x, -y, -z
 
-            octahedron.vertices = verts;
-            octahedron.uv = uvs;
-            octahedron.triangles = tris;
+            octahedron.data.vertices = verts;
+            octahedron.data.uv = uvs;
+            octahedron.data.triangles = tris;
 
-            octahedron.RecalculateBounds();
-            octahedron.RecalculateNormals();
-            octahedron.Optimize();
+            octahedron.data.RecalculateBounds();
+            octahedron.data.RecalculateNormals();
+            octahedron.data.Optimize();
 
-            return octahedron;
+            return octahedron.data;
         }
 	}
 }
