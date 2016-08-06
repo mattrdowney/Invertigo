@@ -20,15 +20,13 @@ public class ShapeToSVG : MonoBehaviour
             Vector2 delta_end_UV = SpaceConverter.SphereToUV(edge.Evaluate(end - delta));
             Vector2 control_point = Intersection(begin_UV, delta_begin_UV, delta_end_UV, end_UV);
 
-            lines.Add(new QuadraticBezier(begin_UV, control_point, end_UV));
+            lines.Add(new QuadraticBezier(edge, begin_UV, control_point, end_UV, begin, end));
         }
     }
 
     public static void Append(GameObject shape)
     {
         ArcOfSphere first_edge = shape.GetComponentInChildren<Edge>();
-        SVGBuilder.BeginShape();
-        SVGBuilder.SetPoint(SpaceConverter.SphereToUV(first_edge.Evaluate(first_edge.Begin())));
         ArcOfSphere arc = first_edge;
 
         do
@@ -45,18 +43,17 @@ public class ShapeToSVG : MonoBehaviour
             int[,] xyz_signs_range_end = new int[2, 3]; //the first detected change in any sign
             int[,] xyz_signs_range_mid = new int[2, 3]; //middle of begin and range_end
 
-            // 1) get x, y, and z sign at beginning and end of arc
-            // 2) get beginning of arc's slope's sign for xyz(0, delta) and end of arc's slope's sign for xyz(end - delta, end)
+            // get signs for beginning and end
             UpdateSigns(arc, ref xyz_signs_begin, arc.Begin(), delta); // ~2**-21 e.g. 4*(2**-23); 4 because it's the largest power of 2 below 2*pi; 2**-23 because it is the smallest mantissa possible in IEEE 754 (for float)
             UpdateSigns(arc, ref xyz_signs_end, arc.End(), -delta);
 
-            // 7) continue from #3 until you begin = end for positional and slope signs
+            // process new lines until the signs match
             while (!SameSigns(ref xyz_signs_begin, ref xyz_signs_end))
             {
                 xyz_signs_range_begin = xyz_signs_begin;
                 xyz_signs_range_end = xyz_signs_end;
 
-                // 3) binary search and discard ranges with matching slope signs and position signs at ends; and then update the slope signs.
+                // binary search and discard ranges with matching slope signs and position signs at ends; and then update the slope signs.
                 while (range_begin < range_end - delta)
                 {
                     range_mid = (range_begin + range_end) / 2; //guaranteed not to overflow since numbers are in range [0, 2pi]
@@ -72,23 +69,66 @@ public class ShapeToSVG : MonoBehaviour
                         xyz_signs_range_end = xyz_signs_range_mid;
                     }
                 }
-                // 4) when you find a sign that switches, log the exact position of the switch with as much precision as possible
+                // when you find a sign that switches, log the exact position of the switch with as much precision as possible
                 Subdivide(arc, begin, range_begin);
-                // 6) when you find that position, you must then switch the x, y, z signs at the new beginning of the arc and the slope signs xyz at the beginning of the arc
+                // when you find that position, you must then switch the x, y, z signs at the new beginning of the arc and the slope signs xyz at the beginning of the arc
                 begin = range_end;
                 xyz_signs_begin = xyz_signs_range_end;
 
             }
-            // 4) when you find a sign that switches, log the exact position of the switch with as much precision as possible
+            // draw the last line
             Subdivide(arc, begin, end);
 
-            for (float iteration = 1; iteration <= 1000; ++iteration) //TODO: use exactly the number iterations neccessary to minimize error below threshold in svg
-            {
-                SVGBuilder.SetPoint(SpaceConverter.SphereToUV(arc.Evaluate(arc.End() * (iteration / 1000)))); //Assert: begin = 0 for radius of 0
-            }
-            arc = arc.next.next; //skip corners
+            arc = arc.next.next; //skip corners //HACK: FIXME: make this elegant
         } while (arc != first_edge);
-        SVGBuilder.EndShape();
+
+        ClampToEdges();
+        OverlapSharedEdges();
+        BuildShape();
+    }
+
+    private static void AugmentDictionary(Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern)
+    {
+        //add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) ) using arc and EvaluateNormal information
+        //at the discontinuity use Mathf.Sign(EvaluateNormal().y) to find the direction the edge isn't going and add it to one of 8 lists (2 directions * 4 corners)
+        //other info you need Sign(UV.x) and Sign(UV.z) which gives you which of the four corners the point is located at
+
+        //after you have created the four lists, you can then start drawing edges between discontinuities (and the points (0,0), (1,0), (1,1), (0,1) ) no other points should be introduced
+        //these points will have a control point at (UV1 + UV2) / 2 and should be added both ways
+
+        //possible implementation issues: since this maps a QB to a QB, it should not work using the current naive approach.
+        //this is because QB objects are not the same even if they have the same data (because they are compared by pointers)
+        //a good solution is to make it Dictionary<int, int> where "int" is the index into List<QuadraticBezier>, this does mean that the created lines need to be added to the "lines" variable
+    }
+
+    private static void BuildDictionary(Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern)
+    {
+        //for each QuadraticBezier and the next; (including last then first !)
+        //if QB1.end == QB2.begin (difference's magnitude is less than threshold)
+        //add edge from QB1 to QB2 and from QB2 to QB1
+    }
+
+    private static void BuildShape()
+    {
+        //each "shape" may contain more than one shape (e.g. a zig-zag on the southern hemisphere between two octahedral faces will have #zig + #zag + 1 shapes)
+        //SVGBuilder.BeginShape();
+        //SVGBuilder.SetPoint(SpaceConverter.SphereToUV(first_edge.Evaluate(first_edge.Begin())));
+        //SVGBuilder.EndShape();
+
+        Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern = new Dictionary<QuadraticBezier, QuadraticBezier>();
+        BuildDictionary(edge_pattern);
+        AugmentDictionary(edge_pattern); // add edges that are along the square (0,0) -> (1,0) -> (1,1) -> (0,1)
+
+        //after this point, simply remove edges from edge_pattern until you have none left to draw. (in a double while loop, one for making sure there are none left, the other for drawing the shapes one at a time)
+        //since shapes go in both directions, you do need to create a list of visited edges
+    }
+
+    private static void ClampToEdges()
+    {
+        //for each QuadraticBezier and the next; (including last then first !)
+        //see if Vector3.Dot(QB1.end - QB1.begin, QB2.begin - QB1.begin) < 0
+        //if it is, then there is a discontinuity, since QB1.end should be equal to QB2.begin (approximately)
+        //all you need to do is project QB1.end and QB2.begin onto the square (0,0) -> (1,0) -> (1,1) -> (0,1) based on their control point curvature
     }
 
     private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end)
@@ -151,6 +191,13 @@ public class ShapeToSVG : MonoBehaviour
         }
 
         return (begin + end) / 2; // return LOCATION of max error
+    }
+
+    private static void OverlapSharedEdges()
+    {
+        //for each QuadraticBezier and the next; (including last then first !)
+        //if QB1.end ~= QB2.begin (difference's magnitude is less than threshold)
+        //set QB1.end = QB2.begin = (QB1.end + QB2.begin) / 2;
     }
 
     private static float Point_Line_Distance(Vector2 L1, Vector2 L2, Vector2 P)

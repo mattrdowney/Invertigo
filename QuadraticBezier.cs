@@ -2,13 +2,23 @@
 
 public class QuadraticBezier
 {
-    public QuadraticBezier(Vector2 b, Vector2 c, Vector2 e)
+    public QuadraticBezier(ArcOfSphere a, Vector2 b, Vector2 c, Vector2 e, float bt, float et)
     {
-        begin = b;
+        begin_UV = b;
         control_point = c;
-        end = e;
+        end_UV = e;
+
+        arc = a;
+        begin = bt;
+        end = et;
     }
-    public Vector2 begin;
+    //crucial data
+    public Vector2 begin_UV;
     public Vector2 control_point;
-    public Vector2 end;
+    public Vector2 end_UV;
+
+    //supplementary data for "cutting" shapes at edges (when you need to know the "insideness")
+    public ArcOfSphere arc;
+    public float begin;
+    public float end;
 }

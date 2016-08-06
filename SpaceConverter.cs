@@ -3,13 +3,13 @@ using System.Collections;
 
 public class SpaceConverter
 {
-    public static Vector3 SphereToOctahedron(Vector3 spherical)
+    private static Vector3 SphereToOctahedron(Vector3 spherical)
     {
         float sum = Mathf.Abs(spherical.x) + Mathf.Abs(spherical.y) + Mathf.Abs(spherical.z);
         return spherical / sum;
     }
 
-    public static Vector2 OctahedronToUV(Vector3 octahedral) // since this is essentially editor code, there might not be any need to optimize this
+    private static Vector2 OctahedronToUV(Vector3 octahedral) // since this is essentially editor code, there might not be any need to optimize this
     {
         Vector2 UV;
         Vector2 xPivot, yPivot, zPivot;
