@@ -25,21 +25,17 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
         writer.Write("\t<path d=\"");
     }
 
-    public static void SetPoint(Vector2 UV)
+    public static void SetEdge(QuadraticBezier curve)
     {
-        UV *= 1000;
+        curve.begin_UV *= 1000;
+        curve.end_UV *= 1000;
 
         if (first)
         {
-            writer.Write("M ");
+            writer.Write("M" + curve.begin_UV.x + "," + curve.begin_UV.y);
             first = false;
         }
-        else
-        {
-            writer.Write(" L ");
-        }
-
-        writer.Write(UV.x + " " + UV.y);
+        writer.Write(" Q" + curve.control_point.x + "," + curve.control_point.y + " " + curve.end_UV.x + "," + curve.end_UV.y);
     }
 
     public static void EndShape()

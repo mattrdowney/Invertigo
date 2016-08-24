@@ -87,57 +87,93 @@ public class ShapeToSVG : MonoBehaviour
         BuildShape();
     }
 
-    private static void AugmentDictionary(Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern)
+    private static void AugmentDictionary(Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern, List<QuadraticBezier> end_discontinuities, List<QuadraticBezier> begin_discontinuities)
     {
         //add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) ) using arc and EvaluateNormal information
-        //at the discontinuity use Mathf.Sign(EvaluateNormal().y) to find the direction the edge isn't going and add it to one of 8 lists (2 directions * 4 corners)
+        //at the discontinuity use Mathf.Sign(EvaluateNormal().y) to find the direction the edge isn't going and add it to one of 1 or 4 or 8 lists (2 directions * 4 corners)
         //other info you need Sign(UV.x) and Sign(UV.z) which gives you which of the four corners the point is located at
 
         //after you have created the four lists, you can then start drawing edges between discontinuities (and the points (0,0), (1,0), (1,1), (0,1) ) no other points should be introduced
-        //these points will have a control point at (UV1 + UV2) / 2 and should be added both ways
-
-        //possible implementation issues: since this maps a QB to a QB, it should not work using the current naive approach.
-        //this is because QB objects are not the same even if they have the same data (because they are compared by pointers)
-        //a good solution is to make it Dictionary<int, int> where "int" is the index into List<QuadraticBezier>, this does mean that the created lines need to be added to the "lines" variable
+        //these points will have a control point at (UV1 + UV2) / 2
     }
 
     private static void BuildDictionary(Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern)
     {
-        //for each QuadraticBezier and the next; (including last then first !)
-        //if QB1.end == QB2.begin (difference's magnitude is less than threshold)
-        //add edge from QB1 to QB2 and from QB2 to QB1
+        for (int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
+        {
+            QuadraticBezier QB1 = lines[index];
+            QuadraticBezier QB2 = lines[(index + 1) % lines.Count];
+
+            if (QB1.end_UV == QB2.begin_UV) // take identical points and link them
+            {
+                edge_pattern.Add(QB1, QB2); //should work since it's referencing the QuadraticBezier inside of the List<QB>
+                //edge_pattern.Add(QB2, QB1); <-- originally planned to add two copies, but that isn't possible without a multimap
+            }
+        }
     }
 
     private static void BuildShape()
     {
         //each "shape" may contain more than one shape (e.g. a zig-zag on the southern hemisphere between two octahedral faces will have #zig + #zag + 1 shapes)
-        //SVGBuilder.BeginShape();
-        //SVGBuilder.SetPoint(SpaceConverter.SphereToUV(first_edge.Evaluate(first_edge.Begin())));
-        //SVGBuilder.EndShape();
 
         Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern = new Dictionary<QuadraticBezier, QuadraticBezier>();
         BuildDictionary(edge_pattern);
-        AugmentDictionary(edge_pattern); // add edges that are along the square (0,0) -> (1,0) -> (1,1) -> (0,1)
+        List<QuadraticBezier> end_discontinuities = new List<QuadraticBezier>();
+        List<QuadraticBezier> begin_discontinuities = new List<QuadraticBezier>();
+        DiscontinuityLocations(end_discontinuities, begin_discontinuities);
+        AugmentDictionary(edge_pattern, end_discontinuities, begin_discontinuities); // add edges that are along the square (0,0) -> (1,0) -> (1,1) -> (0,1)
 
-        //after this point, simply remove edges from edge_pattern until you have none left to draw. (in a double while loop, one for making sure there are none left, the other for drawing the shapes one at a time)
-        //since shapes go in both directions, you do need to create a list of visited edges
+        while (edge_pattern.Count != 0) // make sure there are no more shapes left to process
+        {
+            QuadraticBezier first_edge = edge_pattern.GetEnumerator().Current.Key;
+            QuadraticBezier current_edge = first_edge;
+
+            SVGBuilder.BeginShape();
+            while (current_edge != first_edge) // process every edge in each shape
+            {
+                SVGBuilder.SetEdge(current_edge);
+                edge_pattern.Remove(current_edge);
+            }
+            SVGBuilder.EndShape();
+        }
     }
 
     private static void ClampToEdges()
     {
-        //for each QuadraticBezier and the next; (including last then first !)
-        //see if Vector3.Dot(QB1.end - QB1.begin, QB2.begin - QB1.begin) < 0
-        //if it is, then there is a discontinuity, since QB1.end should be equal to QB2.begin (approximately)
-        //all you need to do is project QB1.end and QB2.begin onto the square (0,0) -> (1,0) -> (1,1) -> (0,1) based on their control point curvature
+        for(int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
+        {
+            QuadraticBezier QB1 = lines[index];
+            QuadraticBezier QB2 = lines[(index + 1) % lines.Count];
+
+            if ((QB1.end_UV - QB2.begin_UV).magnitude > threshold) //if end is not close to begin, there is a discontinuity
+            {
+                ProjectOntoSquare(ref QB1.end_UV, QB1.control_point); // project the points onto the edge of a square
+                ProjectOntoSquare(ref QB2.begin_UV, QB2.control_point);
+            }
+        }
+    }
+
+    private static void DiscontinuityLocations(List<QuadraticBezier> end_discontinuities, List<QuadraticBezier> begin_discontinuities)
+    {
+        for (int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
+        {
+            QuadraticBezier QB1 = lines[index];
+            QuadraticBezier QB2 = lines[(index + 1) % lines.Count];
+
+            if (QB1.end_UV != QB2.begin_UV) //if there is a discontinuity
+            {
+                end_discontinuities.Add(QB1);
+                begin_discontinuities.Add(QB2);
+            }
+        }
     }
 
     private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end)
     {
         float numerator_x, numerator_y, denominator;
 
-        numerator_x = ((begin.x * after_begin.y - begin.y * after_begin.x) * (before_end.x - end.x) -
-                       (before_end.x * end.y - before_end.y * end.x) * (begin.x - after_begin.x);
-
+        numerator_x = (begin.x * after_begin.y - begin.y * after_begin.x) * (before_end.x - end.x) -
+                      (before_end.x * end.y - before_end.y * end.x) * (begin.x - after_begin.x);
 
         numerator_y = (begin.x * after_begin.y - begin.y * after_begin.x) * (before_end.y - end.y) -
                       (before_end.x * end.y - before_end.y * end.x) * (begin.y - after_begin.y);
@@ -148,56 +184,44 @@ public class ShapeToSVG : MonoBehaviour
         return new Vector2(numerator_x / denominator, numerator_y / denominator);
     }
 
-    private static float MaxError(ArcOfSphere arc, float begin, float end)
+    private static float MaxErrorLocation(ArcOfSphere arc, float begin, float end)
     {
-        float midpoint = (begin + end) / 2;
-
         Vector2 L1 = SpaceConverter.SphereToUV(arc.Evaluate(begin));
         Vector2 L2 = SpaceConverter.SphereToUV(arc.Evaluate(end));
 
-        float error1 = MaxError(arc, L1, L2, begin, midpoint);
-        float error2 = MaxError(arc, L1, L2, midpoint, end);
-
-        Vector2 P1 = SpaceConverter.SphereToUV(arc.Evaluate(error1));
-        Vector2 P2 = SpaceConverter.SphereToUV(arc.Evaluate(error2));
-
-        if (Point_Line_Distance(L1, L2, P1) > Point_Line_Distance(L1, L2, P2))
-        {
-            return error1;
-        }
-        return error2;
-    }
-
-    private static float MaxError(ArcOfSphere arc, Vector2 L1, Vector2 L2, float begin, float end)
-    {
-        float error_begin = Point_Line_Distance(L1, L2, SpaceConverter.SphereToUV(arc.Evaluate(begin)));
-        float error_end = Point_Line_Distance(L1, L2, SpaceConverter.SphereToUV(arc.Evaluate(end)));
-
         // 2) use binary / bisection search to find the point of maximal error
-        while (begin < end - delta)
+        while (end - begin > delta)
         {
             float midpoint = (begin + end) / 2;
-            float error_mid = Point_Line_Distance(L1, L2, SpaceConverter.SphereToUV(arc.Evaluate(midpoint)));
-            if(error_begin < error_end) //error begin should be replaced since it has minimum error
+
+            float error_left  = Point_Line_Distance(L1, L2, SpaceConverter.SphereToUV(arc.Evaluate(midpoint - delta)));
+            float error_right = Point_Line_Distance(L1, L2, SpaceConverter.SphereToUV(arc.Evaluate(midpoint + delta)));
+
+            if (error_left < error_right) //error begin should be replaced since it has less error
             {
                 begin = midpoint;
-                error_begin = error_mid;
             }
-            else //error end should be replaced since it has minimum error
+            else //error end should be replaced since it has less error
             {
                 end = midpoint;
-                error_end = error_mid;
             }
         }
 
-        return (begin + end) / 2; // return LOCATION of max error
+        return (begin + end) / 2; // return location of max error
     }
 
     private static void OverlapSharedEdges()
     {
-        //for each QuadraticBezier and the next; (including last then first !)
-        //if QB1.end ~= QB2.begin (difference's magnitude is less than threshold)
-        //set QB1.end = QB2.begin = (QB1.end + QB2.begin) / 2;
+        for (int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
+        {
+            QuadraticBezier QB1 = lines[index];
+            QuadraticBezier QB2 = lines[(index + 1) % lines.Count];
+
+            if ((QB1.end_UV - QB2.begin_UV).magnitude < threshold) //if QB1.end ~= QB2.begin
+            {
+                QB1.end = QB2.begin = (QB1.end + QB2.begin) / 2; //make the points equal
+            }
+        }
     }
 
     private static float Point_Line_Distance(Vector2 L1, Vector2 L2, Vector2 P)
@@ -206,6 +230,31 @@ public class ShapeToSVG : MonoBehaviour
         float denominator = Mathf.Sqrt(Mathf.Pow((L2.y - L1.y), 2) + Mathf.Pow((L2.x - L1.x), 2));
 
         return numerator / denominator;
+    }
+
+    private static void ProjectOntoSquare(ref Vector2 point, Vector2 control_point)
+    {
+        Vector2 upper = Intersection(control_point, point, Vector2.up, Vector2.one);
+        Vector2 lower = Intersection(control_point, point, Vector2.zero, Vector2.right);
+        Vector2 left  = Intersection(control_point, point, Vector2.zero, Vector2.up);
+        Vector2 right = Intersection(control_point, point, Vector2.right, Vector2.one);
+
+        if (0 <= upper.x && upper.x <= 1) // is the upper (and--by extension--lower) intersection valid? (are they on unit square?)
+        {
+            if(Vector2.Distance(point, upper) < Vector2.Distance(point, lower)) // find the closer intersection with the square
+            {
+                point = upper;
+            }
+            point = lower;
+        }
+        else // otherwise the intersections are at the left and right side
+        {
+            if (Vector2.Distance(point, left) < Vector2.Distance(point, right)) // find the closer intersection with the square
+            {
+                point = left;
+            }
+            point = right;
+        }
     }
 
     private static bool SameSigns(ref int[,] data_A, ref int[,] data_B) // for the purpose of this function, zero is not considered a sign
@@ -225,14 +274,13 @@ public class ShapeToSVG : MonoBehaviour
 
     private static void Subdivide(ArcOfSphere arc, float begin, float end)
     {
-        float midpoint = MaxError(arc, begin, end);
+        float midpoint = MaxErrorLocation(arc, begin, end);
 
         Vector2 L1 = SpaceConverter.SphereToUV(arc.Evaluate(begin));
         Vector2 L2 = SpaceConverter.SphereToUV(arc.Evaluate(end));
         Vector2 P = SpaceConverter.SphereToUV(arc.Evaluate(midpoint));
 
-        // if the max error is greater than a threshold, recursively add the left and right halves into the list of lines
-        if (Point_Line_Distance(L1, L2, P) > threshold)
+        if (Point_Line_Distance(L1, L2, P) > threshold) // if the max error is greater than a threshold, recursively add the left and right halves into the list of lines
         {
             Subdivide(arc, begin, midpoint);
             Subdivide(arc, midpoint, end);
@@ -251,7 +299,6 @@ public class ShapeToSVG : MonoBehaviour
         {
             data[0, dimension] = System.Math.Sign(arc.Evaluate(location)[dimension]);
         }
-
         for (int dimension = 0; dimension < 3; ++dimension)
         {
             data[1, dimension] = System.Math.Sign(arc.Evaluate(location + delta)[dimension] - arc.Evaluate(location)[dimension]) * System.Math.Sign(delta);
