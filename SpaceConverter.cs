@@ -14,9 +14,9 @@ public class SpaceConverter
         Vector2 UV;
         Vector2 xPivot, yPivot, zPivot;
 
-        if (Mathf.Sign(octahedral.x) == +1) //FIXME: optimize this hardcoded stuff, Barycentric coordinate conversions are certainly capable of being elegant
+        if (System.Math.Sign(octahedral.x) == +1) //FIXME: optimize this hardcoded stuff, Barycentric coordinate conversions are certainly capable of being elegant
         {
-            if(Mathf.Sign(octahedral.z) == +1)
+            if(System.Math.Sign(octahedral.z) == +1)
             {
                 yPivot = new Vector2(1.0f, 1.0f);
                 zPivot = new Vector2(0.5f, 1.0f);
@@ -30,7 +30,7 @@ public class SpaceConverter
         }
         else
         {
-            if (Mathf.Sign(octahedral.z) == +1)
+            if (System.Math.Sign(octahedral.z) == +1)
             {
                 yPivot = new Vector2(0.0f, 1.0f);
                 zPivot = new Vector2(0.5f, 1.0f);
@@ -42,7 +42,7 @@ public class SpaceConverter
             }
             xPivot = new Vector2(0.0f, 0.5f);
         }
-        if(Mathf.Sign(octahedral.y) == +1)
+        if(System.Math.Sign(octahedral.y) == +1)
         {
             yPivot = new Vector2(0.5f, 0.5f);
         }
