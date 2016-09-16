@@ -35,4 +35,14 @@ public struct optional<T>
 	{
 		return new optional<T>(value);
 	}
+
+    public static bool operator ==(optional<T> lhs, optional<T> rhs)
+    {
+        return (!lhs.exists && !rhs.exists) || (lhs.exists && rhs.exists && lhs.data.Equals(rhs.data));
+    }
+
+    public static bool operator !=(optional<T> lhs, optional<T> rhs)
+    {
+        return !(lhs == rhs);
+    }
 }
