@@ -102,16 +102,20 @@ public class ShapeToSVG : MonoBehaviour
         optional<QuadraticBezier> this_bezier = NextDiscontinuity(edge_map, last_bezier);
         optional<QuadraticBezier> first_bezier = this_bezier;
 
-        do
+        while (this_bezier != first_bezier)
         {
-            if(last_bezier.exists)
+            if (this_bezier.exists && last_bezier.exists)
             {
-                //edge_pattern.Add();
+                edge_pattern.Add(last_bezier.data, this_bezier.data);
+            }
+            else if (!this_bezier.exists && last_bezier.exists)
+            {
+                edge_pattern.Add(last_bezier.data, first_bezier.data);
             }
 
             last_bezier = this_bezier;
             this_bezier = NextDiscontinuity(edge_map, this_bezier);
-        } while (this_bezier != first_bezier);
+        }
 
         //using arc and EvaluateNormal information
         //at the discontinuity use Mathf.Sign(EvaluateNormal().y) to find the direction the edge isn't going and add it to one of 1 or 4 or 8 lists (2 directions * 4 corners)
@@ -259,7 +263,7 @@ public class ShapeToSVG : MonoBehaviour
 
     private static optional<QuadraticBezier> NextDiscontinuity(SortedDictionary<float, QuadraticBezier> edge_map, optional<QuadraticBezier> last_bezier)
     {
-        static int index = 0; //while this isn't re-set on 
+        int index = 0; //never resets on second or later function calls
 
         return null;
     }
@@ -293,21 +297,25 @@ public class ShapeToSVG : MonoBehaviour
         Vector2 left  = Intersection(control_point, point, Vector2.zero, Vector2.up);
         Vector2 right = Intersection(control_point, point, Vector2.right, Vector2.one);
 
-        if (0 <= upper.x && upper.x <= 1) // is the upper (and--by extension--lower) intersection valid? (are they on unit square?)
+        if (upper.y == 1 && 0 <= upper.x && upper.x <= 1) // is the upper intersection valid? (on the upper boarder of a unit square?)
         {
-            if(Vector2.Distance(point, upper) < Vector2.Distance(point, lower)) // find the closer intersection with the square
-            {
-                point = upper;
-            }
+            point = upper;
+        }
+        else if (lower.y == 0 && 0 <= lower.x && lower.x <= 1) // is the lower intersection valid? 
+        {
             point = lower;
         }
-        else // otherwise the intersections are at the left and right side
+        else if (right.x == 1 && 0 <= right.y && right.y <= 1) // is the right intersection valid?
         {
-            if (Vector2.Distance(point, left) < Vector2.Distance(point, right)) // find the closer intersection with the square
-            {
-                point = left;
-            }
             point = right;
+        }
+        else if (left.x == 0 && 0 <= left.y && left.y <= 1) // if the left intersection valid?
+        {
+            point = left;
+        }
+        else
+        {
+            DebugUtility.Print("ProjectOntoSquare failed.");
         }
     }
 
