@@ -4,12 +4,19 @@ using System.Collections.Generic;
 
 public class ShapeToSVG : MonoBehaviour
 {
+    static readonly float delta = 4 * Mathf.Pow(2, -23); // 4 because it's the largest power of 2 below 2*pi; 2**-23 because it is the smallest mantissa possible in IEEE 754 (for float)
+    const float threshold = 1e-5f;
+
+    bool clockwise_normal_vector = true;
+
+    static float last_key = 0; 
+
     static List<QuadraticBezier> lines;
-
-    static float delta = 4 * Mathf.Pow(2, -23); // 4 because it's the largest power of 2 below 2*pi; 2**-23 because it is the smallest mantissa possible in IEEE 754 (for float)
-    static float threshold = 1e-5f;
-
-    enum SquareFace { kTop, kRight, kBottom, kLeft, kNone }
+    static List<QuadraticBezier> start_discontinuities;
+    static List<QuadraticBezier> end_discontinuities;
+    static Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern;
+    static SortedList<float, QuadraticBezier> edge_map;
+    static optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>> edge_map_iter;
 
     public static void AddLine(ArcOfSphere edge, float begin, float end)
     {
@@ -88,18 +95,18 @@ public class ShapeToSVG : MonoBehaviour
         BuildShape();
     }
 
-    private static void AugmentDictionary(Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern, List<QuadraticBezier> start_discontinuities, List<QuadraticBezier> end_discontinuities)
+    private static void AugmentDictionary()
     {
-        SortedDictionary<float, QuadraticBezier> edge_map = new SortedDictionary<float, QuadraticBezier>(); // HACK: to be foolproof this needs to be Tuple<QB, QB> to store forwards and backwards references; the hack should work as long as the level design is simple. (I think that level designs that break this also break the physics code too.)
+        edge_map = new SortedList<float, QuadraticBezier>(); // HACK: to be foolproof this needs to be Tuple<QB, QB> to store forwards and backwards references; the hack should work as long as the level design is simple. (I think that level designs that break this also break the physics code too.)
 
         //create quick map for locating consecutive QB's on edge of square
-        BuildEdgeMap(edge_map, start_discontinuities);
-        BuildEdgeMap(edge_map, end_discontinuities);
+        BuildEdgeMap(start_discontinuities);
+        BuildEdgeMap(end_discontinuities);
 
         //add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) )
         //using function calls is a better idea (and getting rid of the enum)
         optional<QuadraticBezier> last_bezier = new optional<QuadraticBezier>();
-        optional<QuadraticBezier> this_bezier = NextDiscontinuity(edge_map, last_bezier);
+        optional<QuadraticBezier> this_bezier = NextDiscontinuity();
         optional<QuadraticBezier> first_bezier = this_bezier;
 
         while (this_bezier != first_bezier)
@@ -114,7 +121,7 @@ public class ShapeToSVG : MonoBehaviour
             }
 
             last_bezier = this_bezier;
-            this_bezier = NextDiscontinuity(edge_map, this_bezier);
+            this_bezier = NextDiscontinuity();
         }
 
         //using arc and EvaluateNormal information
@@ -125,7 +132,7 @@ public class ShapeToSVG : MonoBehaviour
         //these points will have a control point at (UV1 + UV2) / 2
     }
 
-    private static void BuildDictionary(Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern)
+    private static void BuildDictionary()
     {
         for (int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
         {
@@ -139,7 +146,7 @@ public class ShapeToSVG : MonoBehaviour
         }
     }
 
-    private static void BuildEdgeMap(SortedDictionary<float, QuadraticBezier> edge_map, List<QuadraticBezier> discontinuities)
+    private static void BuildEdgeMap(List<QuadraticBezier> discontinuities)
     {
         //create quick map for locating consecutive QB's on edge of square
         for (int index = 0; index < discontinuities.Count; ++index)
@@ -166,13 +173,13 @@ public class ShapeToSVG : MonoBehaviour
     private static void BuildShape()
     {
         //each "shape" may contain more than one shape (e.g. a zig-zag on the southern hemisphere between two octahedral faces will have #zig + #zag + 1 shapes)
-
-        Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern = new Dictionary<QuadraticBezier, QuadraticBezier>();
-        BuildDictionary(edge_pattern);
+        
+        edge_pattern = new Dictionary<QuadraticBezier, QuadraticBezier>();
+        BuildDictionary();
         List<QuadraticBezier> start_discontinuities = new List<QuadraticBezier>();
         List<QuadraticBezier> end_discontinuities = new List<QuadraticBezier>();
-        DiscontinuityLocations(start_discontinuities, end_discontinuities);
-        AugmentDictionary(edge_pattern, start_discontinuities, end_discontinuities); // add edges that are along the square (0,0) -> (1,0) -> (1,1) -> (0,1)
+        DiscontinuityLocations();
+        AugmentDictionary(); // add edges that are along the square (0,0) -> (1,0) -> (1,1) -> (0,1)
 
         while (edge_pattern.Count != 0) // make sure there are no more shapes left to process
         {
@@ -204,7 +211,28 @@ public class ShapeToSVG : MonoBehaviour
         }
     }
 
-    private static void DiscontinuityLocations(List<QuadraticBezier> start_discontinuities, List<QuadraticBezier> end_discontinuities)
+    private static Vector3 ClockwiseDirection(float edge_interpolation) // I could define this for negative numbers, but I will only be using [0,4] at most.
+    {
+        if (edge_interpolation < 1)
+        {
+            return Vector3.right;
+        }
+        else if (edge_interpolation < 2)
+        {
+            return Vector3.back;
+        }
+        else
+        {
+            return -ClockwiseDirection(edge_interpolation - 2);
+        }
+    }
+
+    private static Vector2 CounterclockwiseDirection(float edge_interpolation)
+    {
+        return -ClockwiseDirection(edge_interpolation);
+    }
+
+    private static void DiscontinuityLocations()
     {
         for (int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
         {
@@ -217,6 +245,13 @@ public class ShapeToSVG : MonoBehaviour
                 end_discontinuities.Add(QB2);
             }
         }
+    }
+
+    private static optional<QuadraticBezier> GetFirstDiscontinuity()
+    {
+        //edge_map_iter
+
+        return new optional<QuadraticBezier>();
     }
 
     private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end)
@@ -261,11 +296,44 @@ public class ShapeToSVG : MonoBehaviour
         return (begin + end) / 2; // return location of max error
     }
 
-    private static optional<QuadraticBezier> NextDiscontinuity(SortedDictionary<float, QuadraticBezier> edge_map, optional<QuadraticBezier> last_bezier)
+    private static optional<QuadraticBezier> NextDiscontinuity()
     {
-        int index = 0; //never resets on second or later function calls
+        if (edge_map_iter.exists)
+        {
+            //0.5 -> 1 -> 2 -> 2.5
+            //0.5 = last_key
+            //last_key
+            if (last_key == Mathf.Ceil(last_key))
+            {
+                last_key++;
+            }
+            else
+            {
+                last_key = Mathf.Ceil(last_key);
+            }
 
-        return null;
+            if(last_key)
+            //last_key = edge_map_iter.data.Current.Key;
+            if (!edge_map_iter.data.MoveNext())
+            {
+                return new optional<QuadraticBezier>();
+            }
+            else
+            {
+                return GetFirstDiscontinuity();
+            }
+        }
+
+        edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(edge_map.GetEnumerator());
+        last_key = 0;
+        if (!edge_map_iter.data.MoveNext())
+        {
+            return new optional<QuadraticBezier>();
+        }
+        else
+        {
+            return GetFirstDiscontinuity();
+        }
     }
 
     private static void OverlapSharedEdges()
