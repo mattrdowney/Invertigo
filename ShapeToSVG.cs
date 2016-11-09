@@ -113,11 +113,11 @@ public class ShapeToSVG : MonoBehaviour
         {
             if (this_bezier.exists && last_bezier.exists)
             {
-                edge_pattern.Add(last_bezier.data, this_bezier.data);
+                StitchTogether(last_bezier.data, this_bezier.data);
             }
             else if (!this_bezier.exists && last_bezier.exists)
             {
-                edge_pattern.Add(last_bezier.data, first_bezier.data);
+                StitchTogether(last_bezier.data, first_bezier.data);
             }
 
             last_bezier = this_bezier;
@@ -249,9 +249,27 @@ public class ShapeToSVG : MonoBehaviour
 
     private static optional<QuadraticBezier> GetFirstDiscontinuity()
     {
-        //edge_map_iter
+        if (!edge_map_iter.data.MoveNext())
+        {
+            return new optional<QuadraticBezier>();
+        }
 
-        return new optional<QuadraticBezier>();
+        float location = edge_map_iter.data.Current.Value.begin;
+        if (start_discontinuities.Contains(edge_map_iter.data.Current.Value))
+        {
+            location = edge_map_iter.data.Current.Value.end;
+        }
+
+        float similarity = Vector3.Dot(ClockwiseDirection(edge_map_iter.data.Current.Key),
+            edge_map_iter.data.Current.Value.arc.EvaluateNormal(location));
+
+        if (similarity > 0)
+        {
+            return edge_map_iter.data.Current.Value;
+        }
+        
+        edge_map_iter.data.MoveNext();
+        return edge_map_iter.data.Current.Value;
     }
 
     private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end)
@@ -300,40 +318,27 @@ public class ShapeToSVG : MonoBehaviour
     {
         if (edge_map_iter.exists)
         {
-            //0.5 -> 1 -> 2 -> 2.5
-            //0.5 = last_key
-            //last_key
-            if (last_key == Mathf.Ceil(last_key))
-            {
-                last_key++;
-            }
-            else
-            {
-                last_key = Mathf.Ceil(last_key);
-            }
-
-            if(last_key)
             //last_key = edge_map_iter.data.Current.Key;
-            if (!edge_map_iter.data.MoveNext())
+            if (edge_map_iter.data.MoveNext())
             {
-                return new optional<QuadraticBezier>();
+                return edge_map_iter.data.Current.Value;
             }
             else
             {
-                return GetFirstDiscontinuity();
+                edge_map_iter.data.Reset();
+                if (edge_map_iter.data.MoveNext())
+                {
+                    return edge_map_iter.data.Current.Value;
+                }
+                else
+                {
+                    return new optional<QuadraticBezier>();
+                }
             }
         }
 
         edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(edge_map.GetEnumerator());
-        last_key = 0;
-        if (!edge_map_iter.data.MoveNext())
-        {
-            return new optional<QuadraticBezier>();
-        }
-        else
-        {
-            return GetFirstDiscontinuity();
-        }
+        return GetFirstDiscontinuity();
     }
 
     private static void OverlapSharedEdges()
@@ -400,6 +405,11 @@ public class ShapeToSVG : MonoBehaviour
             }
         }
         return true;
+    }
+
+    private static void StitchTogether(QuadraticBezier last, QuadraticBezier current)
+    {
+
     }
 
     private static void Subdivide(ArcOfSphere arc, float begin, float end)
