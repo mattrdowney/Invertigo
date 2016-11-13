@@ -21,8 +21,8 @@ public class ShapeToSVG : MonoBehaviour
 
         if (Vector2.Distance(begin_UV, end_UV) > threshold)
         {
-            Vector2 delta_begin_UV = SpaceConverter.SphereToUV(edge.Evaluate(begin + delta));
-            Vector2 delta_end_UV = SpaceConverter.SphereToUV(edge.Evaluate(end - delta));
+            Vector2 delta_begin_UV = SpaceConverter.SphereToUV(edge.Evaluate(begin + 64*delta));
+            Vector2 delta_end_UV = SpaceConverter.SphereToUV(edge.Evaluate(end - 64*delta));
             Vector2 control_point = Intersection(begin_UV, delta_begin_UV, delta_end_UV, end_UV);
 
             lines.Add(new QuadraticBezier(edge, begin_UV, control_point, end_UV, begin, end));
@@ -218,6 +218,7 @@ public class ShapeToSVG : MonoBehaviour
 
             if (QB1.end_UV != QB2.begin_UV) //if there is a discontinuity
             {
+                Debug.Log(QB1.end_UV + ":" + QB2.begin_UV);
                 start_discontinuities.Add(QB1);
                 end_discontinuities.Add(QB2);
             }
@@ -274,7 +275,7 @@ public class ShapeToSVG : MonoBehaviour
         return edge_map_iter.data.Current.Value;
     }
 
-    private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end)
+    private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end) // FIXME: function LIES
     {
         float numerator_x, numerator_y, denominator;
 
@@ -287,7 +288,16 @@ public class ShapeToSVG : MonoBehaviour
         denominator = (begin.x - after_begin.x) * (before_end.y - end.y) -
                       (begin.y - after_begin.y) * (before_end.x - end.x);
 
-        return new Vector2(numerator_x / denominator, numerator_y / denominator);
+        Vector2 result = new Vector2(numerator_x / denominator, numerator_y / denominator);
+
+        if (System.Single.IsNaN(result.x) ||
+                System.Single.IsPositiveInfinity(result.x) ||
+                System.Single.IsNegativeInfinity(result.x)) // checking for x implicitly checks for y
+        {
+            return (begin + end) / 2;
+        }
+
+        return result;
     }
 
     private static float MaxErrorLocation(ArcOfSphere arc, float begin, float end)
