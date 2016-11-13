@@ -10,7 +10,7 @@ public class ShapeToSVG : MonoBehaviour
     static List<QuadraticBezier> lines;
     static List<QuadraticBezier> start_discontinuities;
     static List<QuadraticBezier> end_discontinuities;
-    static Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern;
+    static Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern; // HACK: to be foolproof this needs to be Tuple<QB, QB> to store forwards and backwards references; the hack should work as long as the level design is simple. (I think that level designs that break this also break the physics code too.)
     static SortedList<float, QuadraticBezier> edge_map;
     static optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>> edge_map_iter;
 
@@ -31,6 +31,8 @@ public class ShapeToSVG : MonoBehaviour
 
     public static void Append(GameObject shape)
     {
+        lines = new List<QuadraticBezier>();
+
         ArcOfSphere first_edge = shape.GetComponentInChildren<Edge>();
         ArcOfSphere arc = first_edge;
 
@@ -85,15 +87,15 @@ public class ShapeToSVG : MonoBehaviour
 
             arc = arc.next.next; //skip corners //HACK: FIXME: make this elegant
         } while (arc != first_edge);
-
         ClampToEdges();
         OverlapSharedEdges();
         BuildShape();
+
     }
 
     private static void AugmentDictionary()
     {
-        edge_map = new SortedList<float, QuadraticBezier>(); // HACK: to be foolproof this needs to be Tuple<QB, QB> to store forwards and backwards references; the hack should work as long as the level design is simple. (I think that level designs that break this also break the physics code too.)
+        edge_map = new SortedList<float, QuadraticBezier>();
 
         //create quick map for locating consecutive QB's on edge of square
         for (int index = 0; index < start_discontinuities.Count; ++index)
@@ -124,6 +126,8 @@ public class ShapeToSVG : MonoBehaviour
             last_bezier = this_bezier;
             this_bezier = NextDiscontinuity();
         }
+
+        edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>();
     }
 
     private static void BuildDictionary()
@@ -143,14 +147,11 @@ public class ShapeToSVG : MonoBehaviour
     private static void BuildShape()
     {
         //each "shape" may contain more than one shape (e.g. a zig-zag on the southern hemisphere between two octahedral faces will have #zig + #zag + 1 shapes)
-        
+
         edge_pattern = new Dictionary<QuadraticBezier, QuadraticBezier>();
         BuildDictionary();
-        List<QuadraticBezier> start_discontinuities = new List<QuadraticBezier>();
-        List<QuadraticBezier> end_discontinuities = new List<QuadraticBezier>();
         DiscontinuityLocations();
         AugmentDictionary(); // add edges that are along the square (0,0) -> (1,0) -> (1,1) -> (0,1)
-
         while (edge_pattern.Count != 0) // make sure there are no more shapes left to process
         {
             Dictionary<QuadraticBezier, QuadraticBezier>.Enumerator iter = edge_pattern.GetEnumerator();
@@ -162,8 +163,9 @@ public class ShapeToSVG : MonoBehaviour
             do // process every edge in each shape
             {
                 SVGBuilder.SetEdge(current_edge);
-                edge_pattern.Remove(current_edge);
+                QuadraticBezier temp_edge = current_edge;
                 current_edge = edge_pattern[current_edge];
+                edge_pattern.Remove(temp_edge);
             } while (current_edge != first_edge);
             SVGBuilder.EndShape();
         }
@@ -207,6 +209,8 @@ public class ShapeToSVG : MonoBehaviour
 
     private static void DiscontinuityLocations()
     {
+        start_discontinuities = new List<QuadraticBezier>();
+        end_discontinuities = new List<QuadraticBezier>();
         for (int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
         {
             QuadraticBezier QB1 = lines[index];
@@ -483,16 +487,21 @@ public class ShapeToSVG : MonoBehaviour
 
         // add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) )
         optional<Vector2> intermediate_point = NextCorner(last_key, current_key, clockwise);
+        Vector2 midpoint;
+        QuadraticBezier intermediate_edge;
         while (intermediate_point.exists)
         {
-            Vector2 midpoint = (last.end_UV + intermediate_point.data) / 2;
-            QuadraticBezier intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, intermediate_point.data, -1f, -1f);
+            midpoint = (last.end_UV + intermediate_point.data) / 2;
+            intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, intermediate_point.data, -1f, -1f);
             edge_pattern.Add(last, intermediate_edge);
             last = intermediate_edge;
             last_key = EdgeMapKey(last.end_UV);
             intermediate_point = NextCorner(last_key, current_key, clockwise);
         }
-        edge_pattern.Add(last, current);
+        midpoint = (last.end_UV + current.begin_UV) / 2;
+        intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, current.begin_UV, -1f, -1f);
+        edge_pattern.Add(last, intermediate_edge);
+        edge_pattern.Add(intermediate_edge, current);
     }
 
     private static void Subdivide(ArcOfSphere arc, float begin, float end)

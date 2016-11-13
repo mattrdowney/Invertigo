@@ -27,15 +27,12 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
 
     public static void SetEdge(QuadraticBezier curve)
     {
-        curve.begin_UV *= 1000; // XXX: altering the data isn't a great idea
-        curve.end_UV *= 1000;
-
         if (first)
         {
-            writer.Write("M" + curve.begin_UV.x + "," + curve.begin_UV.y);
+            writer.Write("M" + curve.begin_UV.x * 1000 + "," + curve.begin_UV.y * 1000);
             first = false;
         }
-        writer.Write(" Q" + curve.control_point.x + "," + curve.control_point.y + " " + curve.end_UV.x + "," + curve.end_UV.y);
+        writer.Write(" Q" + curve.control_point.x * 1000 + "," + curve.control_point.y * 1000 + " " + curve.end_UV.x * 1000 + "," + curve.end_UV.y * 1000);
     }
 
     public static void EndShape()
