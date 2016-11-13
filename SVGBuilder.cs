@@ -27,7 +27,7 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
 
     public static void SetEdge(QuadraticBezier curve)
     {
-        curve.begin_UV *= 1000;
+        curve.begin_UV *= 1000; // XXX: altering the data isn't a great idea
         curve.end_UV *= 1000;
 
         if (first)

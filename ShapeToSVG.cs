@@ -7,10 +7,6 @@ public class ShapeToSVG : MonoBehaviour
     static readonly float delta = 4 * Mathf.Pow(2, -23); // 4 because it's the largest power of 2 below 2*pi; 2**-23 because it is the smallest mantissa possible in IEEE 754 (for float)
     const float threshold = 1e-5f;
 
-    bool clockwise_normal_vector = true;
-
-    static float last_key = 0; 
-
     static List<QuadraticBezier> lines;
     static List<QuadraticBezier> start_discontinuities;
     static List<QuadraticBezier> end_discontinuities;
@@ -100,11 +96,16 @@ public class ShapeToSVG : MonoBehaviour
         edge_map = new SortedList<float, QuadraticBezier>(); // HACK: to be foolproof this needs to be Tuple<QB, QB> to store forwards and backwards references; the hack should work as long as the level design is simple. (I think that level designs that break this also break the physics code too.)
 
         //create quick map for locating consecutive QB's on edge of square
-        BuildEdgeMap(start_discontinuities);
-        BuildEdgeMap(end_discontinuities);
+        for (int index = 0; index < start_discontinuities.Count; ++index)
+        {
+            edge_map.Add(EdgeMapKey(start_discontinuities[index].end_UV), start_discontinuities[index]);
+        }
+        for (int index = 0; index < end_discontinuities.Count; ++index)
+        {
+            edge_map.Add(EdgeMapKey(end_discontinuities[index].begin_UV), end_discontinuities[index]);
+        }
 
-        //add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) )
-        //using function calls is a better idea (and getting rid of the enum)
+        
         optional<QuadraticBezier> last_bezier = new optional<QuadraticBezier>();
         optional<QuadraticBezier> this_bezier = NextDiscontinuity();
         optional<QuadraticBezier> first_bezier = this_bezier;
@@ -123,13 +124,6 @@ public class ShapeToSVG : MonoBehaviour
             last_bezier = this_bezier;
             this_bezier = NextDiscontinuity();
         }
-
-        //using arc and EvaluateNormal information
-        //at the discontinuity use Mathf.Sign(EvaluateNormal().y) to find the direction the edge isn't going and add it to one of 1 or 4 or 8 lists (2 directions * 4 corners)
-        //other info you need Sign(UV.x) and Sign(UV.z) which gives you which of the four corners the point is located at
-
-        //after you have created the four lists, you can then start drawing edges between discontinuities (and the points (0,0), (1,0), (1,1), (0,1) ) no other points should be introduced
-        //these points will have a control point at (UV1 + UV2) / 2
     }
 
     private static void BuildDictionary()
@@ -142,30 +136,6 @@ public class ShapeToSVG : MonoBehaviour
             if (QB1.end_UV == QB2.begin_UV) // take identical points and link them
             {
                 edge_pattern.Add(QB1, QB2); //should work since it's referencing the QuadraticBezier inside of the List<QB>
-            }
-        }
-    }
-
-    private static void BuildEdgeMap(List<QuadraticBezier> discontinuities)
-    {
-        //create quick map for locating consecutive QB's on edge of square
-        for (int index = 0; index < discontinuities.Count; ++index)
-        {
-            if (discontinuities[index].end_UV.x == 0.0f) //left
-            {
-                edge_map.Add(discontinuities[index].end_UV.y + 3, discontinuities[index]);
-            }
-            else if (discontinuities[index].end_UV.x == 1.0f) //right
-            {
-                edge_map.Add(1f - discontinuities[index].end_UV.y + 1, discontinuities[index]);
-            }
-            else if (discontinuities[index].end_UV.y == 0.0f) //bottom
-            {
-                edge_map.Add(1f - discontinuities[index].end_UV.x + 2, discontinuities[index]);
-            }
-            else //top
-            {
-                edge_map.Add(discontinuities[index].end_UV.x + 0, discontinuities[index]);
             }
         }
     }
@@ -183,15 +153,18 @@ public class ShapeToSVG : MonoBehaviour
 
         while (edge_pattern.Count != 0) // make sure there are no more shapes left to process
         {
-            QuadraticBezier first_edge = edge_pattern.GetEnumerator().Current.Key;
+            Dictionary<QuadraticBezier, QuadraticBezier>.Enumerator iter = edge_pattern.GetEnumerator();
+            iter.MoveNext();
+            QuadraticBezier first_edge = iter.Current.Key;
             QuadraticBezier current_edge = first_edge;
 
             SVGBuilder.BeginShape();
-            while (current_edge != first_edge) // process every edge in each shape
+            do // process every edge in each shape
             {
                 SVGBuilder.SetEdge(current_edge);
                 edge_pattern.Remove(current_edge);
-            }
+                current_edge = edge_pattern[current_edge];
+            } while (current_edge != first_edge);
             SVGBuilder.EndShape();
         }
     }
@@ -245,6 +218,31 @@ public class ShapeToSVG : MonoBehaviour
                 end_discontinuities.Add(QB2);
             }
         }
+    }
+    /** length travelled along the perimeter of a unit square starting from the top left and moving clockwise
+     *  @param uv the coordinates along the boundary of the unit square (both coordinates must be [0,1] and at least one coordinate must be exactly 0 or 1
+     *  @return length travelled along the perimeter of a unit square starting from the top left and moving clockwise
+     */
+    private static float EdgeMapKey(Vector2 uv) // isolate the behavior that varies!
+    {
+        if (uv.y == 1.0f) // top
+        {
+            return 0.0f + (uv.x);
+        }
+        else if (uv.x == 1.0f) // right
+        {
+            return 1.0f + (1.0f - uv.y);
+        }
+        else if (uv.y == 0.0f) // bottom
+        {
+            return 2.0f + (1.0f - uv.x);
+        }
+        else if (uv.x == 0.0f) // left
+        {
+            return 3.0f + (uv.y);
+        }
+        DebugUtility.Print("ShapeToSVG: EdgeMapKey(): input error");
+        return 4.0f;
     }
 
     private static optional<QuadraticBezier> GetFirstDiscontinuity()
@@ -314,11 +312,37 @@ public class ShapeToSVG : MonoBehaviour
         return (begin + end) / 2; // return location of max error
     }
 
+    private static optional<Vector2> NextCorner(float first, float last, bool clockwise)
+    {
+        float end = last;
+        if (end != (int) end)
+        {
+            end = NextEdge(last, clockwise);
+        }
+
+        float next = NextEdge(first, clockwise);
+        if (next != end)
+        {
+            switch ((int)next)
+            {
+                case 0: case 4:
+                    return Vector2.up;
+                case 1:
+                    return Vector2.one;
+                case 2:
+                    return Vector2.right;
+                case 3:
+                    return Vector2.zero;
+            } 
+        }
+
+        return new optional<Vector2>();
+    }
+
     private static optional<QuadraticBezier> NextDiscontinuity()
     {
         if (edge_map_iter.exists)
         {
-            //last_key = edge_map_iter.data.Current.Key;
             if (edge_map_iter.data.MoveNext())
             {
                 return edge_map_iter.data.Current.Value;
@@ -339,6 +363,42 @@ public class ShapeToSVG : MonoBehaviour
 
         edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(edge_map.GetEnumerator());
         return GetFirstDiscontinuity();
+    }
+
+    private static float NextEdge(float current, bool clockwise)
+    {
+        float next;
+        if (clockwise)
+        {
+            if (Mathf.Ceil(current) == current)
+            {
+                next = current + 1;
+            }
+            else
+            {
+                next = Mathf.Ceil(current);
+            }
+            if (next >= 4)
+            {
+                next -= 4;
+            }
+        }
+        else // counterclockwise
+        {
+            if (Mathf.Floor(current) == current)
+            {
+                next = current - 1;
+            }
+            else
+            {
+                next = Mathf.Floor(current);
+            }
+            if (next < 0)
+            {
+                next += 4;
+            }
+        }
+        return next;
     }
 
     private static void OverlapSharedEdges()
@@ -409,7 +469,30 @@ public class ShapeToSVG : MonoBehaviour
 
     private static void StitchTogether(QuadraticBezier last, QuadraticBezier current)
     {
+        if (start_discontinuities.Contains(current)) // set last equal to the beginning of the discontinuity 
+        {
+            QuadraticBezier temp = last;
+            last = current;
+            current = temp;
+        }
+        float last_key = EdgeMapKey(last.end_UV);
+        float current_key = EdgeMapKey(current.begin_UV);
 
+        bool clockwise = Vector3.Dot(ClockwiseDirection(last_key),
+            last.arc.EvaluateNormal(last.end)) > 0;
+
+        // add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) )
+        optional<Vector2> intermediate_point = NextCorner(last_key, current_key, clockwise);
+        while (intermediate_point.exists)
+        {
+            Vector2 midpoint = (last.end_UV + intermediate_point.data) / 2;
+            QuadraticBezier intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, intermediate_point.data, -1f, -1f);
+            edge_pattern.Add(last, intermediate_edge);
+            last = intermediate_edge;
+            last_key = EdgeMapKey(last.end_UV);
+            intermediate_point = NextCorner(last_key, current_key, clockwise);
+        }
+        edge_pattern.Add(last, current);
     }
 
     private static void Subdivide(ArcOfSphere arc, float begin, float end)
