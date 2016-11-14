@@ -51,7 +51,7 @@ public class ShapeToSVG : MonoBehaviour
             int[,] xyz_signs_range_mid = new int[2, 3]; //middle of begin and range_end
 
             // get signs for beginning and end
-            UpdateSigns(arc, ref xyz_signs_begin, arc.Begin(), delta); // ~2**-21 e.g. 4*(2**-23); 4 because it's the largest power of 2 below 2*pi; 2**-23 because it is the smallest mantissa possible in IEEE 754 (for float)
+            UpdateSigns(arc, ref xyz_signs_begin, arc.Begin(), delta);
             UpdateSigns(arc, ref xyz_signs_end, arc.End(), -delta);
 
             // process new lines until the signs match
@@ -85,7 +85,11 @@ public class ShapeToSVG : MonoBehaviour
             // draw the last line
             Subdivide(arc, begin, end);
 
-            arc = arc.next.next; //skip corners //HACK: FIXME: make this elegant
+            arc = arc.next; // move to next arc
+            while(arc.GetType().IsSubclassOf(typeof(Corner))) // skip corners //XXX: Corner is abstract... for now
+            {
+                arc = arc.next;
+            }
         } while (arc != first_edge);
         ClampToEdges();
         OverlapSharedEdges();
@@ -106,25 +110,25 @@ public class ShapeToSVG : MonoBehaviour
         {
             edge_map.Add(EdgeMapKey(end_discontinuities[index].begin_UV), end_discontinuities[index]);
         }
-
         
         optional<QuadraticBezier> last_bezier = new optional<QuadraticBezier>();
         optional<QuadraticBezier> this_bezier = NextDiscontinuity();
         optional<QuadraticBezier> first_bezier = this_bezier;
 
-        while (this_bezier != first_bezier)
+        do
         {
             if (this_bezier.exists && last_bezier.exists)
             {
                 StitchTogether(last_bezier.data, this_bezier.data);
             }
-            else if (!this_bezier.exists && last_bezier.exists)
-            {
-                StitchTogether(last_bezier.data, first_bezier.data);
-            }
 
             last_bezier = this_bezier;
             this_bezier = NextDiscontinuity();
+        } while (this_bezier != first_bezier);
+
+        if (first_bezier.exists && last_bezier.exists && first_bezier != last_bezier)
+        {
+            StitchTogether(last_bezier.data, first_bezier.data);
         }
 
         edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>();
@@ -137,7 +141,7 @@ public class ShapeToSVG : MonoBehaviour
             QuadraticBezier QB1 = lines[index];
             QuadraticBezier QB2 = lines[(index + 1) % lines.Count];
 
-            if (QB1.end_UV == QB2.begin_UV) // take identical points and link them
+            if (!NearBoundary(QB1.end_UV) && !NearBoundary(QB2.begin_UV)) // take identical points and link them
             {
                 edge_pattern.Add(QB1, QB2); //should work since it's referencing the QuadraticBezier inside of the List<QB>
             }
@@ -173,13 +177,16 @@ public class ShapeToSVG : MonoBehaviour
 
     private static void ClampToEdges()
     {
-        for(int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
+        Debug.Log("Clamping1");
+        for (int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
         {
             QuadraticBezier QB1 = lines[index];
             QuadraticBezier QB2 = lines[(index + 1) % lines.Count];
 
-            if ((QB1.end_UV - QB2.begin_UV).magnitude > threshold) //if end is not close to begin, there is a discontinuity
+            Debug.Log("Clamping2");
+            if (NearBoundary(QB1.end_UV)) //if end is not close to begin, there is a discontinuity
             {
+                Debug.Log("Clamping3");
                 ProjectOntoSquare(ref QB1.end_UV, QB1.control_point); // project the points onto the edge of a square
                 ProjectOntoSquare(ref QB2.begin_UV, QB2.control_point);
             }
@@ -187,7 +194,7 @@ public class ShapeToSVG : MonoBehaviour
     }
 
     private static Vector3 ClockwiseDirection(float edge_interpolation) // I could define this for negative numbers, but I will only be using [0,4] at most.
-    {
+    { // TODO: CHECK: might be wrong!
         if (edge_interpolation < 1)
         {
             return Vector3.right;
@@ -213,14 +220,17 @@ public class ShapeToSVG : MonoBehaviour
         end_discontinuities = new List<QuadraticBezier>();
         for (int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
         {
-            QuadraticBezier QB1 = lines[index];
-            QuadraticBezier QB2 = lines[(index + 1) % lines.Count];
-
-            if (QB1.end_UV != QB2.begin_UV) //if there is a discontinuity
+            QuadraticBezier QB = lines[index];
+            
+            if (NearBoundary(QB.begin_UV) && !NearBoundary(QB.end_UV)) // just because this can work does not mean it will always work (at least in theory)... FIXME: include all vertexes unless the line is parallel to the boundary
             {
-                Debug.Log(QB1.end_UV + ":" + QB2.begin_UV);
-                start_discontinuities.Add(QB1);
-                end_discontinuities.Add(QB2);
+                Debug.Log("(" + QB.begin_UV.x + "," + QB.begin_UV.y + "):(" + QB.end_UV.x + "," + QB.end_UV.y + ")");
+                end_discontinuities.Add(QB);
+            }
+            else if (NearBoundary(QB.end_UV) && !NearBoundary(QB.begin_UV))
+            {
+                Debug.Log("(" + QB.begin_UV.x + "," + QB.begin_UV.y + "):(" + QB.end_UV.x + "," + QB.end_UV.y + ")");
+                start_discontinuities.Add(QB);
             }
         }
     }
@@ -326,6 +336,18 @@ public class ShapeToSVG : MonoBehaviour
         return (begin + end) / 2; // return location of max error
     }
 
+    private static bool NearBoundary(Vector2 uv)
+    {
+        if (uv.x >= 1.0f - threshold ||
+                uv.x <= threshold ||
+                uv.y >= 1.0f - threshold ||
+                uv.y <= threshold)
+        {
+            return true;
+        }
+        return false;
+    }
+
     private static optional<Vector2> NextCorner(float first, float last, bool clockwise)
     {
         float end = last;
@@ -422,7 +444,7 @@ public class ShapeToSVG : MonoBehaviour
             QuadraticBezier QB1 = lines[index];
             QuadraticBezier QB2 = lines[(index + 1) % lines.Count];
 
-            if ((QB1.end_UV - QB2.begin_UV).magnitude < threshold) //if QB1.end ~= QB2.begin
+            if (Vector2.Distance(QB1.end_UV, QB2.begin_UV) < threshold) //if QB1.end ~= QB2.begin
             {
                 QB1.end = QB2.begin = (QB1.end + QB2.begin) / 2; //make the points equal
             }
@@ -489,6 +511,7 @@ public class ShapeToSVG : MonoBehaviour
             last = current;
             current = temp;
         }
+        Debug.Log("Stitching " + last.end_UV + " and " + current.begin_UV);
         float last_key = EdgeMapKey(last.end_UV);
         float current_key = EdgeMapKey(current.begin_UV);
 
@@ -499,7 +522,7 @@ public class ShapeToSVG : MonoBehaviour
         optional<Vector2> intermediate_point = NextCorner(last_key, current_key, clockwise);
         Vector2 midpoint;
         QuadraticBezier intermediate_edge;
-        while (intermediate_point.exists)
+        /*while (intermediate_point.exists) //FIXME: infinite loop
         {
             midpoint = (last.end_UV + intermediate_point.data) / 2;
             intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, intermediate_point.data, -1f, -1f);
@@ -507,7 +530,7 @@ public class ShapeToSVG : MonoBehaviour
             last = intermediate_edge;
             last_key = EdgeMapKey(last.end_UV);
             intermediate_point = NextCorner(last_key, current_key, clockwise);
-        }
+        }*/
         midpoint = (last.end_UV + current.begin_UV) / 2;
         intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, current.begin_UV, -1f, -1f);
         edge_pattern.Add(last, intermediate_edge);
