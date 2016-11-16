@@ -100,6 +100,7 @@ public class ShapeToSVG : MonoBehaviour
     private static void AugmentDictionary()
     {
         edge_map = new SortedList<float, QuadraticBezier>();
+        edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>();
 
         //create quick map for locating consecutive QB's on edge of square
         for (int index = 0; index < start_discontinuities.Count; ++index)
@@ -130,8 +131,6 @@ public class ShapeToSVG : MonoBehaviour
         {
             StitchTogether(last_bezier.data, first_bezier.data);
         }
-
-        edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>();
     }
 
     private static void BuildDictionary()
@@ -193,20 +192,14 @@ public class ShapeToSVG : MonoBehaviour
         }
     }
 
-    private static Vector3 ClockwiseDirection(float edge_interpolation) // I could define this for negative numbers, but I will only be using [0,4] at most.
+    private static Vector3 ClockwiseDirection(float edge_interpolation) // undefined for negative edge_interpolation factors
     { // TODO: CHECK: might be wrong!
-        if (edge_interpolation < 1)
+        edge_interpolation %= 1; 
+        if (edge_interpolation < 0.5f)
         {
-            return Vector3.right;
+            return Vector3.up;
         }
-        else if (edge_interpolation < 2)
-        {
-            return Vector3.back;
-        }
-        else
-        {
-            return -ClockwiseDirection(edge_interpolation - 2);
-        }
+        return Vector3.down;
     }
 
     private static Vector2 CounterclockwiseDirection(float edge_interpolation)
@@ -285,7 +278,7 @@ public class ShapeToSVG : MonoBehaviour
         return edge_map_iter.data.Current.Value;
     }
 
-    private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end) // FIXME: function LIES
+    private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end)
     {
         float numerator_x, numerator_y, denominator;
 
