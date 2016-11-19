@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2015
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Invertigo.CSharp", "Invertigo.CSharp.csproj", "{C087C794-BF9E-2C40-B81C-3B47C9CF92EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Invertigo.CSharp.Editor", "Invertigo.CSharp.Editor.csproj", "{C867C660-D242-ADE1-648E-8D9D2EF3A62A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C087C794-BF9E-2C40-B81C-3B47C9CF92EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C087C794-BF9E-2C40-B81C-3B47C9CF92EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C087C794-BF9E-2C40-B81C-3B47C9CF92EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C087C794-BF9E-2C40-B81C-3B47C9CF92EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C867C660-D242-ADE1-648E-8D9D2EF3A62A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C867C660-D242-ADE1-648E-8D9D2EF3A62A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C867C660-D242-ADE1-648E-8D9D2EF3A62A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C867C660-D242-ADE1-648E-8D9D2EF3A62A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
