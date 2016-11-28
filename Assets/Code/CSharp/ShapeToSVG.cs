@@ -25,6 +25,8 @@ public class ShapeToSVG : MonoBehaviour
             Vector2 delta_end_UV = SpaceConverter.SphereToUV(edge.Evaluate(end - 64*delta));
             Vector2 control_point = Intersection(begin_UV, delta_begin_UV, delta_end_UV, end_UV);
 
+            Debug.Log("AddLine: " + DebugUtility.Vector2ToString(begin_UV) + "," + DebugUtility.Vector2ToString(end_UV));
+
             lines.Add(new QuadraticBezier(edge, begin_UV, control_point, end_UV, begin, end));
         }
     }
@@ -57,12 +59,14 @@ public class ShapeToSVG : MonoBehaviour
             // process new lines until the signs match
             while (!SameSigns(ref xyz_signs_begin, ref xyz_signs_end))
             {
+                Debug.Log("Here1");
                 xyz_signs_range_begin = xyz_signs_begin;
                 xyz_signs_range_end = xyz_signs_end;
 
                 // binary search and discard ranges with matching slope signs and position signs at ends; and then update the slope signs.
                 while (range_end - range_begin > delta)
                 {
+                    Debug.Log("Here2");
                     range_mid = (range_begin + range_end) / 2; //guaranteed not to overflow since numbers are in range [0, 2pi]
                     UpdateSigns(arc, ref xyz_signs_range_mid, range_mid, delta);
                     if (SameSigns(ref xyz_signs_range_begin, ref xyz_signs_range_mid))
@@ -77,6 +81,7 @@ public class ShapeToSVG : MonoBehaviour
                     }
                 }
                 // when you find a sign that switches, log the exact position of the switch with as much precision as possible
+                
                 Subdivide(arc, begin, range_begin);
                 // when you find that position, you must then switch the x, y, z signs at the new beginning of the arc and the slope signs xyz at the beginning of the arc
                 begin = range_end;
@@ -112,24 +117,24 @@ public class ShapeToSVG : MonoBehaviour
             edge_map.Add(EdgeMapKey(end_discontinuities[index].begin_UV), end_discontinuities[index]);
         }
         
-        optional<QuadraticBezier> last_bezier = new optional<QuadraticBezier>();
+        optional<QuadraticBezier> last_bezier = NextDiscontinuity();
         optional<QuadraticBezier> this_bezier = NextDiscontinuity();
-        optional<QuadraticBezier> first_bezier = this_bezier;
+        optional<QuadraticBezier> first_bezier = last_bezier;
 
-        do
+        while (true) // TODO: clean up / make pretty / make elegant
         {
-            if (this_bezier.exists && last_bezier.exists)
+            if (last_bezier.exists && this_bezier.exists)
             {
                 StitchTogether(last_bezier.data, this_bezier.data);
             }
 
-            last_bezier = this_bezier;
+            last_bezier = NextDiscontinuity();
             this_bezier = NextDiscontinuity();
-        } while (this_bezier != first_bezier);
 
-        if (first_bezier.exists && last_bezier.exists && first_bezier != last_bezier)
-        {
-            StitchTogether(last_bezier.data, first_bezier.data);
+            if (last_bezier == first_bezier || this_bezier == first_bezier)
+            {
+                break;
+            }
         }
     }
 
@@ -176,16 +181,13 @@ public class ShapeToSVG : MonoBehaviour
 
     private static void ClampToEdges()
     {
-        Debug.Log("Clamping1");
         for (int index = 0; index < lines.Count; ++index) //for each QuadraticBezier and the next; (including last then first !)
         {
             QuadraticBezier QB1 = lines[index];
             QuadraticBezier QB2 = lines[(index + 1) % lines.Count];
-
-            Debug.Log("Clamping2");
+            
             if (NearBoundary(QB1.end_UV)) //if end is not close to begin, there is a discontinuity
             {
-                Debug.Log("Clamping3");
                 ProjectOntoSquare(ref QB1.end_UV, QB1.control_point); // project the points onto the edge of a square
                 ProjectOntoSquare(ref QB2.begin_UV, QB2.control_point);
             }
@@ -202,11 +204,6 @@ public class ShapeToSVG : MonoBehaviour
         return Vector3.down;
     }
 
-    private static Vector2 CounterclockwiseDirection(float edge_interpolation)
-    {
-        return -ClockwiseDirection(edge_interpolation);
-    }
-
     private static void DiscontinuityLocations()
     {
         start_discontinuities = new List<QuadraticBezier>();
@@ -215,14 +212,22 @@ public class ShapeToSVG : MonoBehaviour
         {
             QuadraticBezier QB = lines[index];
             
-            if (NearBoundary(QB.begin_UV) && !NearBoundary(QB.end_UV)) // just because this can work does not mean it will always work (at least in theory)... FIXME: include all vertexes unless the line is parallel to the boundary
+            if (NearBoundary(QB.begin_UV) && !NearBoundary(QB.end_UV)) // just because this can work does not mean it will always work (at least in theory)... 
             {
-                Debug.Log("(" + QB.begin_UV.x + "," + QB.begin_UV.y + "):(" + QB.end_UV.x + "," + QB.end_UV.y + ")");
+                Debug.Log(DebugUtility.Vector2ToString(QB.begin_UV));
                 end_discontinuities.Add(QB);
             }
             else if (NearBoundary(QB.end_UV) && !NearBoundary(QB.begin_UV))
             {
-                Debug.Log("(" + QB.begin_UV.x + "," + QB.begin_UV.y + "):(" + QB.end_UV.x + "," + QB.end_UV.y + ")");
+                Debug.Log(DebugUtility.Vector2ToString(QB.end_UV));
+                start_discontinuities.Add(QB);
+            }
+            else if (NearBoundary(QB.begin_UV) && NearBoundary(QB.end_UV) && //TODO: CHECK: include all vertexes unless the line is parallel to the boundary
+                Mathf.Floor(EdgeMapKey(QB.end_UV)) != Mathf.Floor(EdgeMapKey(QB.begin_UV)))
+            {
+                Debug.Log(DebugUtility.Vector2ToString(QB.end_UV));
+                Debug.Log(DebugUtility.Vector2ToString(QB.begin_UV));
+                end_discontinuities.Add(QB);
                 start_discontinuities.Add(QB);
             }
         }
@@ -266,10 +271,13 @@ public class ShapeToSVG : MonoBehaviour
             location = edge_map_iter.data.Current.Value.end;
         }
 
+        Debug.Log(DebugUtility.Vector3ToString(ClockwiseDirection(edge_map_iter.data.Current.Key)));
+        Debug.Log(DebugUtility.Vector3ToString(edge_map_iter.data.Current.Value.arc.EvaluateNormal(location)));
+
         float similarity = Vector3.Dot(ClockwiseDirection(edge_map_iter.data.Current.Key),
             edge_map_iter.data.Current.Value.arc.EvaluateNormal(location));
 
-        if (similarity > 0)
+        if (similarity < 0)
         {
             return edge_map_iter.data.Current.Value;
         }
@@ -278,22 +286,20 @@ public class ShapeToSVG : MonoBehaviour
         return edge_map_iter.data.Current.Value;
     }
 
-    private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end)
+    private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end) // TODO: make this function do what it says
     {
-        float numerator_x, numerator_y, denominator;
+        float numerator_x = (begin.x * after_begin.y - begin.y * after_begin.x) * (before_end.x - end.x) -
+                            (before_end.x * end.y - before_end.y * end.x) * (begin.x - after_begin.x);
 
-        numerator_x = (begin.x * after_begin.y - begin.y * after_begin.x) * (before_end.x - end.x) -
-                      (before_end.x * end.y - before_end.y * end.x) * (begin.x - after_begin.x);
+        float numerator_y = (begin.x * after_begin.y - begin.y * after_begin.x) * (before_end.y - end.y) -
+                            (before_end.x * end.y - before_end.y * end.x) * (begin.y - after_begin.y);
 
-        numerator_y = (begin.x * after_begin.y - begin.y * after_begin.x) * (before_end.y - end.y) -
-                      (before_end.x * end.y - before_end.y * end.x) * (begin.y - after_begin.y);
-
-        denominator = (begin.x - after_begin.x) * (before_end.y - end.y) -
-                      (begin.y - after_begin.y) * (before_end.x - end.x);
+        float denominator = (begin.x - after_begin.x) * (before_end.y - end.y) -
+                            (begin.y - after_begin.y) * (before_end.x - end.x);
 
         Vector2 result = new Vector2(numerator_x / denominator, numerator_y / denominator);
 
-        if (System.Single.IsNaN(result.x) ||
+        if (System.Single.IsNaN(result.x) || // if there are infinite solutions (or none)
                 System.Single.IsPositiveInfinity(result.x) ||
                 System.Single.IsNegativeInfinity(result.x)) // checking for x implicitly checks for y
         {
@@ -331,14 +337,8 @@ public class ShapeToSVG : MonoBehaviour
 
     private static bool NearBoundary(Vector2 uv)
     {
-        if (uv.x >= 1.0f - threshold ||
-                uv.x <= threshold ||
-                uv.y >= 1.0f - threshold ||
-                uv.y <= threshold)
-        {
-            return true;
-        }
-        return false;
+        return uv.x >= 1.0f - threshold || uv.x <= threshold ||
+               uv.y >= 1.0f - threshold || uv.y <= threshold;
     }
 
     private static optional<Vector2> NextCorner(float first, float last, bool clockwise)
@@ -378,7 +378,7 @@ public class ShapeToSVG : MonoBehaviour
             }
             else
             {
-                edge_map_iter.data.Reset();
+                edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(edge_map.GetEnumerator());
                 if (edge_map_iter.data.MoveNext())
                 {
                     return edge_map_iter.data.Current.Value;
@@ -452,33 +452,50 @@ public class ShapeToSVG : MonoBehaviour
         return numerator / denominator;
     }
 
-    private static void ProjectOntoSquare(ref Vector2 point, Vector2 control_point)
+    private static void ProjectOntoSquare(ref Vector2 point, Vector2 control_point) // TODO: CHECK: this had an error and might still have one
     {
         Vector2 upper = Intersection(control_point, point, Vector2.up, Vector2.one);
         Vector2 lower = Intersection(control_point, point, Vector2.zero, Vector2.right);
         Vector2 left  = Intersection(control_point, point, Vector2.zero, Vector2.up);
         Vector2 right = Intersection(control_point, point, Vector2.right, Vector2.one);
 
+        Vector2 closestPoint = Vector2.zero;
+        float distance = Mathf.Infinity;
+
         if (upper.y == 1 && 0 <= upper.x && upper.x <= 1) // is the upper intersection valid? (on the upper boarder of a unit square?)
         {
-            point = upper;
+            if (distance > Vector2.Distance(upper, point)) // if upper intersection is the closest so far
+            {
+                closestPoint = upper;
+                distance = Vector2.Distance(upper, point);
+            }
         }
-        else if (lower.y == 0 && 0 <= lower.x && lower.x <= 1) // is the lower intersection valid? 
+        if (lower.y == 0 && 0 <= lower.x && lower.x <= 1) // is the lower intersection valid? 
         {
-            point = lower;
+            if (distance > Vector2.Distance(lower, point))
+            {
+                closestPoint = lower;
+                distance = Vector2.Distance(lower, point);
+            }
         }
-        else if (right.x == 1 && 0 <= right.y && right.y <= 1) // is the right intersection valid?
+        if (right.x == 1 && 0 <= right.y && right.y <= 1) // is the right intersection valid?
         {
-            point = right;
+            if (distance > Vector2.Distance(right, point))
+            {
+                closestPoint = right;
+                distance = Vector2.Distance(right, point);
+            }
         }
-        else if (left.x == 0 && 0 <= left.y && left.y <= 1) // if the left intersection valid?
+        if (left.x == 0 && 0 <= left.y && left.y <= 1) // if the left intersection valid?
         {
-            point = left;
+            if (distance > Vector2.Distance(left, point))
+            {
+                closestPoint = left;
+                distance = Vector2.Distance(left, point);
+            }
         }
-        else
-        {
-            DebugUtility.Print("ProjectOntoSquare failed.");
-        }
+
+        point = closestPoint;
     }
 
     private static bool SameSigns(ref int[,] data_A, ref int[,] data_B) // for the purpose of this function, zero is not considered a sign
@@ -504,7 +521,7 @@ public class ShapeToSVG : MonoBehaviour
             last = current;
             current = temp;
         }
-        Debug.Log("Stitching " + last.end_UV + " and " + current.begin_UV);
+        Debug.Log("Stitching " + DebugUtility.Vector2ToString(last.end_UV) + " and " + DebugUtility.Vector2ToString(current.begin_UV));
         float last_key = EdgeMapKey(last.end_UV);
         float current_key = EdgeMapKey(current.begin_UV);
 
@@ -515,15 +532,19 @@ public class ShapeToSVG : MonoBehaviour
         optional<Vector2> intermediate_point = NextCorner(last_key, current_key, clockwise);
         Vector2 midpoint;
         QuadraticBezier intermediate_edge;
-        /*while (intermediate_point.exists) //FIXME: infinite loop
+        while (intermediate_point.exists)
         {
+            if (intermediate_point.exists)
+            {
+                DebugUtility.Print(DebugUtility.Vector2ToString(intermediate_point.data));
+            }
             midpoint = (last.end_UV + intermediate_point.data) / 2;
             intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, intermediate_point.data, -1f, -1f);
             edge_pattern.Add(last, intermediate_edge);
             last = intermediate_edge;
             last_key = EdgeMapKey(last.end_UV);
             intermediate_point = NextCorner(last_key, current_key, clockwise);
-        }*/
+        }
         midpoint = (last.end_UV + current.begin_UV) / 2;
         intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, current.begin_UV, -1f, -1f);
         edge_pattern.Add(last, intermediate_edge);

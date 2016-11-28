@@ -42,7 +42,7 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
 
     static void WriteHeader()
     {
-        writer = new StreamWriter("C:/Users/Matt Downey/Documents/Invertigo/Assets/TestSVG.svg");
+        writer = new StreamWriter("C:/Users/Matt Downey/Documents/Invertigo/Assets/Art/Scalable Vector Graphics/TestSVG.svg");
         writer.Write("<svg width=\"1000\" height=\"1000\">\n\n");
     }
 
@@ -50,5 +50,6 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
     {
         writer.Write("\n</svg>");
         writer.Flush();
+        writer.Close();
     }
 }
