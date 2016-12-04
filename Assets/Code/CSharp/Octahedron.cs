@@ -59,7 +59,7 @@ public class Octahedron : MonoBehaviour
 
             octahedron.data.RecalculateBounds();
             octahedron.data.RecalculateNormals();
-            octahedron.data.Optimize();
+            ;
 
             return octahedron.data;
         }

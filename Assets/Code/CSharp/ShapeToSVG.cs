@@ -13,9 +13,9 @@ public class ShapeToSVG : MonoBehaviour
     static Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern; // HACK: to be foolproof this needs to be Tuple<QB, QB> to store forwards and backwards references; the hack should work as long as the level design is simple. (I think that level designs that break this also break the physics code too.)
     static SortedList<float, QuadraticBezier> start_edge_map;
     static SortedList<float, QuadraticBezier> end_edge_map;
-    static bool start = true;
-    static optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>> start_edge_map_iter;
-    static optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>> end_edge_map_iter;
+    static bool start;
+    static IEnumerator<KeyValuePair<float, QuadraticBezier>> start_edge_map_iter;
+    static IEnumerator<KeyValuePair<float, QuadraticBezier>> end_edge_map_iter;
 
     public static void AddLine(ArcOfSphere edge, float begin, float end)
     {
@@ -109,9 +109,6 @@ public class ShapeToSVG : MonoBehaviour
     {
         start_edge_map = new SortedList<float, QuadraticBezier>();
         end_edge_map = new SortedList<float, QuadraticBezier>();
-        start = true;
-        start_edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>();
-        end_edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>();
 
         //create quick map for locating consecutive QB's on edge of square
         for (int index = 0; index < start_discontinuities.Count; ++index)
@@ -135,6 +132,8 @@ public class ShapeToSVG : MonoBehaviour
                 Debug.Log(DebugUtility.Vector2ToString(last_bezier.data.begin_UV));
             if (this_bezier.exists)
                 Debug.Log(DebugUtility.Vector2ToString(this_bezier.data.begin_UV));
+
+            Application.Quit();
 
             if (last_bezier.exists && this_bezier.exists)
             {
@@ -276,56 +275,57 @@ public class ShapeToSVG : MonoBehaviour
 
     private static optional<QuadraticBezier> GetFirstDiscontinuity()
     {
-        start_edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(start_edge_map.GetEnumerator());
+        start = false;
+        start_edge_map_iter = start_edge_map.GetEnumerator();
 
-        if (!start_edge_map_iter.data.MoveNext())
+        if (!start_edge_map_iter.MoveNext())
         {
             return new optional<QuadraticBezier>();
         }
         
-        float similarity = Vector3.Dot(ClockwiseDirection(start_edge_map_iter.data.Current.Key),
-            start_edge_map_iter.data.Current.Value.arc.EvaluateNormal(start_edge_map_iter.data.Current.Value.end));
+        float similarity = Vector3.Dot(ClockwiseDirection(start_edge_map_iter.Current.Key),
+            start_edge_map_iter.Current.Value.arc.EvaluateNormal(start_edge_map_iter.Current.Value.end));
 
         if (similarity > 0)
         {
-            if (!start_edge_map_iter.data.MoveNext())
+            if (!start_edge_map_iter.MoveNext())
             {
-                start_edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(start_edge_map.GetEnumerator());
+                start_edge_map_iter = start_edge_map.GetEnumerator();
             }
         }
 
-        return start_edge_map_iter.data.Current.Value;
+        return start_edge_map_iter.Current.Value;
     }
 
     private static optional<QuadraticBezier> GetSecondDiscontinuity()
     {
-        end_edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(end_edge_map.GetEnumerator());
+        end_edge_map_iter = end_edge_map.GetEnumerator();
 
-        if (!end_edge_map_iter.data.MoveNext())
+        if (!end_edge_map_iter.MoveNext())
         {
             return new optional<QuadraticBezier>();
         }
 
-        while (end_edge_map_iter.data.Current.Key <= start_edge_map_iter.data.Current.Key)
+        while (end_edge_map_iter.Current.Key <= start_edge_map_iter.Current.Key)
         {
-            if (!end_edge_map_iter.data.MoveNext())
+            if (!end_edge_map_iter.MoveNext())
             {
-                end_edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(end_edge_map.GetEnumerator());
-                end_edge_map_iter.data.MoveNext();
+                end_edge_map_iter = end_edge_map.GetEnumerator();
+                end_edge_map_iter.MoveNext();
                 break;
             }
         }
-        float difference = end_edge_map_iter.data.Current.Key - start_edge_map_iter.data.Current.Key;
+        float difference = end_edge_map_iter.Current.Key - start_edge_map_iter.Current.Key;
         if ( 0 < difference && difference <= 16 * delta) // the edge is too close and was placed on the wrong side due to floating point imprecision
         {
-            if (!end_edge_map_iter.data.MoveNext())
+            if (!end_edge_map_iter.MoveNext())
             {
-                end_edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(end_edge_map.GetEnumerator());
-                end_edge_map_iter.data.MoveNext();
+                end_edge_map_iter = end_edge_map.GetEnumerator();
+                end_edge_map_iter.MoveNext();
             }
         }
 
-        return end_edge_map_iter.data.Current.Value;
+        return end_edge_map_iter.Current.Value;
     }
 
     private static Vector2 Intersection(Vector2 begin, Vector2 after_begin, Vector2 before_end, Vector2 end) // TODO: make this function do what it says
@@ -412,18 +412,19 @@ public class ShapeToSVG : MonoBehaviour
 
     private static optional<QuadraticBezier> NextDiscontinuity() // ugly, ugly, ugly
     {
+        start = !start;
         if (start)
         {
-            if (start_edge_map_iter.data.MoveNext())
+            if (start_edge_map_iter.MoveNext())
             {
-                return start_edge_map_iter.data.Current.Value;
+                return start_edge_map_iter.Current.Value;
             }
             else
             {
-                start_edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(start_edge_map.GetEnumerator());
-                if (start_edge_map_iter.data.MoveNext())
+                start_edge_map_iter = start_edge_map.GetEnumerator();
+                if (start_edge_map_iter.MoveNext())
                 {
-                    return start_edge_map_iter.data.Current.Value;
+                    return start_edge_map_iter.Current.Value;
                 }
                 else
                 {
@@ -433,16 +434,16 @@ public class ShapeToSVG : MonoBehaviour
         }
         else
         {
-            if (end_edge_map_iter.data.MoveNext())
+            if (end_edge_map_iter.MoveNext())
             {
-                return end_edge_map_iter.data.Current.Value;
+                return end_edge_map_iter.Current.Value;
             }
             else
             {
-                end_edge_map_iter = new optional<IEnumerator<KeyValuePair<float, QuadraticBezier>>>(end_edge_map.GetEnumerator());
-                if (end_edge_map_iter.data.MoveNext())
+                end_edge_map_iter = end_edge_map.GetEnumerator();
+                if (end_edge_map_iter.MoveNext())
                 {
-                    return end_edge_map_iter.data.Current.Value;
+                    return end_edge_map_iter.Current.Value;
                 }
                 else
                 {
@@ -450,7 +451,6 @@ public class ShapeToSVG : MonoBehaviour
                 }
             }
         }
-        start = !start;
     }
 
     private static float NextEdge(float current, bool clockwise)
@@ -585,29 +585,27 @@ public class ShapeToSVG : MonoBehaviour
         float current_key = EdgeMapKey(current.begin_UV);
 
         bool clockwise = Vector3.Dot(ClockwiseDirection(last_key),
-            last.arc.EvaluateNormal(last.end)) > 0;
+            last.arc.EvaluateNormal(last.end)) < 0;
 
         // add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) )
-        optional<Vector2> intermediate_point = NextCorner(last_key, current_key, clockwise);
-        Vector2 midpoint;
-        QuadraticBezier intermediate_edge;
-        while (intermediate_point.exists)
+        optional<Vector2> corner = NextCorner(last_key, current_key, clockwise);
+        Vector2 control_point;
+        QuadraticBezier intermediate_line;
+        while (corner.exists)
         {
-            if (intermediate_point.exists)
-            {
-                DebugUtility.Print(DebugUtility.Vector2ToString(intermediate_point.data));
-            }
-            midpoint = (last.end_UV + intermediate_point.data) / 2;
-            intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, intermediate_point.data, -1f, -1f);
-            edge_pattern.Add(last, intermediate_edge);
-            last = intermediate_edge;
+            DebugUtility.Print(DebugUtility.Vector2ToString(corner.data));
+
+            control_point = (last.end_UV + corner.data) / 2;
+            intermediate_line = new QuadraticBezier(null, last.end_UV, control_point, corner.data, -1f, -1f);
+            edge_pattern.Add(last, intermediate_line);
+            last = intermediate_line;
             last_key = EdgeMapKey(last.end_UV);
-            intermediate_point = NextCorner(last_key, current_key, clockwise);
+            corner = NextCorner(last_key, current_key, clockwise);
         }
-        midpoint = (last.end_UV + current.begin_UV) / 2;
-        intermediate_edge = new QuadraticBezier(null, last.end_UV, midpoint, current.begin_UV, -1f, -1f);
-        edge_pattern.Add(last, intermediate_edge);
-        edge_pattern.Add(intermediate_edge, current);
+        control_point = (last.end_UV + current.begin_UV) / 2;
+        intermediate_line = new QuadraticBezier(null, last.end_UV, control_point, current.begin_UV, -1f, -1f);
+        edge_pattern.Add(last, intermediate_line);
+        edge_pattern.Add(intermediate_line, current);
     }
 
     private static void Subdivide(ArcOfSphere arc, float begin, float end)
