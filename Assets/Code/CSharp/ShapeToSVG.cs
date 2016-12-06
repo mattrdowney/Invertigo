@@ -128,12 +128,8 @@ public class ShapeToSVG : MonoBehaviour
 
         while (true) // TODO: clean up / make pretty / make elegant
         {
-            if (last_bezier.exists)
-                Debug.Log(DebugUtility.Vector2ToString(last_bezier.data.begin_UV));
-            if (this_bezier.exists)
-                Debug.Log(DebugUtility.Vector2ToString(this_bezier.data.begin_UV));
-
-            Application.Quit();
+            Debug.Log(last_bezier);
+            Debug.Log(this_bezier);
 
             if (last_bezier.exists && this_bezier.exists)
             {
@@ -559,9 +555,9 @@ public class ShapeToSVG : MonoBehaviour
 
     private static bool SameSigns(ref int[,] data_A, ref int[,] data_B) // for the purpose of this function, zero is not considered a sign
     {
-        for(int derivative = 0; derivative < 2; ++derivative)
+        for (int derivative = 0; derivative < 2; ++derivative)
         {
-            for(int dimension = 0; dimension < 3; ++dimension)
+            for (int dimension = 0; dimension < 3; ++dimension)
             {
                 if (data_A[derivative, dimension] != data_B[derivative, dimension])
                 {
@@ -572,40 +568,34 @@ public class ShapeToSVG : MonoBehaviour
         return true;
     }
 
-    private static void StitchTogether(QuadraticBezier last, QuadraticBezier current)
+    private static void StitchTogether(QuadraticBezier cursor, QuadraticBezier last)
     {
-        if (start_discontinuities.Contains(current)) // set last equal to the beginning of the discontinuity 
-        {
-            QuadraticBezier temp = last;
-            last = current;
-            current = temp;
-        }
-        Debug.Log("Stitching " + DebugUtility.Vector2ToString(last.end_UV) + " and " + DebugUtility.Vector2ToString(current.begin_UV));
-        float last_key = EdgeMapKey(last.end_UV);
-        float current_key = EdgeMapKey(current.begin_UV);
+        Debug.Log("Stitching " + DebugUtility.Vector2ToString(cursor.end_UV) + " and " + DebugUtility.Vector2ToString(last.begin_UV));
+        float cursor_key = EdgeMapKey(cursor.end_UV);
+        float last_key = EdgeMapKey(last.begin_UV);
 
-        bool clockwise = Vector3.Dot(ClockwiseDirection(last_key),
-            last.arc.EvaluateNormal(last.end)) < 0;
+        bool clockwise = Vector3.Dot(ClockwiseDirection(cursor_key),
+            cursor.arc.EvaluateNormal(cursor.end)) < 0;
 
         // add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) )
-        optional<Vector2> corner = NextCorner(last_key, current_key, clockwise);
+        optional<Vector2> corner = NextCorner(cursor_key, last_key, clockwise);
         Vector2 control_point;
         QuadraticBezier intermediate_line;
         while (corner.exists)
         {
             DebugUtility.Print(DebugUtility.Vector2ToString(corner.data));
 
-            control_point = (last.end_UV + corner.data) / 2;
-            intermediate_line = new QuadraticBezier(null, last.end_UV, control_point, corner.data, -1f, -1f);
-            edge_pattern.Add(last, intermediate_line);
-            last = intermediate_line;
-            last_key = EdgeMapKey(last.end_UV);
-            corner = NextCorner(last_key, current_key, clockwise);
+            control_point = (cursor.end_UV + corner.data) / 2;
+            intermediate_line = new QuadraticBezier(null, cursor.end_UV, control_point, corner.data, -1f, -1f);
+            edge_pattern.Add(cursor, intermediate_line);
+            cursor = intermediate_line;
+            cursor_key = EdgeMapKey(cursor.end_UV);
+            corner = NextCorner(cursor_key, last_key, clockwise);
         }
-        control_point = (last.end_UV + current.begin_UV) / 2;
-        intermediate_line = new QuadraticBezier(null, last.end_UV, control_point, current.begin_UV, -1f, -1f);
-        edge_pattern.Add(last, intermediate_line);
-        edge_pattern.Add(intermediate_line, current);
+        control_point = (cursor.end_UV + last.begin_UV) / 2;
+        intermediate_line = new QuadraticBezier(null, cursor.end_UV, control_point, last.begin_UV, -1f, -1f);
+        edge_pattern.Add(cursor, intermediate_line);
+        edge_pattern.Add(intermediate_line, last);
     }
 
     private static void Subdivide(ArcOfSphere arc, float begin, float end)

@@ -45,4 +45,16 @@ public struct optional<T>
     {
         return !(lhs == rhs);
     }
+
+    public override string ToString()
+    {
+        if (exists)
+        {
+            return "exists: " + val;
+        }
+        else
+        {
+            return "nonexistent: " + val.GetType().ToString(); 
+        }
+    }
 }

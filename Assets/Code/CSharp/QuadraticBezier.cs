@@ -12,6 +12,12 @@ public class QuadraticBezier
         begin = bt;
         end = et;
     }
+
+    public override string ToString()
+    {
+        return begin_UV.ToString("F6") + "->" + control_point.ToString("F6") + "->" + end_UV.ToString("F6");
+    }
+
     //crucial data
     public Vector2 begin_UV;
     public Vector2 control_point;
