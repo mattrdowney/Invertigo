@@ -3,29 +3,30 @@
 using UnityEngine;
 using System;
 using System.Diagnostics;
+using System.Text;
 
 public class DebugUtility
 {
     [Conditional("DEBUG")]
-    public static void Assert(bool condition, string message)
+    public static void Assert(bool condition, params object[] parameters)
     {
         if (!condition)
         {
-            UnityEngine.Debug.Log(message);
+            Log("<color=red>", parameters, "</color>");
             throw new Exception();
         }
     }
 
     [Conditional("DEBUG")]
-    public static void Print(string message)
+    public static void Log(params object[] parameters) // http://www.alanzucconi.com/2015/08/26/console-debugging-in-unity-made-easy/
     {
-        UnityEngine.Debug.Log(message);
-    }
-
-    [Conditional("DEBUG")]
-    public static void Print(string message, int frames)
-    {
-        if (UnityEngine.Random.Range(0, frames) == 0) UnityEngine.Debug.Log(message);
+        StringBuilder builder = new StringBuilder();
+        for (int index = 0; index < parameters.Length; ++index)
+        {
+            builder.Append(parameters[index].ToString());
+            builder.Append(" ");
+        }
+        UnityEngine.Debug.Log(builder.ToString());
     }
 
     [Conditional("DEBUG")]
@@ -43,21 +44,11 @@ public class DebugUtility
                    Mathf.Abs(Vector3.Dot(v1, v3)) > 1e-7 ||
                    Mathf.Abs(Vector3.Dot(v2, v3)) > 1e-7)
         {
-            UnityEngine.Debug.Log("Vectors not orthogonal!");
-            UnityEngine.Debug.Log(v1 + "." + v2 + "=" + Vector3.Dot(v1, v2));
-            UnityEngine.Debug.Log(v1 + "." + v3 + "=" + Vector3.Dot(v1, v3));
-            UnityEngine.Debug.Log(v2 + "." + v3 + "=" + Vector3.Dot(v2, v3));
+            Log("Vectors not orthogonal!");
+            Log(v1, ".", v2, "=", Vector3.Dot(v1, v2));
+            Log(v1, ".", v3, "=", Vector3.Dot(v1, v3));
+            Log(v2, ".", v3, "=", Vector3.Dot(v2, v3));
             throw new Exception();
         }
-    }
-
-    public static string Vector2ToString(Vector2 print_me)
-    {
-        return "(" + print_me.x + ", " + print_me.y + ")";
-    }
-
-    public static string Vector3ToString(Vector3 print_me)
-    {
-        return "(" + print_me.x + ", " + print_me.y + "," + print_me.z + ")";
     }
 }

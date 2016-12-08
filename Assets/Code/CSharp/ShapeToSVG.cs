@@ -13,6 +13,7 @@ public class ShapeToSVG : MonoBehaviour
     static Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern; // HACK: to be foolproof this needs to be Tuple<QB, QB> to store forwards and backwards references; the hack should work as long as the level design is simple. (I think that level designs that break this also break the physics code too.)
     static SortedList<float, QuadraticBezier> start_edge_map;
     static SortedList<float, QuadraticBezier> end_edge_map;
+    static bool swapped;
     static bool start;
     static IEnumerator<KeyValuePair<float, QuadraticBezier>> start_edge_map_iter;
     static IEnumerator<KeyValuePair<float, QuadraticBezier>> end_edge_map_iter;
@@ -28,7 +29,7 @@ public class ShapeToSVG : MonoBehaviour
             Vector2 delta_end_UV = SpaceConverter.SphereToUV(edge.Evaluate(end - 64*delta));
             Vector2 control_point = Intersection(begin_UV, delta_begin_UV, delta_end_UV, end_UV);
 
-            Debug.Log("AddLine: " + DebugUtility.Vector2ToString(begin_UV) + "," + DebugUtility.Vector2ToString(end_UV));
+            DebugUtility.Log("AddLine:", begin_UV, end_UV);
 
             lines.Add(new QuadraticBezier(edge, begin_UV, control_point, end_UV, begin, end));
         }
@@ -102,7 +103,6 @@ public class ShapeToSVG : MonoBehaviour
         ClampToEdges();
         OverlapSharedEdges();
         BuildShape();
-
     }
 
     private static void AugmentDictionary()
@@ -114,12 +114,12 @@ public class ShapeToSVG : MonoBehaviour
         for (int index = 0; index < start_discontinuities.Count; ++index)
         {
             start_edge_map.Add(EdgeMapKey(start_discontinuities[index].end_UV), start_discontinuities[index]);
-            Debug.Log(index);
+            DebugUtility.Log("start_edge_map", EdgeMapKey(start_discontinuities[index].end_UV));
         }
         for (int index = 0; index < end_discontinuities.Count; ++index)
         {
             end_edge_map.Add(EdgeMapKey(end_discontinuities[index].begin_UV), end_discontinuities[index]);
-            Debug.Log(index);
+            DebugUtility.Log("end_edge_map", EdgeMapKey(end_discontinuities[index].begin_UV));
         }
         
         optional<QuadraticBezier> last_bezier = GetFirstDiscontinuity();
@@ -135,8 +135,6 @@ public class ShapeToSVG : MonoBehaviour
             {
                 StitchTogether(last_bezier.data, this_bezier.data);
             }
-
-            Debug.Log("Here"); // TODO: SDAKSJDKASJDKASJDKSAJ:::: the issue is doubly adding a start and end discontinuity at the same point!!!!
 
             last_bezier = NextDiscontinuity();
             this_bezier = NextDiscontinuity();
@@ -182,7 +180,7 @@ public class ShapeToSVG : MonoBehaviour
             {
                 SVGBuilder.SetEdge(current_edge);
                 QuadraticBezier temp_edge = current_edge;
-                Debug.Log("Cycling " + DebugUtility.Vector2ToString(current_edge.end_UV) + " and " + DebugUtility.Vector2ToString(current_edge.begin_UV));
+                DebugUtility.Log("Cycling:", current_edge.end_UV, current_edge.begin_UV);
                 current_edge = edge_pattern[current_edge];
                 edge_pattern.Remove(temp_edge);
             } while (current_edge != first_edge);
@@ -205,14 +203,38 @@ public class ShapeToSVG : MonoBehaviour
         }
     }
 
-    private static Vector3 ClockwiseDirection(float edge_interpolation) // undefined for negative edge_interpolation factors
-    { // TODO: CHECK: might be wrong!
-        edge_interpolation %= 1; 
-        if (edge_interpolation < 0.5f)
+    private static Vector3 ClockwiseDirection(float edge_interpolation) // As I thought... I needed to provide the actual gradient direction at the boundary...
+    {
+        edge_interpolation %= 4;
+        if (edge_interpolation < 0.5f) // FIXME: hardcoding
         {
-            return Vector3.up;
+            return new Vector3(0, 1, 1).normalized;
         }
-        return Vector3.down;
+        else if (edge_interpolation < 1f)
+        {
+            return new Vector3(0, -1, -1).normalized;
+        }
+        else if (edge_interpolation < 1.5f)
+        {
+            return new Vector3(1, 1, 0).normalized;
+        }
+        else if (edge_interpolation < 2f)
+        {
+            return new Vector3(-1, -1, 0).normalized;
+        }
+        else if (edge_interpolation < 2.5f)
+        {
+            return new Vector3(0, 1, -1).normalized;
+        }
+        else if (edge_interpolation < 3f)
+        {
+            return new Vector3(0, -1, 1).normalized;
+        }
+        else if (edge_interpolation < 3.5f)
+        {
+            return new Vector3(-1, 1, 0).normalized;
+        }
+        return new Vector3(1, -1, 0).normalized;
     }
 
     private static void DiscontinuityLocations()
@@ -225,19 +247,19 @@ public class ShapeToSVG : MonoBehaviour
             
             if (NearBoundary(QB.begin_UV) && !NearBoundary(QB.end_UV)) // just because this can work does not mean it will always work (at least in theory)... 
             {
-                Debug.Log(DebugUtility.Vector2ToString(QB.begin_UV));
+                DebugUtility.Log(QB.begin_UV);
                 end_discontinuities.Add(QB);
             }
             else if (NearBoundary(QB.end_UV) && !NearBoundary(QB.begin_UV))
             {
-                Debug.Log(DebugUtility.Vector2ToString(QB.end_UV));
+                DebugUtility.Log(QB.end_UV);
                 start_discontinuities.Add(QB);
             }
             else if (NearBoundary(QB.begin_UV) && NearBoundary(QB.end_UV) && //TODO: CHECK: include all vertexes unless the line is parallel to the boundary
                 Mathf.Floor(EdgeMapKey(QB.end_UV)) != Mathf.Floor(EdgeMapKey(QB.begin_UV)))
             {
-                Debug.Log(DebugUtility.Vector2ToString(QB.end_UV));
-                Debug.Log(DebugUtility.Vector2ToString(QB.begin_UV));
+                DebugUtility.Log(QB.end_UV);
+                DebugUtility.Log(QB.begin_UV);
                 end_discontinuities.Add(QB);
                 start_discontinuities.Add(QB);
             }
@@ -265,12 +287,13 @@ public class ShapeToSVG : MonoBehaviour
         {
             return 3.0f + (uv.y);
         }
-        DebugUtility.Print("ShapeToSVG: EdgeMapKey(): input error");
+        DebugUtility.Log("ShapeToSVG.cs: EdgeMapKey(): input error");
         return 4.0f;
     }
 
     private static optional<QuadraticBezier> GetFirstDiscontinuity()
     {
+        swapped = false;
         start = false;
         start_edge_map_iter = start_edge_map.GetEnumerator();
 
@@ -282,13 +305,19 @@ public class ShapeToSVG : MonoBehaviour
         float similarity = Vector3.Dot(ClockwiseDirection(start_edge_map_iter.Current.Key),
             start_edge_map_iter.Current.Value.arc.EvaluateNormal(start_edge_map_iter.Current.Value.end));
 
+        DebugUtility.Log("Similarity: ", similarity);
+
         if (similarity > 0)
         {
-            if (!start_edge_map_iter.MoveNext())
-            {
-                start_edge_map_iter = start_edge_map.GetEnumerator();
-            }
+            SortedList<float, QuadraticBezier> swapper = start_edge_map;
+            start_edge_map = end_edge_map;
+            end_edge_map = swapper;
+            optional<QuadraticBezier> result = GetFirstDiscontinuity();
+            swapped = true;
+            return result;
         }
+
+        DebugUtility.Log("First: ", start_edge_map_iter.Current.Key);
 
         return start_edge_map_iter.Current.Value;
     }
@@ -320,6 +349,8 @@ public class ShapeToSVG : MonoBehaviour
                 end_edge_map_iter.MoveNext();
             }
         }
+
+        DebugUtility.Log("Second: ", end_edge_map_iter.Current.Key);
 
         return end_edge_map_iter.Current.Value;
     }
@@ -570,7 +601,14 @@ public class ShapeToSVG : MonoBehaviour
 
     private static void StitchTogether(QuadraticBezier cursor, QuadraticBezier last)
     {
-        Debug.Log("Stitching " + DebugUtility.Vector2ToString(cursor.end_UV) + " and " + DebugUtility.Vector2ToString(last.begin_UV));
+        if (swapped)
+        {
+            QuadraticBezier swapper = cursor;
+            cursor = last;
+            last = swapper;
+        }
+
+        DebugUtility.Log("Stitching:", cursor.end_UV, last.begin_UV);
         float cursor_key = EdgeMapKey(cursor.end_UV);
         float last_key = EdgeMapKey(last.begin_UV);
 
@@ -583,7 +621,7 @@ public class ShapeToSVG : MonoBehaviour
         QuadraticBezier intermediate_line;
         while (corner.exists)
         {
-            DebugUtility.Print(DebugUtility.Vector2ToString(corner.data));
+            Debug.Log(corner);
 
             control_point = (cursor.end_UV + corner.data) / 2;
             intermediate_line = new QuadraticBezier(null, cursor.end_UV, control_point, corner.data, -1f, -1f);
