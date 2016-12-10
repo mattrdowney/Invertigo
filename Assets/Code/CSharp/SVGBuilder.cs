@@ -1,8 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 using UnityEngine;
-using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
 {
@@ -22,7 +21,7 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
     public static void BeginShape()
     {
         first = true;
-        writer.Write("\t<path stroke=black fill=none d=\"");
+        writer.Write("\t<path d=\"");
     }
 
     public static void SetEdge(QuadraticBezier curve)
@@ -42,7 +41,7 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
 
     static void WriteHeader()
     {
-        writer = new StreamWriter("C:/Users/Matt Downey/Documents/Invertigo/Assets/Art/Scalable Vector Graphics/TestSVG.svg");
+        writer = new StreamWriter("C:/Users/Matt Downey/Documents/Invertigo/Assets/Art/Scalable Vector Graphics/" + SceneManager.GetActiveScene().buildIndex + ".svg");
         writer.Write("<svg width=\"1000\" height=\"1000\">\n\n");
     }
 

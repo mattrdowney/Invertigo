@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// THIS IS THE SHITTIEST / JANKEST PERMATRASH (aside from my editor code; that's probably more garbage)
+
 public class ShapeToSVG : MonoBehaviour
 {
     static readonly float delta = 4 * Mathf.Pow(2, -23); // 4 because it's the largest power of 2 below 2*pi; 2**-23 because it is the smallest mantissa possible in IEEE 754 (for float)
@@ -10,7 +12,7 @@ public class ShapeToSVG : MonoBehaviour
     static List<QuadraticBezier> lines;
     static List<QuadraticBezier> start_discontinuities;
     static List<QuadraticBezier> end_discontinuities;
-    static Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern; // HACK: to be foolproof this needs to be Tuple<QB, QB> to store forwards and backwards references; the hack should work as long as the level design is simple. (I think that level designs that break this also break the physics code too.)
+    static Dictionary<QuadraticBezier, QuadraticBezier> edge_pattern; // HACK: to be foolproof this needs to be QB->Tuple<QB, QB> to store forwards and backwards references; the hack should work as long as the level design is simple. (I think that level designs that break this also break the physics code too.)
     static SortedList<float, QuadraticBezier> start_edge_map;
     static SortedList<float, QuadraticBezier> end_edge_map;
     static bool swapped;
@@ -25,7 +27,7 @@ public class ShapeToSVG : MonoBehaviour
 
         if (Vector2.Distance(begin_UV, end_UV) > threshold)
         {
-            Vector2 delta_begin_UV = SpaceConverter.SphereToUV(edge.Evaluate(begin + 64*delta)); // 4096 == sqrt(bits(2^mantissa))
+            Vector2 delta_begin_UV = SpaceConverter.SphereToUV(edge.Evaluate(begin + 64*delta));
             Vector2 delta_end_UV = SpaceConverter.SphereToUV(edge.Evaluate(end - 64*delta));
             Vector2 control_point = Intersection(begin_UV, delta_begin_UV, delta_end_UV, end_UV);
 
@@ -297,9 +299,9 @@ public class ShapeToSVG : MonoBehaviour
         {
             return new optional<QuadraticBezier>();
         }
-        
+
         float similarity = Vector3.Dot(ClockwiseDirection(start_edge_map_iter.Current.Key),
-            start_edge_map_iter.Current.Value.arc.EvaluateRight(start_edge_map_iter.Current.Value.end));
+            -start_edge_map_iter.Current.Value.arc.EvaluateRight(start_edge_map_iter.Current.Value.end)); // left for start_edge_map/end since right is a nonexistent line segment
 
         DebugUtility.Log("Similarity: ", similarity);
 
@@ -308,9 +310,14 @@ public class ShapeToSVG : MonoBehaviour
             SortedList<float, QuadraticBezier> swapper = start_edge_map;
             start_edge_map = end_edge_map;
             end_edge_map = swapper;
-            optional<QuadraticBezier> result = GetFirstDiscontinuity();
             swapped = true;
-            return result;
+
+            start_edge_map_iter = start_edge_map.GetEnumerator();
+
+            if (!start_edge_map_iter.MoveNext())
+            {
+                return new optional<QuadraticBezier>();
+            }
         }
 
         DebugUtility.Log("First: ", start_edge_map_iter.Current.Key);
@@ -609,7 +616,7 @@ public class ShapeToSVG : MonoBehaviour
         float last_key = EdgeMapKey(last.begin_UV);
 
         bool clockwise = Vector3.Dot(ClockwiseDirection(cursor_key),
-            cursor.arc.EvaluateRight(cursor.end)) > 0;
+            -cursor.arc.EvaluateRight(cursor.end)) > 0; // left for start_edge_map/end because right DNE
 
         // add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) )
         optional<Vector2> corner = NextCorner(cursor_key, last_key, clockwise);

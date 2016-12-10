@@ -54,7 +54,7 @@ public struct optional<T>
         }
         else
         {
-            return "nonexistent: " + val.GetType().ToString(); 
+            return "nonexistent: "; // + val.GetType().ToString(); 
         }
     }
 }
