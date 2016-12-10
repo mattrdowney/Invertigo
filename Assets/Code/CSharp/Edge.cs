@@ -6,9 +6,11 @@
  */
 
 using UnityEngine;
+using System.Diagnostics;
+
+#if UNITY_EDITOR
 using UnityEditor;
-using System.Collections;
-using System.Linq;
+#endif
 
 [System.Serializable]
 public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in production builds
@@ -76,7 +78,7 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
 		int  nOutOfThree		   = CountTrueBooleans(bLeftContains, bRightContains, bIsObtuse);
 
-        Debug.Log("above: " + bAboveGround + " below: " + bBelowCOM + " left: " + bLeftContains + " right: " + bRightContains + " obtuse: " + bIsObtuse);
+        DebugUtility.Log("above:", bAboveGround, "below:", bBelowCOM, "left:", bLeftContains, "right:", bRightContains, "obtuse:", bIsObtuse);
 		
         return bIsAtCorrectElevation && nOutOfThree >= 2;
 	}
@@ -101,13 +103,14 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		return new optional<float>();
 	}
 	
+    #if UNITY_EDITOR
 	void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
 		UnityEditor.Handles.DrawWireArc(Center(radius), path_normal, Evaluate(Begin(radius), radius) - Center(radius), (End(radius) - Begin(radius)) * 180 / Mathf.PI, LengthRadius(radius));
 	}
-	
-	void DrawDefault()
+
+    void DrawDefault()
 	{	
 		UnityEditor.Handles.color = Color.cyan;
 		UnityEditor.Handles.DrawLine(Evaluate(Begin()), Evaluate(Begin()) + arc_left*.1f);
@@ -121,12 +124,13 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		UnityEditor.Handles.color = Color.green;
 		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right_normal*.1f);
 	}
-	
-	void DrawRadial(float angle, float radius, Color color) //CONSIDER: use DrawWireArc
+    
+    void DrawRadial(float angle, float radius, Color color) //CONSIDER: use DrawWireArc
 	{
 		UnityEditor.Handles.color = color;
 		UnityEditor.Handles.DrawLine(Evaluate(angle, 0), Evaluate(angle, radius)); 
 	}
+    #endif
 	
 	public override float End(float radius) //TODO: optimize, avoid recursion if convenient
 	{
@@ -179,7 +183,9 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 	 */
 	public void Initialize(Vector3 left_edge, Vector3 right_edge, Vector3 normal)
 	{
+        #if UNITY_EDITOR
 		this.Save();
+        #endif
 		
 		path_normal = normal.normalized;
 		Vector3 path_center = path_normal*Vector3.Dot(left_edge, path_normal); //or right_edge
@@ -216,7 +222,9 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		
 		RecalculateAABB(this);
 
+        #if UNITY_EDITOR
 		this.Save();
+        #endif
 	}
 
     public static bool IsConvex(Edge left, Edge right)
@@ -243,6 +251,7 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		return obj;
 	}
 	
+    #if UNITY_EDITOR
 	private void OnDrawGizmos() //TODO: get rid of this in production builds //It's tedious that I can't just put this in the editor code
 	{
 		// draw floor path
@@ -256,17 +265,20 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		
 		//DrawDefault();
 	}
+    #endif
 
     protected override Vector3 Pole()
     {
         return path_normal;
     }
-
+    
+    #if UNITY_EDITOR
     public override void Save()
 	{
 		base.Save();
 		Undo.RecordObject(this, "Save edge");
 	}
+    #endif
 
 	public static Edge StartEdge(Transform block_transform, Vector3 left_point, Vector3 right_point)
 	{
@@ -274,21 +286,24 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		
 		#if UNITY_EDITOR
 		GameObject obj = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
-		#else
+        #else
 		GameObject obj = Instantiate(prefab) as GameObject;
+        #endif
+
+        #if UNITY_EDITOR
+        Undo.RegisterCreatedObjectUndo(obj, "Created edge");
 		#endif
-		
-		Undo.RegisterCreatedObjectUndo(obj, "Created edge");
-		
+
 		obj.name = "Edge";
 
 		Edge result = obj.GetComponent<Edge>();
 
 		result.Initialize(left_point, right_point);
 
-		result.Save();
-
+		#if UNITY_EDITOR
+        result.Save();
 		result.LinkBlock(block_transform);
+		#endif
 
 		return result;
 	}

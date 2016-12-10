@@ -1,13 +1,12 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
+
 using System.Collections;
-using System.Collections.Generic;
 
 abstract class RoomLoader : MonoBehaviour //use Strategy Pattern //FIXME: Entire file is JANK
 {
     int initial_level = 1;
 
-    // Static singleton instance //all credit for Singleton pattern to http://clearcutgames.net/home/?p=437
+    // Static singleton instance // credit for this implementation of the Singleton pattern to http://clearcutgames.net/home/?p=437
     private static RoomLoader instance;
 
     // Static singleton property
@@ -39,12 +38,21 @@ abstract class RoomLoader : MonoBehaviour //use Strategy Pattern //FIXME: Entire
 
     private void ToggleRoom(int level, bool state)
     {
-        GameObject root = GameObject.Find("/" + level.ToString());
+        GameObject geometry_root = GameObject.Find("/" + level.ToString());
+        GameObject graphics_root = GameObject.Find("/" + level.ToString() + "g");
 
-        for (int child_id = 0; child_id < root.transform.childCount; child_id++)
+
+        // geometry
+        for (int child_id = 0; child_id < geometry_root.transform.childCount; child_id++)
         {
-            root.transform.GetChild(child_id).gameObject.SetActive(state);
-        } 
+            geometry_root.transform.GetChild(child_id).gameObject.SetActive(state);
+        }
+
+        // graphics
+        for (int child_id = 0; child_id < graphics_root.transform.childCount; child_id++)
+        {
+            graphics_root.transform.GetChild(child_id).gameObject.SetActive(state);
+        }
     }
 
     public void LoadRoom(int level)

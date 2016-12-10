@@ -6,7 +6,11 @@
  */
 
 using UnityEngine;
+using System.Diagnostics;
+
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 [System.Serializable]
 public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in production builds
@@ -68,7 +72,7 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		bool bRightContains	= Vector3.Dot(pos, arc_right_normal) >= 0;
 		bool bCorrectAngle  = bLeftContains && bRightContains;
 
-        Debug.Log("above: " + bAboveGround + " below: " + bBelowCOM + " left: " + bLeftContains + " right: " + bRightContains);
+        DebugUtility.Log("above:", bAboveGround, "below:", bBelowCOM, "left:", bLeftContains, "right:", bRightContains);
 
         return bIsAtCorrectElevation && bCorrectAngle;
 	}
@@ -92,14 +96,15 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		
 		return new optional<float>();
 	}
-	
-	void DrawArc(float radius, Color color)
+
+    #if UNITY_EDITOR
+    void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
 		UnityEditor.Handles.DrawWireArc(Center(radius), -path_normal, arc_left*LengthRadius(radius), arc_angle * 180 / Mathf.PI, LengthRadius(radius));
 	}
-	
-	void DrawDefault()
+    
+    void DrawDefault()
 	{	
 		UnityEditor.Handles.color = Color.cyan;
 		UnityEditor.Handles.DrawLine(Evaluate(Begin()), Evaluate(Begin()) + arc_left*.1f);
@@ -113,14 +118,15 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		UnityEditor.Handles.color = Color.green;
 		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right_normal*.1f);
 	}
-	
-	void DrawRadial(float angle, float radius, Color color) //CONSIDER: use DrawWireArc
+    
+    void DrawRadial(float angle, float radius, Color color) //CONSIDER: use DrawWireArc
 	{
 		UnityEditor.Handles.color = color;
 		UnityEditor.Handles.DrawLine(Evaluate(angle, 0), Evaluate(angle, radius)); 
 	}
-	
-	public override float End(float radius)
+    #endif
+
+    public override float End(float radius)
 	{
 		return arc_angle;
 	}
@@ -146,7 +152,9 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 	
 	public override void Initialize(ArcOfSphere left, ArcOfSphere right)
 	{
+        #if UNITY_EDITOR
 		this.Save();
+        #endif
 		
 		Vector3 path_center = right.Evaluate(right.Begin());
 
@@ -174,7 +182,9 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		
 		RecalculateAABB(this);
 
+        #if UNITY_EDITOR
 		this.Save();
+        #endif
 	}
 
     public override float LengthRadius(float radius)
@@ -185,6 +195,7 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		return (position - center).magnitude;
 	}
 	
+    #if UNITY_EDITOR
 	private void OnDrawGizmos() //TODO: get rid of this in production builds //It's tedious that I can't just put this in the editor code
 	{
 		//return;
@@ -200,17 +211,20 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		
 		//DrawDefault();
 	}
+    #endif
 
     protected override Vector3 Pole()
     {
         return path_normal;
     }
 
+    #if UNITY_EDITOR
     public override void Save()
 	{
 		base.Save();
 		Undo.RecordObject(this, "Save convex corner");
 	}
+    #endif
 
 	public static ConvexCorner Spawn(ArcOfSphere previous_edge, ArcOfSphere next_edge)
 	{
@@ -222,18 +236,21 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		GameObject obj = Instantiate(prefab) as GameObject;
 		#endif
 		
+        #if UNITY_EDITOR
 		Undo.RegisterCreatedObjectUndo(obj, "Created convex corner");
-		
+		#endif
+
 		obj.name = "Convex corner";
 		
 		ConvexCorner result = obj.GetComponent<ConvexCorner>();
 		
 		result.Initialize(previous_edge, next_edge);
 
-		result.Save();
-
+        #if UNITY_EDITOR
+        result.Save();
 		result.LinkBlock(previous_edge);
-		
+		#endif
+
 		return result;
 	}
 }

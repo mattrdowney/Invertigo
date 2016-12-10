@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
+using System.Diagnostics;
+
+#if UNITY_EDITOR
 using UnityEditor;
-using System.Collections;
+#endif
 
 [System.Serializable]
 public class ConcaveCorner : Corner
@@ -62,7 +65,7 @@ public class ConcaveCorner : Corner
 		bool bRightContains	= Vector3.Dot(pos, arc_right_normal) >= 0;
 		bool bCorrectAngle	= bLeftContains && bRightContains;
 
-        Debug.Log("above: " + bAboveGround + " below: " + bBelowCOM + " left: " + bLeftContains + " right: " + bRightContains);
+        DebugUtility.Log("above:", bAboveGround, "below:", bBelowCOM, "left:", bLeftContains, "right:", bRightContains);
 
         return bIsAtCorrectElevation && bCorrectAngle;
 	}
@@ -86,15 +89,16 @@ public class ConcaveCorner : Corner
 		
 		return new optional<float>();
 	}
-	
-	void DrawArc(float radius, Color color)
+
+    #if UNITY_EDITOR
+    void DrawArc(float radius, Color color)
 	{
 		UnityEditor.Handles.color = color;
 		float height = Vector3.Distance(next.Evaluate(next.Begin(radius)), Evaluate(End(radius),radius));
 		UnityEditor.Handles.DrawWireArc(Center(radius), -Center(radius), prev.Evaluate(prev.End(radius), radius) - Center(radius), arc_angle * 180 / Mathf.PI, height);
 	}
-	
-	void DrawDefault()
+
+    void DrawDefault()
 	{	
 		UnityEditor.Handles.color = Color.cyan;
 		UnityEditor.Handles.DrawLine(Evaluate(Begin()), Evaluate(Begin()) + arc_left*.1f);
@@ -108,14 +112,15 @@ public class ConcaveCorner : Corner
 		UnityEditor.Handles.color = Color.green;
 		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right_normal*.1f);
 	}
-	
-	void DrawRadial(float angle, float radius, Color color) //CONSIDER: use DrawWireArc
+    
+    void DrawRadial(float angle, float radius, Color color) //CONSIDER: use DrawWireArc
 	{
 		UnityEditor.Handles.color = color;
 		UnityEditor.Handles.DrawLine(Evaluate(angle, 0), Evaluate(angle, radius)); 
 	}
-	
-	public override float End(float radius)
+    #endif
+
+    public override float End(float radius)
 	{
 		return arc_angle;
 	}
@@ -145,7 +150,9 @@ public class ConcaveCorner : Corner
 
     public override void Initialize(ArcOfSphere left, ArcOfSphere right)
 	{
-		this.Save();
+        #if UNITY_EDITOR
+        this.Save();
+        #endif
 		
 		Vector3 path_center = right.Evaluate(right.Begin());
 		
@@ -173,7 +180,9 @@ public class ConcaveCorner : Corner
 		
 		RecalculateAABB(this);
 		
+        #if UNITY_EDITOR
 		this.Save();
+        #endif
 	}
 
     public override float LengthRadius(float radius)
@@ -184,6 +193,7 @@ public class ConcaveCorner : Corner
 		return (CoM - floor).magnitude;
 	}
 	
+    #if UNITY_EDITOR
 	private void OnDrawGizmos() //TODO: get rid of this in production builds //It's tedious that I can't just put this in the editor code
 	{	
 		// draw Floor path
@@ -191,17 +201,20 @@ public class ConcaveCorner : Corner
 		
 		//DrawDefault();
 	}
+    #endif
 
     protected override Vector3 Pole()
     {
         return path_normal;
     }
 
+    #if UNITY_EDITOR
     public override void Save()
 	{
 		base.Save();
 		Undo.RecordObject(this, "Save concave corner");
 	}
+    #endif
 	
 	public static ConcaveCorner Spawn(ArcOfSphere previous_edge, ArcOfSphere next_edge)
 	{
@@ -213,17 +226,20 @@ public class ConcaveCorner : Corner
 		GameObject obj = Instantiate(prefab) as GameObject;
 		#endif
 		
+        #if UNITY_EDITOR
 		Undo.RegisterCreatedObjectUndo(obj, "Created concave corner");
-		
+		#endif
+
 		obj.name = "Concave corner";
 		
 		ConcaveCorner result = obj.GetComponent<ConcaveCorner>();
 		
 		result.Initialize(previous_edge, next_edge);
 		
-		result.Save();
-		
+		#if UNITY_EDITOR
+        result.Save();
 		result.LinkBlock(previous_edge);
+		#endif
 		
 		return result;
 	}

@@ -6,8 +6,12 @@
  */
 
 using UnityEngine;
-using UnityEditor;
+using System.Diagnostics;
 using System.Linq;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [System.Serializable]
 public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get rid of this in production builds
@@ -104,18 +108,16 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
     public optional<Vector3> Intersect(Vector3 to, Vector3 from, float radius)
     {
         optional<Vector3> result = SphereUtility.Intersection(from, to, Pole(), AngularRadius(radius));
-        Debug.DrawRay(from, Vector3.up, Color.red);
-        Debug.DrawRay(result.data, Vector3.up, Color.green);
-        Debug.DrawRay(to, Vector3.up, Color.blue);
         return result;
     }
 
-
+    #if UNITY_EDITOR
     public void LinkBlock(Transform block_transform) { Undo.SetTransformParent(this.transform, block_transform, "Link arc to block"); }
-	public void LinkBlock(ArcOfSphere other) { LinkBlock(other.gameObject.transform.parent); }
+    public void LinkBlock(ArcOfSphere other) { LinkBlock(other.gameObject.transform.parent); }
+    #endif
 
     //CONSIDER: Can you "inversion of control" ClosestPoint and MaxGradient?
-	public Vector3 ClosestPoint(Vector3 point) //TODO: eliminate code duplication with MaxGradient //HACK: may not work in all or even most cases
+    public Vector3 ClosestPoint(Vector3 point) //TODO: eliminate code duplication with MaxGradient //HACK: may not work in all or even most cases
 	{
 		Vector3 closest_point = Vector3.zero;
 		float min_distance = Mathf.Infinity;
@@ -253,11 +255,13 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 
 	public ArcOfSphere Relink(ArcOfSphere left, ArcOfSphere right)
 	{
-		this.Save();
+        #if UNITY_EDITOR
+        this.Save();
 		left.Save();
 		right.Save();
-		
-		this.next  = right;
+        #endif
+
+        this.next  = right;
 		this.prev  = left;
 
 		left.next  = this;
@@ -266,10 +270,13 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 		return this;
 	}
 
-	public virtual void Save()
+
+    #if UNITY_EDITOR
+    public virtual void Save()
 	{
 		Undo.RecordObject(this, "Save arc of sphere");
 		Undo.RecordObject(this.transform, "Save transform");
 		Undo.RecordObject(this.GetComponent<BoxCollider>(), "Save box collider");
 	}
+    #endif
 }

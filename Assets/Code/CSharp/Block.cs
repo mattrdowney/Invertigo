@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
+
+#if UNITY_EDITOR
 using UnityEditor;
-using System.Collections;
+#endif
 
 abstract public class Block : Component
 {
@@ -21,8 +23,10 @@ abstract public class Block : Component
 		GameObject obj = Instantiate(prefab) as GameObject;
 		#endif
 
+        #if UNITY_EDITOR
 		Undo.RegisterCreatedObjectUndo(obj, "Created block");
-		
+		#endif
+
 		obj.name = "Shape";
 		
 		return obj;

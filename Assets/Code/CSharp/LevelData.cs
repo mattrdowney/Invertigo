@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class LevelData : MonoBehaviour //credit to http://clearcutgames.net/home/?p=437
 {
@@ -16,7 +16,7 @@ public class LevelData : MonoBehaviour //credit to http://clearcutgames.net/home
 
 		Instance = this; // Here we save our singleton instance
 
-		switch(Application.loadedLevel) //TODO: Make this into an XML loader
+		switch(SceneManager.GetActiveScene().buildIndex) //TODO: Make this into an XML loader
 		{
 			default:
 				playerRadius = .01f;

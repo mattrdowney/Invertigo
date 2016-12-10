@@ -96,6 +96,7 @@
     <Compile Include="Assets\Code\CSharp\DoubleRoomLoader.cs" />
     <Compile Include="Assets\Code\CSharp\Edge.cs" />
     <Compile Include="Assets\Code\CSharp\Enemy.cs" />
+    <Compile Include="Assets\Code\CSharp\EscapeToQuit.cs" />
     <Compile Include="Assets\Code\CSharp\Globals.cs" />
     <Compile Include="Assets\Code\CSharp\GroundInfo.cs" />
     <Compile Include="Assets\Code\CSharp\Invertigo.cs" />
@@ -112,7 +113,6 @@
     <Compile Include="Assets\Code\CSharp\RoomLoader.cs" />
     <Compile Include="Assets\Code\CSharp\RotationLockedCamera.cs" />
     <Compile Include="Assets\Code\CSharp\SVGBuilder.cs" />
-    <Compile Include="Assets\Code\CSharp\ShapeMaker.cs" />
     <Compile Include="Assets\Code\CSharp\ShapeToSVG.cs" />
     <Compile Include="Assets\Code\CSharp\SingleRoomLoader.cs" />
     <Compile Include="Assets\Code\CSharp\SpaceConverter.cs" />

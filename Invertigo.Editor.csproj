@@ -123,6 +123,7 @@
     <Compile Include="Assets\Editor\ArcOfSphereEditor.cs" />
     <Compile Include="Assets\Editor\InvertigoEditor.cs" />
     <Compile Include="Assets\Editor\InvertigoUtility.cs" />
+    <Compile Include="Assets\Editor\ShapeMaker.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Code\Shaders\AlwaysUnlit.shader" />

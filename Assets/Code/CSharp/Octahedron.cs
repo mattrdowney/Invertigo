@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class Octahedron : MonoBehaviour
 {
@@ -36,13 +35,13 @@ public class Octahedron : MonoBehaviour
 
             uvs[0] = new Vector2(0.5f, 0.5f); // up
             uvs[1] = new Vector2(1.0f, 0.5f); // right
-            uvs[2] = new Vector2(0.5f, 1.0f); // forward
+            uvs[2] = new Vector2(0.5f, 0.0f); // forward
             uvs[3] = new Vector2(0.0f, 0.5f); // left
-            uvs[4] = new Vector2(0.5f, 0.0f); // back
-            uvs[5] = new Vector2(1.0f, 1.0f); // down
-            uvs[6] = new Vector2(0.0f, 1.0f); // down
-            uvs[7] = new Vector2(0.0f, 0.0f); // down
-            uvs[8] = new Vector2(1.0f, 0.0f); // down
+            uvs[4] = new Vector2(0.5f, 1.0f); // back
+            uvs[5] = new Vector2(1.0f, 0.0f); // down
+            uvs[6] = new Vector2(0.0f, 0.0f); // down
+            uvs[7] = new Vector2(0.0f, 1.0f); // down
+            uvs[8] = new Vector2(1.0f, 1.0f); // down
 
             tris[0]  = 0; tris[1]  = 1; tris[2]  = 2; //+x, +y, +z
             tris[3]  = 0; tris[4]  = 2; tris[5]  = 3; //-x, +y, +z

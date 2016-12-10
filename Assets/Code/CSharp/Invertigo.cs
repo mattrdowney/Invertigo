@@ -1,13 +1,15 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Diagnostics;
 
 public class Invertigo : MonoBehaviour
 {
 	public int rows = 15; //equator drawn when rows is odd
 	public int columns = 16; //RENAME?: misleading //always draws 2*columns lines from the North to South pole
 
+    [Conditional("UNITY_EDITOR")]
 	void OnDrawGizmos()
 	{
+        #if UNITY_EDITOR
 		UnityEditor.Handles.color = Color.white;
 
 		for(float row = 1; row <= rows; ++row)
@@ -24,5 +26,6 @@ public class Invertigo : MonoBehaviour
 			                                 Vector3.right  *Mathf.Sin(Mathf.PI*column/columns),
 			                                 1);
 		}
+        #endif
 	}
 }
