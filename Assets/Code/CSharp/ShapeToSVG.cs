@@ -25,7 +25,7 @@ public class ShapeToSVG : MonoBehaviour
 
         if (Vector2.Distance(begin_UV, end_UV) > threshold)
         {
-            Vector2 delta_begin_UV = SpaceConverter.SphereToUV(edge.Evaluate(begin + 64*delta));
+            Vector2 delta_begin_UV = SpaceConverter.SphereToUV(edge.Evaluate(begin + 64*delta)); // 4096 == sqrt(bits(2^mantissa))
             Vector2 delta_end_UV = SpaceConverter.SphereToUV(edge.Evaluate(end - 64*delta));
             Vector2 control_point = Intersection(begin_UV, delta_begin_UV, delta_end_UV, end_UV);
 
@@ -63,14 +63,12 @@ public class ShapeToSVG : MonoBehaviour
             // process new lines until the signs match
             while (!SameSigns(ref xyz_signs_begin, ref xyz_signs_end))
             {
-                Debug.Log("Here1");
                 xyz_signs_range_begin = xyz_signs_begin;
                 xyz_signs_range_end = xyz_signs_end;
 
                 // binary search and discard ranges with matching slope signs and position signs at ends; and then update the slope signs.
                 while (range_end - range_begin > delta)
                 {
-                    Debug.Log("Here2");
                     range_mid = (range_begin + range_end) / 2; //guaranteed not to overflow since numbers are in range [0, 2pi]
                     UpdateSigns(arc, ref xyz_signs_range_mid, range_mid, delta);
                     if (SameSigns(ref xyz_signs_range_begin, ref xyz_signs_range_mid))
@@ -203,38 +201,36 @@ public class ShapeToSVG : MonoBehaviour
         }
     }
 
-    private static Vector3 ClockwiseDirection(float edge_interpolation) // As I thought... I needed to provide the actual gradient direction at the boundary...
+    private static Vector3 ClockwiseDirection(float edge_interpolation)
     {
-        edge_interpolation %= 4;
-        if (edge_interpolation < 0.5f) // FIXME: hardcoding
+        Vector2 unit_square_point;
+
+        if (edge_interpolation < 1)
         {
-            return new Vector3(0, 1, 1).normalized;
+            unit_square_point = new Vector2(edge_interpolation, 1);
         }
-        else if (edge_interpolation < 1f)
+        else if (edge_interpolation < 2)
         {
-            return new Vector3(0, -1, -1).normalized;
+            unit_square_point = new Vector2(1, 2 - edge_interpolation);
         }
-        else if (edge_interpolation < 1.5f)
+        else if (edge_interpolation < 3)
         {
-            return new Vector3(1, 1, 0).normalized;
+            unit_square_point = new Vector2(3 - edge_interpolation, 0);
         }
-        else if (edge_interpolation < 2f)
+        else
         {
-            return new Vector3(-1, -1, 0).normalized;
+            unit_square_point = new Vector2(0, edge_interpolation - 3);
         }
-        else if (edge_interpolation < 2.5f)
-        {
-            return new Vector3(0, 1, -1).normalized;
-        }
-        else if (edge_interpolation < 3f)
-        {
-            return new Vector3(0, -1, 1).normalized;
-        }
-        else if (edge_interpolation < 3.5f)
-        {
-            return new Vector3(-1, 1, 0).normalized;
-        }
-        return new Vector3(1, -1, 0).normalized;
+
+        Vector2 circle_point = (unit_square_point - new Vector2(0.5f, 0.5f)).normalized;
+
+        Vector3 augmented_circle_point = new Vector3(circle_point.x, 0, circle_point.y);
+
+        Vector3 result = Vector3.Cross(Vector3.up, augmented_circle_point).normalized;
+
+        int i = 0;
+
+        return result;
     }
 
     private static void DiscontinuityLocations()
@@ -293,7 +289,7 @@ public class ShapeToSVG : MonoBehaviour
 
     private static optional<QuadraticBezier> GetFirstDiscontinuity()
     {
-        swapped = false;
+        swapped = false; // FIXME: gotta hate bools
         start = false;
         start_edge_map_iter = start_edge_map.GetEnumerator();
 
@@ -303,11 +299,11 @@ public class ShapeToSVG : MonoBehaviour
         }
         
         float similarity = Vector3.Dot(ClockwiseDirection(start_edge_map_iter.Current.Key),
-            start_edge_map_iter.Current.Value.arc.EvaluateNormal(start_edge_map_iter.Current.Value.end));
+            start_edge_map_iter.Current.Value.arc.EvaluateRight(start_edge_map_iter.Current.Value.end));
 
         DebugUtility.Log("Similarity: ", similarity);
 
-        if (similarity > 0)
+        if (similarity < 0)
         {
             SortedList<float, QuadraticBezier> swapper = start_edge_map;
             start_edge_map = end_edge_map;
@@ -613,7 +609,7 @@ public class ShapeToSVG : MonoBehaviour
         float last_key = EdgeMapKey(last.begin_UV);
 
         bool clockwise = Vector3.Dot(ClockwiseDirection(cursor_key),
-            cursor.arc.EvaluateNormal(cursor.end)) < 0;
+            cursor.arc.EvaluateRight(cursor.end)) > 0;
 
         // add edges that weren't added by BuildDictionary (along  the square (0,0) -> (1,0) -> (1,1) -> (0,1) )
         optional<Vector2> corner = NextCorner(cursor_key, last_key, clockwise);

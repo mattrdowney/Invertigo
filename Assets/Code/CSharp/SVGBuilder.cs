@@ -22,7 +22,7 @@ public class SVGBuilder : MonoBehaviour //DOESN'T need to be MonoBehaviour
     public static void BeginShape()
     {
         first = true;
-        writer.Write("\t<path d=\"");
+        writer.Write("\t<path stroke=black fill=none d=\"");
     }
 
     public static void SetEdge(QuadraticBezier curve)

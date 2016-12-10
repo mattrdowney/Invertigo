@@ -7,7 +7,6 @@
 
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
 using System.Linq;
 
 [System.Serializable]
