@@ -17,7 +17,7 @@ Platform assembly: C:\Users\Matt Downey\Documents\Invertigo\LastPlayable\Inverti
 Loading C:\Users\Matt Downey\Documents\Invertigo\LastPlayable\Invertigo_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
 Platform assembly: C:\Users\Matt Downey\Documents\Invertigo\LastPlayable\Invertigo_Data\Managed\UnityEngine.PlaymodeTestsRunner.dll (this message is harmless)
 Loading C:\Users\Matt Downey\Documents\Invertigo\LastPlayable\Invertigo_Data\Managed\UnityEngine.PlaymodeTestsRunner.dll into Unity Child Domain
-- Completed reload, in  0.029 seconds
+- Completed reload, in  0.032 seconds
 Platform assembly: C:\Users\Matt Downey\Documents\Invertigo\LastPlayable\Invertigo_Data\Managed\System.Core.dll (this message is harmless)
 Platform assembly: C:\Users\Matt Downey\Documents\Invertigo\LastPlayable\Invertigo_Data\Managed\System.dll (this message is harmless)
 desktop: 1920x1080 59Hz; virtual: 1920x1080 at 0,0
@@ -25,9 +25,9 @@ desktop: 1920x1080 59Hz; virtual: 1920x1080 at 0,0
 <RI> Input initialized.
 <RI> Initialized touch support.
 WARNING: BC6H/BC7 texture format is not supported, decompressing texture
-UnloadTime: 1.936335 ms
+UnloadTime: 1.418895 ms
 Setting up 2 worker threads for Enlighten.
-  Thread -> id: 32a0 -> priority: 1 
-  Thread -> id: 32dc -> priority: 1 
+  Thread -> id: 2968 -> priority: 1 
+  Thread -> id: 2618 -> priority: 1 
 WARNING: BC6H/BC7 texture format is not supported, decompressing texture
 WARNING: BC6H/BC7 texture format is not supported, decompressing texture

@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class EscapeToQuit : MonoBehaviour
 {
@@ -8,7 +6,10 @@ public class EscapeToQuit : MonoBehaviour
     {
 	    if (Input.GetKeyDown(KeyCode.Escape))
         {
+            #if UNITY_WEBGL
+            #else
             Application.Quit();
+            #endif
         }     	
 	}
 }
