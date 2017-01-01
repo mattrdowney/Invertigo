@@ -52,6 +52,9 @@
     <Reference Include="UnityEngine">
       <HintPath>Library\UnityAssemblies\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.Advertisements">
+      <HintPath>Library\UnityAssemblies\UnityEngine.Advertisements.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>Library\UnityAssemblies\UnityEngine.UI.dll</HintPath>
     </Reference>
@@ -66,6 +69,9 @@
     </Reference>
     <Reference Include="UnityEngine.HoloLens">
       <HintPath>Library\UnityAssemblies\UnityEngine.HoloLens.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Purchasing">
+      <HintPath>Library\UnityAssemblies\UnityEngine.Purchasing.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VR">
       <HintPath>Library\UnityAssemblies\UnityEngine.VR.dll</HintPath>
@@ -82,20 +88,20 @@
     <Compile Include="Assets\Code\CSharp\ArcOfSphere\Edge.cs" />
     <Compile Include="Assets\Code\CSharp\Block\Block.cs" />
     <Compile Include="Assets\Code\CSharp\Block\BlockBehavior.cs" />
-    <Compile Include="Assets\Code\CSharp\Block\BlockMotor.cs" />
     <Compile Include="Assets\Code\CSharp\Block\BlockUtility.cs" />
-    <Compile Include="Assets\Code\CSharp\Brain\Command.cs" />
+    <Compile Include="Assets\Code\CSharp\Brain\Brain.cs" />
     <Compile Include="Assets\Code\CSharp\Camera\InvertigoCamera.cs" />
     <Compile Include="Assets\Code\CSharp\Camera\RollingCamera.cs" />
     <Compile Include="Assets\Code\CSharp\Camera\RotationLockedCamera.cs" />
     <Compile Include="Assets\Code\CSharp\Character\Generic\Character.cs" />
-    <Compile Include="Assets\Code\CSharp\Character\Generic\CharacterMotor.cs" />
     <Compile Include="Assets\Code\CSharp\Character\Generic\CharacterState.cs" />
     <Compile Include="Assets\Code\CSharp\Character\Generic\GroundInfo.cs" />
     <Compile Include="Assets\Code\CSharp\Character\NPC\Enemy\Enemy.cs" />
     <Compile Include="Assets\Code\CSharp\Character\Player\EscapeToQuit.cs" />
     <Compile Include="Assets\Code\CSharp\Character\Player\Player.cs" />
     <Compile Include="Assets\Code\CSharp\Collisions\CollisionDetector.cs" />
+    <Compile Include="Assets\Code\CSharp\DesignPatterns\Command.cs" />
+    <Compile Include="Assets\Code\CSharp\DesignPatterns\CommandMediator.cs" />
     <Compile Include="Assets\Code\CSharp\LevelManagement\BasicRoomLoader.cs" />
     <Compile Include="Assets\Code\CSharp\LevelManagement\Corridor.cs" />
     <Compile Include="Assets\Code\CSharp\LevelManagement\Door.cs" />
@@ -108,6 +114,9 @@
     <Compile Include="Assets\Code\CSharp\LevelManagement\SingleRoomLoader.cs" />
     <Compile Include="Assets\Code\CSharp\Miscellaneous\Globals.cs" />
     <Compile Include="Assets\Code\CSharp\Miscellaneous\Invertigo.cs" />
+    <Compile Include="Assets\Code\CSharp\Motor\Block\BlockMotor.cs" />
+    <Compile Include="Assets\Code\CSharp\Motor\Character\CharacterMotor.cs" />
+    <Compile Include="Assets\Code\CSharp\Motor\Motor.cs" />
     <Compile Include="Assets\Code\CSharp\Rendering\LevelToSVG.cs" />
     <Compile Include="Assets\Code\CSharp\Rendering\Octahedron.cs" />
     <Compile Include="Assets\Code\CSharp\Rendering\QuadraticBezier.cs" />

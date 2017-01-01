@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
-public class CharacterMotor : MonoBehaviour //TODO: make abstract //CONSIDER: make Component
+public class CharacterMotor : Motor //TODO: make abstract //CONSIDER: make Component
 {
 	[SerializeField] Vector3						_current_position;
 	[SerializeField] Vector3						_previous_position;
