@@ -5,6 +5,9 @@ using System.Collections.Generic;
 [System.Serializable]
 public class CharacterMotor : Motor //TODO: make abstract //CONSIDER: make Component
 {
+    CharacterState                                  state;                                  
+    public optional<CollisionDetector>              collision_detector;
+
 	[SerializeField] Vector3						_current_position;
 	[SerializeField] Vector3						_previous_position;
 	
@@ -14,7 +17,7 @@ public class CharacterMotor : Motor //TODO: make abstract //CONSIDER: make Compo
 	[SerializeField] public float					vertical_velocity;
 	[SerializeField] public float					horizontal_velocity;
 
-	optional<GroundInfo>							ground;
+	public optional<GroundInfo>						ground;
     optional<Nexus>                                 connection;
 
 	Dictionary<string, float>						flags; //XXX: Strategy Pattern?
@@ -22,6 +25,8 @@ public class CharacterMotor : Motor //TODO: make abstract //CONSIDER: make Compo
 	[SerializeField] Vector2						_input;
 
 	[SerializeField] float							_radius;
+
+    public float                                    jump_request;
 
 	//TODO: make flags into delegater Queue<*fun()> https://social.msdn.microsoft.com/Forums/en-US/2c08a0d0-58e4-4df6-b6d3-75e785fff8a8/array-of-function-pointers?forum=csharplanguage
 
@@ -210,6 +215,30 @@ public class CharacterMotor : Motor //TODO: make abstract //CONSIDER: make Compo
 		}
 	}
 
+    void Start()
+    {
+        state = new PlayerFallingState();
+        collision_detector = this.gameObject.GetComponent<CollisionDetector>();
+        radius = 0.05f;
+		jump_request = -100;
+    }
+
+    void Update()
+    {
+        if(Input.GetButtonDown("Jump"))
+		{
+			jump_request = Time.time;
+		}
+
+        input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis ("Vertical"));
+    }
+
+    void FixedUpdate()
+    {
+        // use State Machine design pattern
+        state = state.StateMachine(this);
+    }
+
 	public void Traverse(ArcOfSphere path, Vector3 desiredPos) //I don't like these parameters, they can be fixed //I don't like that this is public, it should be private and exposed via a generic move option if possible
 	{
 		ground = new GroundInfo();
@@ -287,7 +316,7 @@ public class CharacterMotor : Motor //TODO: make abstract //CONSIDER: make Compo
 		}
 	}
 
-	public void Jump()
+	public bool Jump()
 	{
 		if(grounded)
 		{
@@ -311,5 +340,7 @@ public class CharacterMotor : Motor //TODO: make abstract //CONSIDER: make Compo
 
             current_position = (current_position + normal * 1e-6f).normalized;
 		}
+
+        return grounded;
 	}
 }

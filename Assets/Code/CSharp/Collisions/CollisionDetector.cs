@@ -2,12 +2,12 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-//CONSIDER: use AABB going from position1 to position2 //no frame speed limit!
-//NOTA BENE: has a bug! fix it with (well-optimized) math or logic
+//AABB would be great if Unity's built-in collision detection was angular, but adding extra precision on my end won't stop Unity from failing to detect certain collisions. K.I.S.S.
+// there would also be extra coupling with resizing the player if I did change it to AABBs (or I would have to do some annoying scaling nonsense).
 
 public class CollisionDetector : MonoBehaviour
 {
-	public List<ArcOfSphere>	colliders;
+	List<ArcOfSphere>	colliders;
 
 	void Awake()
 	{
@@ -120,7 +120,4 @@ If I can make a cool space partioning scheme for angular space that would allow 
 Making a true ArcCastAll would be amazing as well. One that can take multiple rotations and lesser circles into account and return a list of all collisions
 ...and how many times they happen and in what order
 ArcCast would use SphereUtility.Intersection with optional<Vector3>
-
-There really needs to be a distinction between Triggers and Colliders, although I can probably just make another class for that
-
  */
