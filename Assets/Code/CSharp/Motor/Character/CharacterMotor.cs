@@ -239,29 +239,32 @@ public class CharacterMotor : Motor //TODO: make abstract //CONSIDER: make Compo
         state = state.StateMachine(this);
     }
 
-	public void Traverse(ArcOfSphere path, Vector3 desiredPos) //I don't like these parameters, they can be fixed //I don't like that this is public, it should be private and exposed via a generic move option if possible
+	public bool Traverse(ArcOfSphere path, Vector3 desiredPos) //I don't like these parameters, they can be fixed //I don't like that this is public, it should be private and exposed via a generic move option if possible
 	{
-		ground = new GroundInfo();
-
-		ground.data.arc		= path;
-		ground.data.block	= path.GetComponentInParent<Block>();
-		ground.data.height	= path.LengthRadius(radius);
-		ground.data.begin   = path.Begin(radius);
-		ground.data.end		= path.End(radius);
-
         optional<float> interpolation_factor = path.CartesianToRadial(desiredPos);
 
-        if(interpolation_factor.exists)
+        if (interpolation_factor.exists)
         {
+            ground = new GroundInfo();
+
             ground.data.angle = interpolation_factor.data;
+
+            ground.data.arc = path;
+            ground.data.block = path.GetComponentInParent<Block>();
+            ground.data.height = path.LengthRadius(radius);
+            ground.data.begin = path.Begin(radius);
+            ground.data.end = path.End(radius);
+
+            current_position = ArcOfSphere.Evaluate(ground.data, radius);
         }
         else
         {
             Debug.Log("Critical Failure: Traverse's interpolation factor doesn't exist!");
-            ground.data.angle = 0;
         }
-        current_position = ArcOfSphere.Evaluate(ground.data, radius);
-	}
+
+        return interpolation_factor.exists;
+
+    }
 
     public void EnterNexus(Nexus _connection)
     {

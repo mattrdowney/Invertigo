@@ -68,8 +68,8 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		bool bBelowCOM	  = Vector3.Dot(pos - Center()      , path_normal) <= 0; //COM means center of mass
 		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
 
-		bool bLeftContains  = Vector3.Dot(pos,  arc_left_normal  ) >= 0;
-		bool bRightContains	= Vector3.Dot(pos, arc_right_normal) >= 0;
+		bool bLeftContains  = Vector3.Dot(pos - Center(), arc_left_normal ) >= 0;
+		bool bRightContains	= Vector3.Dot(pos - Center(), arc_right_normal) >= 0;
 		bool bCorrectAngle  = bLeftContains && bRightContains;
 
         DebugUtility.Log("above:", bAboveGround, "below:", bBelowCOM, "left:", bLeftContains, "right:", bRightContains);
@@ -117,7 +117,7 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		
 		UnityEditor.Handles.color = Color.green;
 		UnityEditor.Handles.DrawLine(Evaluate(End()), Evaluate(End()) + arc_right_normal*.1f);
-	}
+    }
     
     void DrawRadial(float angle, float radius, Color color) //CONSIDER: use DrawWireArc
 	{
@@ -198,19 +198,27 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
     #if UNITY_EDITOR
 	private void OnDrawGizmos() //TODO: get rid of this in production builds //It's tedious that I can't just put this in the editor code
 	{
-		//return;
+        //return;
 
-		// draw floor path
-		//DrawArc(0.0f, Color.black);
-		
-		// draw CoM path
-		//DrawArc(0.025f, Color.grey);
-		
-		// draw ceil path
-		//DrawArc(0.05f, Color.white);
-		
-		//DrawDefault();
-	}
+        // draw floor path
+        //DrawArc(0.0f, Color.black);
+
+        // draw CoM path
+        //DrawArc(0.025f, Color.grey);
+
+        // draw ceil path
+        //DrawArc(0.05f, Color.white);
+
+        //DrawDefault();
+
+        UnityEditor.Handles.color = Color.green;
+        //UnityEditor.Handles.DrawSolidDisc(Center(), arc_left_normal, 0.1f);
+        UnityEditor.Handles.DrawLine(Center(), Center() + 0.1f * arc_left_normal);
+
+        UnityEditor.Handles.color = Color.yellow;
+        //UnityEditor.Handles.DrawSolidDisc(Center(), arc_right_normal, 0.1f);
+        UnityEditor.Handles.DrawLine(Center(), Center() + 0.1f * arc_right_normal);
+    }
     #endif
 
     protected override Vector3 Pole()

@@ -73,8 +73,8 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0; //COM means center of mass
 		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
 
-		bool bLeftContains		   = Vector3.Dot(pos, arc_left_normal ) >= 0;
-		bool bRightContains		   = Vector3.Dot(pos, arc_right_normal) >= 0;
+		bool bLeftContains		   = Vector3.Dot(pos - Center(), arc_left_normal ) >= 0;
+		bool bRightContains		   = Vector3.Dot(pos - Center(), arc_right_normal) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) <= 0;
 		int  nOutOfThree		   = CountTrueBooleans(bLeftContains, bRightContains, bIsObtuse);
 

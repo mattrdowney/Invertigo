@@ -29,7 +29,7 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 	protected abstract Vector3 Center(float radius);
 	protected Vector3 Center() { return Center(0); }
 
-	/** Determine if the character (represented by a point) is inside of a arc (extruded by the radius of the player)
+	/** Determine if the character (represented by a point) is inside of a arc (extruded by the radius of the character)
 	 *  
 	 */
 	public abstract bool Contains(Vector3 pos, float radius);

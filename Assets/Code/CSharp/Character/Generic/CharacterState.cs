@@ -92,7 +92,7 @@ abstract public class CharacterState : ScriptableObject
 
             if (collision_point.exists)
             {
-                self.Traverse(arc.data, collision_point.data);
+                return self.Traverse(arc.data, collision_point.data);
             }
             else
             {
@@ -100,6 +100,6 @@ abstract public class CharacterState : ScriptableObject
             }
         }
 
-        return arc.exists;
+        return false;
     }
 }
