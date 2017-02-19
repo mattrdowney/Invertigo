@@ -344,6 +344,8 @@ public class CharacterMotor : Motor //TODO: make abstract //CONSIDER: make Compo
             current_position = (current_position + normal * 1e-6f).normalized;
 		}
 
+        state = new PlayerFallingState();
+
         return grounded;
 	}
 }

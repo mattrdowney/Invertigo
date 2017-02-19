@@ -72,12 +72,12 @@
      <Compile Include="Assets\Code\CSharp\LevelManagement\BasicRoomLoader.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\Corridor.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\Door.cs" />
-     <Compile Include="Assets\Code\CSharp\LevelManagement\DoorManager.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\DoubleRoomLoader.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\LevelData.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\Nexus.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\Portal.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\RoomLoader.cs" />
+     <Compile Include="Assets\Code\CSharp\LevelManagement\RoomManager.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\SingleRoomLoader.cs" />
      <Compile Include="Assets\Code\CSharp\Miscellaneous\Globals.cs" />
      <Compile Include="Assets\Code\CSharp\Miscellaneous\Invertigo.cs" />

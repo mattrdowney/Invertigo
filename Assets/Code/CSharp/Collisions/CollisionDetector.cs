@@ -76,7 +76,7 @@ public class CollisionDetector : MonoBehaviour
 			{
 				//step 3: if a collision is happening, a list of TTCs (time till collision) are sorted to find the closest collision.
 				optional<float> distance = arc.Distance(desired_position, curPos, radius);
-				if(distance.exists && (!closest_distance.exists || distance.data < closest_distance.data))
+                if (distance.exists && (!closest_distance.exists || distance.data < closest_distance.data))
 				{
 					closest_distance = distance;
 					closest = arc;

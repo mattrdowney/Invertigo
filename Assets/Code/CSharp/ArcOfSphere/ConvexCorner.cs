@@ -64,17 +64,14 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 
     public override bool Contains(Vector3 pos, float radius)
 	{
-		bool bAboveGround = Vector3.Dot(pos - Center(radius), path_normal) >= 0;
-		bool bBelowCOM	  = Vector3.Dot(pos - Center()      , path_normal) <= 0; //COM means center of mass
-		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
+		bool bIsAtCorrectElevation = Vector3.Dot(pos, path_normal) >= Mathf.Cos(radius);
 
-		bool bLeftContains  = Vector3.Dot(pos - Center(), arc_left_normal ) >= 0;
-		bool bRightContains	= Vector3.Dot(pos - Center(), arc_right_normal) >= 0;
-		bool bCorrectAngle  = bLeftContains && bRightContains;
+        // checking left and right bounds makes the code slower and more complex (locally and globally, see corner glitch).
+        // the left and right bounds are even underground in most situations, which means it is unneccesary.
 
-        DebugUtility.Log("above:", bAboveGround, "below:", bBelowCOM, "left:", bLeftContains, "right:", bRightContains);
+        DebugUtility.Log("below:", bIsAtCorrectElevation);
 
-        return bIsAtCorrectElevation && bCorrectAngle;
+        return bIsAtCorrectElevation;
 	}
 	
 	public override optional<float> Distance(Vector3 to, Vector3 from, float radius) //distance is Euclidean but is (guaranteed?) to be sorted correctly with the current assertions about speed vs player_radius
@@ -213,11 +210,14 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 
         UnityEditor.Handles.color = Color.green;
         //UnityEditor.Handles.DrawSolidDisc(Center(), arc_left_normal, 0.1f);
-        UnityEditor.Handles.DrawLine(Center(), Center() + 0.1f * arc_left_normal);
+        //UnityEditor.Handles.DrawLine(Center(), Center() + 0.1f * arc_left_normal);
 
         UnityEditor.Handles.color = Color.yellow;
         //UnityEditor.Handles.DrawSolidDisc(Center(), arc_right_normal, 0.1f);
-        UnityEditor.Handles.DrawLine(Center(), Center() + 0.1f * arc_right_normal);
+        //UnityEditor.Handles.DrawLine(Center(), Center() + 0.1f * arc_right_normal);
+
+        UnityEditor.Handles.color = Color.red;
+        //UnityEditor.Handles.DrawSolidDisc(Center(0.05f), path_normal, 0.05f);
     }
     #endif
 

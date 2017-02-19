@@ -14,9 +14,12 @@ public class Door : Portal
         {
             CharacterMotor motor = other.gameObject.GetComponent<CharacterMotor>();
 
-            if(motor.grounded)
+            if(motor && motor.grounded)
             {
-                EnterPortal(motor);
+                motor.Jump();
+                RoomLoader.Instance.UnloadRoom(1);
+                RoomLoader.Instance.LoadRoom(2);
+                //RoomManager.RequestLoad()EnterPortal(motor);
             }
         }
     }

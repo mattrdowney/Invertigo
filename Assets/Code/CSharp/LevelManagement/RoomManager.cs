@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
-class DoorManager : MonoBehaviour
+class RoomManager : MonoBehaviour
 {
     Dictionary<int, AsyncOperation> levels;
 
