@@ -55,17 +55,17 @@ public class ConcaveCorner : Corner
 		return SphereUtility.SphereToCartesian(new Vector2(radius / Mathf.Cos(arc_angle / 2), arc_angle / 2), arc_left, arc_left_normal, path_normal); //wow, I can't believe it was really cos(angle/2)
 	}
 	
-	public override bool Contains(Vector3 pos, float radius)
+	public override bool Contains(Vector3 position, float radius)
 	{
-		bool bAboveGround = Vector3.Dot(pos - Center(radius), path_normal) >= 0;
-		bool bBelowCOM	  = Vector3.Dot(pos - Center()      , path_normal) <= 0; //COM means center of mass
-		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
+		bool bAboveGround = Vector3.Dot(position - Center(radius), path_normal) >= 0;
+		bool bBelowCenterOfMass	  = Vector3.Dot(position - Center()      , path_normal) <= 0; //COM means center of mass
+		bool bIsAtCorrectElevation = bAboveGround && bBelowCenterOfMass;
 		
-		bool bLeftContains	= Vector3.Dot(pos - Center(),  arc_left_normal  ) >= 0;
-		bool bRightContains	= Vector3.Dot(pos - Center(), arc_right_normal) >= 0;
+		bool bLeftContains	= Vector3.Dot(position - Center(),  arc_left_normal  ) >= 0;
+		bool bRightContains	= Vector3.Dot(position - Center(), arc_right_normal) >= 0;
 		bool bCorrectAngle	= bLeftContains && bRightContains;
 
-        DebugUtility.Log("above:", bAboveGround, "below:", bBelowCOM, "left:", bLeftContains, "right:", bRightContains);
+        DebugUtility.Log("above:", bAboveGround, "below:", bBelowCenterOfMass, "left:", bLeftContains, "right:", bRightContains);
 
         return bIsAtCorrectElevation && bCorrectAngle;
 	}

@@ -64,23 +64,26 @@ public class Edge /* : Component*/ : ArcOfSphere //TODO: get rid of this in prod
 
     protected override Vector3 Center(float radius)
 	{
-		return path_normal * Mathf.Cos(AngularRadius(radius));
+		return path_normal * Mathf.Sin(radius);
 	}
 	
-	public override bool Contains(Vector3 pos, float radius)
+	public override bool Contains(Vector3 position, float radius)
 	{
-		bool bAboveGround = Vector3.Dot(pos - Center()      , path_normal) >= 0;
-		bool bBelowCOM	  = Vector3.Dot(pos - Center(radius), path_normal) <= 0; //COM means center of mass
-		bool bIsAtCorrectElevation = bAboveGround && bBelowCOM;
+		bool bAboveGround       = Vector3.Dot(position - Center()      , path_normal) >= 0;
+		bool bBelowCenterOfMass	= Vector3.Dot(position - Center(radius), path_normal) <= 0;
+		bool bIsAtCorrectElevation = bAboveGround && bBelowCenterOfMass;
 
-		bool bLeftContains		   = Vector3.Dot(pos - Evaluate(Begin()), arc_left_normal ) >= 0;
-		bool bRightContains		   = Vector3.Dot(pos - Evaluate(  End()), arc_right_normal) >= 0;
+        UnityEngine.Debug.Log((Center() - Center(radius)).magnitude);
+        UnityEngine.Debug.DrawRay(Center(radius), arc_left*3f, Color.red, 10f);
+
+		bool bLeftContains		   = Vector3.Dot(position - Evaluate(Begin()), arc_left_normal ) >= 0;
+		bool bRightContains		   = Vector3.Dot(position - Evaluate(  End()), arc_right_normal) >= 0;
 		bool bIsObtuse			   = Vector3.Dot(arc_left, arc_right) >= 0;
 		int  nOutOfThree		   = CountTrueBooleans(bLeftContains, bRightContains, bIsObtuse);
 
-        DebugUtility.Log("above:", bAboveGround, "below:", bBelowCOM, "left:", bLeftContains, "right:", bRightContains, "obtuse:", bIsObtuse);
-		
-        return bIsAtCorrectElevation && nOutOfThree >= 2;
+        DebugUtility.Log("above:", bAboveGround, "below:", bBelowCenterOfMass, "left:", bLeftContains, "right:", bRightContains, "obtuse:", bIsObtuse);
+
+        return bIsAtCorrectElevation; // && nOutOfThree >= 2;
 	}
 	
 	public override optional<float> Distance(Vector3 to, Vector3 from, float radius) //distance is Euclidean but is (guaranteed?) to be sorted correctly with the current assertions about speed vs player_radius

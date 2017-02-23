@@ -3,22 +3,22 @@ using System.Collections;
 
 public class BlockMotor : MonoBehaviour
 {
-	Transform							trans;
+	Transform							transformation;
 
-	public Vector3 RelativePos(Vector3 pos)
+	public Vector3 RelativePos(Vector3 position)
 	{
-		pos.Normalize(); //redundant-ish
-		return trans.rotation*pos;
+		position.Normalize(); //redundant-ish
+		return transformation.rotation*position;
 	}
 
-	public Quaternion RelativeRotation(Quaternion rot)
+	public Quaternion RelativeRotation(Quaternion orientation)
 	{
-		return trans.rotation * rot; //XXX: check rhs and lhs
+		return transformation.rotation * orientation; //XXX: check rhs and lhs
 	}
 	
 	void Start ()
 	{
-		trans = this.gameObject.GetComponent<Transform>();
+		transformation = this.gameObject.GetComponent<Transform>();
 	}
 
 	void Update ()

@@ -62,9 +62,9 @@ public class ConvexCorner /* : Component*/ : Corner //TODO: get rid of this in p
 		return path_normal * Mathf.Cos(AngularRadius(radius));
 	}
 
-    public override bool Contains(Vector3 pos, float radius)
+    public override bool Contains(Vector3 position, float radius)
 	{
-		bool bIsAtCorrectElevation = Vector3.Dot(pos, path_normal) >= Mathf.Cos(radius);
+		bool bIsAtCorrectElevation = Vector3.Dot(position, path_normal) >= Mathf.Cos(radius);
 
         // checking left and right bounds makes the code slower and more complex (locally and globally, see corner glitch).
         // the left and right bounds are even underground in most situations, which means it is unneccesary.

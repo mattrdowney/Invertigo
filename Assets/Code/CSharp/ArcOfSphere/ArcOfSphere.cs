@@ -32,7 +32,7 @@ public abstract class ArcOfSphere /* : Component*/ : MonoBehaviour //TODO: get r
 	/** Determine if the character (represented by a point) is inside of a arc (extruded by the radius of the character)
 	 *  
 	 */
-	public abstract bool Contains(Vector3 pos, float radius);
+	public abstract bool Contains(Vector3 position, float radius);
 
 	/** Counts the number of booleans that are true in a comma separated list of booleans
 	 * 
