@@ -14,8 +14,8 @@
 <meta name="format-detection" content="telephone=no" />
 <meta name="copyright" content="TiddlyWiki created by Jeremy Ruston, (jeremy [at] jermolene [dot] com)
 
-Copyright © Jeremy Ruston 2004-2007
-Copyright © UnaMesa Association 2007-2015
+Copyright � Jeremy Ruston 2004-2007
+Copyright � UnaMesa Association 2007-2015
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -163,11 +163,15 @@ Error message and password prompt
 
 <li>Executive Summary</li>
 
+<li>Expired</li>
+
 <li>Game Controls</li>
 
 <li>Gameplay</li>
 
 <li>Hazards</li>
+
+<li>Insanity</li>
 
 <li>Interactable Objects</li>
 
@@ -183,9 +187,13 @@ Error message and password prompt
 
 <li>No Escape</li>
 
+<li>Obsession</li>
+
 <li>Projectiles</li>
 
 <li>Protagonist</li>
+
+<li>Protagonist's Art Style</li>
 
 <li>Rolling Mode</li>
 
@@ -228,7 +236,7 @@ Error message and password prompt
         &quot;$:/core/copyright.txt&quot;: {
             &quot;title&quot;: &quot;$:/core/copyright.txt&quot;,
             &quot;type&quot;: &quot;text/plain&quot;,
-            &quot;text&quot;: &quot;TiddlyWiki created by Jeremy Ruston, (jeremy [at] jermolene [dot] com)\n\nCopyright © Jeremy Ruston 2004-2007\nCopyright © UnaMesa Association 2007-2015\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\nRedistributions of source code must retain the above copyright notice, this\nlist of conditions and the following disclaimer.\n\nRedistributions in binary form must reproduce the above copyright notice, this\nlist of conditions and the following disclaimer in the documentation and/or other\nmaterials provided with the distribution.\n\nNeither the name of the UnaMesa Association nor the names of its contributors may be\nused to endorse or promote products derived from this software without specific\nprior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND ANY\nEXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES\nOF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT\nSHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,\nINCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED\nTO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR\nBUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\nCONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN\nANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH\nDAMAGE.\n&quot;
+            &quot;text&quot;: &quot;TiddlyWiki created by Jeremy Ruston, (jeremy [at] jermolene [dot] com)\n\nCopyright � Jeremy Ruston 2004-2007\nCopyright � UnaMesa Association 2007-2015\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\nRedistributions of source code must retain the above copyright notice, this\nlist of conditions and the following disclaimer.\n\nRedistributions in binary form must reproduce the above copyright notice, this\nlist of conditions and the following disclaimer in the documentation and/or other\nmaterials provided with the distribution.\n\nNeither the name of the UnaMesa Association nor the names of its contributors may be\nused to endorse or promote products derived from this software without specific\nprior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND ANY\nEXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES\nOF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT\nSHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,\nINCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED\nTO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR\nBUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\nCONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN\nANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH\nDAMAGE.\n&quot;
         },
         &quot;$:/core/icon&quot;: {
             &quot;title&quot;: &quot;$:/core/icon&quot;,
@@ -5956,7 +5964,7 @@ Error message and password prompt
 <div modified="20151022021925325" title="$:/state/tab-1749438307">
 <pre>$:/core/ui/ControlPanel/Info</pre>
 </div>
-<div list="GettingStarted [[Executive Summary]] Setting Story Characters [[Level and Enviroment]] Gameplay Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
+<div list="GettingStarted [[Executive Summary]] Setting Story [[Journal Logs]] Expired [[No Escape]] Obsession Characters Protagonist [[Protagonist's Art Style]] [[Level and Enviroment]] Gameplay Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div created="20151022034820290" modified="20151022034835138" title="$:/temp/advancedsearch">
@@ -6149,42 +6157,43 @@ u = .5 + atan2(centerY + r*aY*cos(theta) + r*bY*sin(theta),
 v = .5 - asin(centerZ + r*aZ*cos(theta) + r*bZ*sin(theta))</pre>
 </div>
 <div created="20151022041921745" modified="20151022042230260" title="Block Types">
-<pre>Plastic—regular platforming terrain, no special properties.
+<pre>Plastic�regular platforming terrain, no special properties.
 
-Metal—the player can walk on metallic walls and ceilings. The character's long hair points in the direction of gravity.
+Metal�the player can walk on metallic walls and ceilings. The character's long hair points in the direction of gravity.
 
-Glass—cannot conduct electricity and therefore cannot interact with metallic boots, but it can be shattered to open up new corridors and pathways.
+Glass�cannot conduct electricity and therefore cannot interact with metallic boots, but it can be shattered to open up new corridors and pathways.
 
-Rust—dissolves from the bottom up when touched. Cannot conduct electricity well enough to be traversed as a wall or ceiling. If the rust block disappears and cannot be seen, then it respawns.
+Rust�dissolves from the bottom up when touched. Cannot conduct electricity well enough to be traversed as a wall or ceiling. If the rust block disappears and cannot be seen, then it respawns.
 
 Tread--a conveyor-belt-like object that transports objects clockwise or counterclockwise with or without magnetism.
 
-Electricity—hazard block that causes a game over screen. When the character collides, the screen blinks (hard artistically, but possible) as if the character had flinched. Game over state ensues.
+Electricity�hazard block that causes a game over screen. When the character collides, the screen blinks (hard artistically, but possible) as if the character had flinched. Game over state ensues.
 
-Elevator (modifier)—moving block.
+Elevator (modifier)�moving block.
 </pre>
 </div>
 <div created="20151022025350582" modified="20160905032820704" title="Bosses">
 <pre>Non-confrontational: bosses can be detained (and thus skipped) by fulfilling certain tasks before entering the boss room (exception: final boss fight is altered).
 
-Core Demon—sits at the center of the core, absorbing energy, slashes into vents to attack the player.  Can only see the player through slits in the ventilation. Use mortars to kill enemy while dodging projectiles from above.
+Core Demon�sits at the center of the core, absorbing energy, slashes into vents to attack the player.  Can only see the player through slits in the ventilation. Use mortars to kill enemy while dodging projectiles from above.
 
 water demon, changes the currents to force the player into bad situations
 
 grapple demon, changes grapple points on the map to force the player to think on their feet while dodging
 
-Field Demon/Troll—controls gravity to its favor.  Furthermore it can walk on all surfaces (metal, plastic, glass). Changes gravity in one of (4?) directions to push the player into attacks.
+Field Demon/Troll�controls gravity to its favor.  Furthermore it can walk on all surfaces (metal, plastic, glass). Changes gravity in one of (4?) directions to push the player into attacks.
 
 wall demon, splits into multiple enemies in an attempt to corner the player
 
-hidden, Versor—creates vortexes through which it may travel, can travel unimpeded through walls, one hit kill.
+hidden, Versor�creates vortexes through which it may travel, can travel unimpeded through walls, one hit kill.
 </pre>
 </div>
 <div created="20151118163019373" modified="20160401072305386" title="Camera Control">
 <pre>There are two camera modes for [[Invertigo]]: [[Static Mode]] and [[Rolling Mode]]</pre>
 </div>
-<div created="20151022030135893" modified="20151022030145624" title="Characters">
+<div created="20151022030135893" modified="20170319025549788" title="Characters">
 <pre>[[Protagonist]]
+[[Antagonist]]
 
 </pre>
 </div>
@@ -6193,7 +6202,7 @@ hidden, Versor—creates vortexes through which it may travel, can travel unimpe
 
 slime that traverses in direction regardless of gravity (impermeable to certain damage types)
 
-Zero-gravity “ninjas”—jump between nodes/waypoints while throwing knives/shurikens, occasionally stopping, restarting their node hopping with a 50% chance of going in either direction (clockwise vs. counterclockwise).
+Zero-gravity �ninjas��jump between nodes/waypoints while throwing knives/shurikens, occasionally stopping, restarting their node hopping with a 50% chance of going in either direction (clockwise vs. counterclockwise).
 
 bats, navigate towards player
 
@@ -6217,18 +6226,28 @@ Prisoners (sometimes)
 
 Spider
 
-Scalar—Float towards organisms in line of sight, one hit kill
+Scalar�Float towards organisms in line of sight, one hit kill
 
-Phasors —Float towards the player, result in a one hit kill and can move based on phasor speed through walls.
+Phasors �Float towards the player, result in a one hit kill and can move based on phasor speed through walls.
 
-Tensors—Can stop time for all other objects.
+Tensors�Can stop time for all other objects.
 
-Gravity Manipulators—grab objects off conveyor belts with gravity guns and repel them towards the player.
+Gravity Manipulators�grab objects off conveyor belts with gravity guns and repel them towards the player.
 
-Shadows—teleport behind the player.</pre>
+Shadows�teleport behind the player.</pre>
 </div>
 <div created="20151022021400190" modified="20151022021524099" tags="" title="Executive Summary">
 <pre>Stuff Stuff Stuff Stuff Stuff</pre>
+</div>
+<div created="20170319034303413" modified="20170319034437989" title="Expired">
+<pre>Must I build a bridge out of bodies
+To cross your moor?
+Why do you treat me like the plague
+When I'm knocking at your door?
+Is it because I'm sick?
+Well all children of men are.
+Is it because you're afraid of me?
+I'm not me, anymore.</pre>
 </div>
 <div created="20151022031708818" modified="20160401072208270" title="Game Controls">
 <pre>Ideally, the Steam Controller or a mouse and keyboard would be used in Invertigo, since it allows the player to have a simple movement axis and a complex targeting axis.
@@ -6263,22 +6282,31 @@ Design decision #1: air strafing is possible, but has the range [-1 + Vector3.Do
 <div created="20151022025836181" modified="20151022025840189" title="Hazards">
 <pre>&quot;stalactites&quot; that can be shot</pre>
 </div>
+<div created="20170319034114486" modified="20170319034114486" title="Insanity">
+<pre></pre>
+</div>
 <div created="20151022042108576" modified="20151022042122020" title="Interactable Objects">
-<pre>Card-keys—open certain doors
+<pre>Card-keys�open certain doors
 
-Switches—toggle certain environmental factors (e.g. gravity, doors, hazards, lights)
+Switches�toggle certain environmental factors (e.g. gravity, doors, hazards, lights)
 
-Guns—many types, picked up, limited ammo, no reload
+Guns�many types, picked up, limited ammo, no reload
 
-Elevators—metallic!
+Elevators�metallic!
 
-Conveyor Belts—carry different objects (e.g. barrels)</pre>
+Conveyor Belts�carry different objects (e.g. barrels)</pre>
 </div>
 <div created="20151022030438066" modified="20160401070535821" title="Invertigo">
 <pre>Invertigo is a science-fiction puzzle platformer with action elements.</pre>
 </div>
-<div created="20160917082617163" modified="20160917095209223" title="Journal Logs">
-<pre>[[No Escape]]</pre>
+<div created="20160917082617163" modified="20170319034246535" title="Journal Logs">
+<pre>[[Expired]]
+
+[[No Escape]]
+
+[[Obsession]]
+
+</pre>
 </div>
 <div created="20151118161006087" modified="20160401072315385" title="Jumping">
 <pre>Jumping, like in most games, is instantaneous. This creates a number of problems including:
@@ -6298,14 +6326,14 @@ Unlike most games, jumping is not triggered by pressing the space bar, but by re
 Since the game is in [[Spherical 2D]], level design becomes warped. The game takes cues from [[Spherical Geometry]] to allow complex [[Spherical 2D Polygons]].</pre>
 </div>
 <div created="20151022041404135" modified="20151022041433485" title="Neutral Creatures">
-<pre>Gravity biomes—push the player upwards
+<pre>Gravity biomes�push the player upwards
 
-Energy Jelly Fish—in the water level (aesthetic)
+Energy Jelly Fish�in the water level (aesthetic)
 
-Muon Clouds—light particles whizing across the screen (aesthetic)
+Muon Clouds�light particles whizing across the screen (aesthetic)
 </pre>
 </div>
-<div created="20160917082645078" modified="20160917095138416" title="No Escape">
+<div created="20160917082645078" modified="20170319025711591" title="No Escape">
 <pre>I am a photon
 trapped in a diamond
 wandering endlessly
@@ -6336,6 +6364,33 @@ Do I persist?
 
 [DATA EXPUNGED]</pre>
 </div>
+<div created="20170319022944727" modified="20170319025302130" title="Obsession">
+<pre>Hey, can I bother me for a minute?
+I need a moment of my time.
+It'll be done in just a second;
+I'll be done in a blink of an eye.
+
+Pay no mind, spare no brain cells
+From the force that drive me
+Insane, or--worse--aware
+Of all the wasted time, obsessing about-- 
+
+Why do we obsess over mistakes?
+Me, myself, I'll leave that to others:
+I'm done with lending my precious time
+To that bottomless drain that leaches life.
+
+And, yet, I do; I'm only human,
+I guess; I don't remember.
+What's the difference (to me or you)?
+Words can be expressions.
+
+If I didn't think about this thinking,
+What would I rather think about?
+Is there something to be gained
+Not lost? Will I know?
+I guess that's another thing to think about.</pre>
+</div>
 <div created="20160323170239215" modified="20160323170843396" title="Projectiles">
 <pre>Unlike in Cartesian-coordinates, there will not be one type of projectile curvature.
 
@@ -6347,10 +6402,30 @@ Nav-mesh following projectiles (similar to the Bombchu in Legend of Zelda).
 Constant delta_phi, delta_theta-based equations (might be the same as great-circle equation)
 </pre>
 </div>
-<div created="20151022023803520" modified="20160401072324903" title="Protagonist">
-<pre>The protagonist is a long-haired gender-neutral character in [[Invertigo]]. Aside from their hair, flat chest, and curvelessness, the iconic trait that defines them is a series of scars (or, perhaps, tattoos) along their legs: burgundy tallies of the number of days they have been imprisoned.
+<div created="20151022023803520" modified="20170319030124638" title="Protagonist">
+<pre>[[Protagonist's Art Style]]
+
+The protagonist is a long-haired gender-neutral character in [[Invertigo]]. Aside from their hair, flat chest, and curvelessness, the iconic trait that defines them is a series of scars (or, perhaps, tattoos) along their legs:  tallies of the number of days they have been imprisoned.
 
 The protagonist is the most unique character in the game because they are the only character that is three-dimensional. The model is tessellated and the material is made from an infinite resolution .svg to give them a symbolic depth that is infinite as opposed to the two-dimensional levels and enemies.</pre>
+</div>
+<div created="20170319030132639" modified="20170319033617534" title="Protagonist's Art Style">
+<pre>[[Protagonist]] is the most unique character in [[Invertigo]] because they are the only character that is three-dimensional. Additionally, the material they are made from is a theoretically-infinite resolution .svg to give them a symbolic depth. Although I had originally considered tessellating the character, fewer polygons will make the game more enjoyable (plus lookism is dumb / appearance is irrelevant).
+
+Chest:
+[[Protagonist]] has a flat chest as a means of conveying their gender-neutral identity. That being said, the protagonist has at least one redundant vertex on their chest where their bust would be.
+
+Eyes:
+The only facial feature included in [[Invertigo]] will be the eyes. [[Protagonist]] has eyes that change over the course of the game. They start out crying, an idling effect that can be seen when facing rightward (symbollically, towards the past). If [[Protagonist]] becomes a killer, their eyes evolve into dagger-like eyes; whereas if [[Protagonist]] is a pacifist, their eyes become wide and bright.
+
+Hair:
+[[Protagonist]]'s waist-length hair falls in the direction of gravity. This is useful because it serves a diegetic gravity-indicator for the player. The hair will be low-poly hexahedrons with some sort of spring-like physics under gravity conditions.
+
+Neck:
+The [[Protagonist]]'s neck starts out tilted towards the floor. As the player progresses, their neck straightens (symbolically, becoming more confident in theirself).
+
+Scars:
+[[Protagonist]]'s right leg is painted with a large number of burgundy tallies. These scars/tattoos are a remnant of their past and a reminder of who they are. These tallies are usually seen when facing rightward (symbolically, into the past).</pre>
 </div>
 <div created="20151118163137463" modified="20151118164038256" title="Rolling Mode">
 <pre>While grounded in Rolling Mode, pressing rightward means move clockwise around the object while pressing left means move counterclockwise around the object.
@@ -6375,7 +6450,7 @@ There are multiple settings for Invertigo, in order of their appearance:
 6) Zero-gravity environments not linked to the centrifuge, player receives one-hit-kills (due to explosive decompression).
 </pre>
 </div>
-<div created="20151022031321697" modified="20170207030003780" title="Sound and Music">
+<div created="20151022031321697" modified="20170319021232007" title="Sound and Music">
 <pre>Legacy: The music in [[Invertigo]] will typically be sparse noise amidst frequent silence. The music will alternate between unnerving and frantic, with moments of resolution towards the end.
 
 Current: The music in [[Invertigo]] will be 8bit for fight themes, 16 bit when danger is nearby, and electronic otherwise. 
@@ -6392,6 +6467,7 @@ Bound
 Breakpoint
 Brute-force
 Bug
+Clobber
 Clone
 Closure (defeating final boss - pacifist ending)
 Command
@@ -6410,6 +6486,7 @@ Deterministic
 Dependency
 Deprecated
 Destruct
+Die
 Disconnect
 Downcast
 Divide and Conquer

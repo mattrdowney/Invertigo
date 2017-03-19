@@ -15,15 +15,15 @@ TagManager:
   - UI
   - 
   - 
-  - Player
-  - Door
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Player Normal
+  - Player Transition
+  - Player Hurtboxes
+  - Player Hitboxes
+  - Enemy
+  - Enemy Hurtboxes
+  - Enemy Hitboxes
+  - Geometry Normal
+  - Geometry Transition
   - 
   - 
   - 

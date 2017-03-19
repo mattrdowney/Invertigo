@@ -5,18 +5,18 @@ using System.Collections.Generic;
 //AABB would be great if Unity's built-in collision detection was angular, but adding extra precision on my end won't stop Unity from failing to detect certain collisions. K.I.S.S.
 // there would also be extra coupling with resizing the player if I did change it to AABBs (or I would have to do some annoying scaling nonsense).
 
-public class CollisionDetector : MonoBehaviour
+public class ArcDetector : Component
 {
-	List<ArcOfSphere>	colliders;
+    List<ArcOfSphere>	colliders;
 
-	void Awake()
-	{
-		colliders = new List<ArcOfSphere>();
+    public CollisionDetector()
+    {
+        colliders = new List<ArcOfSphere>();
         Activate();
-	}
+    }
 
     //step 0: Character Controller adds the observed SphericalIsoscelesTriangle to a vector in OnTriggerEnter...
-    void OnTriggerEnter(Collider col) //idk why I did collision, tbh
+    public void OnTriggerEnter(Collider col)
 	{
 		ArcOfSphere arc = col.gameObject.GetComponent<ArcOfSphere>();
         if (arc && !colliders.Contains(arc))
@@ -26,7 +26,7 @@ public class CollisionDetector : MonoBehaviour
 	}
 
     //step 0.5: Character Controller removes the observed SphericalIsoscelesTriangle from a vector in OnTriggerExit...
-    void OnTriggerExit(Collider col) //FIXME: not deleting
+    public void OnTriggerExit(Collider col) //FIXME: not deleting
     {
 		ArcOfSphere arc = col.gameObject.GetComponent<ArcOfSphere>();
         if(arc)
@@ -63,7 +63,7 @@ public class CollisionDetector : MonoBehaviour
     }
 
     //CONSIDER: Can you "inversion of control" ArcCast and BalloonCast?
-    public optional<ArcOfSphere> ArcCast(Vector3 desired_position, Vector3 curPos, float radius) //Not actually a true ArcCast, I'm not planned on spending 3 months on R&D'ing it either
+    public optional<ArcOfSphere> ArcCast(Vector3 desired_position, Vector3 current_position, float radius) //Not actually a true ArcCast, I'm not planned on spending 3 months on R&D'ing it either
 	{
 		optional<ArcOfSphere> closest = new optional<ArcOfSphere>();
 		optional<float> closest_distance = new optional<float>();
@@ -75,7 +75,7 @@ public class CollisionDetector : MonoBehaviour
 			if(arc.Contains(desired_position, radius))
 			{
 				//step 3: if a collision is happening, a list of TTCs (time till collision) are sorted to find the closest collision.
-				optional<float> distance = arc.Distance(desired_position, curPos, radius);
+				optional<float> distance = arc.Distance(desired_position, current_position, radius);
                 if (distance.exists && (!closest_distance.exists || distance.data < closest_distance.data))
 				{
 					closest_distance = distance;

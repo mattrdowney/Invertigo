@@ -66,10 +66,13 @@
      <Compile Include="Assets\Code\CSharp\Character\Player\Player.cs" />
      <Compile Include="Assets\Code\CSharp\Character\Player\PlayerFallingState.cs" />
      <Compile Include="Assets\Code\CSharp\Character\Player\PlayerGroundedState.cs" />
-     <Compile Include="Assets\Code\CSharp\Collisions\CollisionDetector.cs" />
+     <Compile Include="Assets\Code\CSharp\Collisions\ArcDetector.cs" />
+     <Compile Include="Assets\Code\CSharp\Collisions\ArcInfo.cs" />
+     <Compile Include="Assets\Code\CSharp\Collisions\InvertigoBehaviour.cs" />
+     <Compile Include="Assets\Code\CSharp\Collisions\ZoneDetector.cs" />
+     <Compile Include="Assets\Code\CSharp\Collisions\ZoneInfo.cs" />
      <Compile Include="Assets\Code\CSharp\DesignPatterns\Command.cs" />
      <Compile Include="Assets\Code\CSharp\DesignPatterns\CommandMediator.cs" />
-     <Compile Include="Assets\Code\CSharp\InvertigoBehaviour.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\BasicRoomLoader.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\Corridor.cs" />
      <Compile Include="Assets\Code\CSharp\LevelManagement\Door.cs" />
@@ -95,6 +98,7 @@
      <Compile Include="Assets\Code\CSharp\Utilities\SpaceConverterUtility.cs" />
      <Compile Include="Assets\Code\CSharp\Utilities\SphereUtility.cs" />
      <Compile Include="Assets\Code\CSharp\Utilities\Transform2sD.cs" />
+     <Compile Include="Assets\Code\CSharp\Zone\Zone.cs" />
      <None Include="Assets\Code\Shaders\AlwaysUnlit.shader" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
