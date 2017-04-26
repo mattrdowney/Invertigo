@@ -5,11 +5,11 @@ using System.Collections.Generic;
 //AABB would be great if Unity's built-in collision detection was angular, but adding extra precision on my end won't stop Unity from failing to detect certain collisions. K.I.S.S.
 // there would also be extra coupling with resizing the player if I did change it to AABBs (or I would have to do some annoying scaling nonsense).
 
-public class ArcDetector : Component
+public class CollisionDetector : Component
 {
     List<ArcOfSphere>	colliders;
 
-    public CollisionDetector()
+    public void Start()
     {
         colliders = new List<ArcOfSphere>();
         Activate();
