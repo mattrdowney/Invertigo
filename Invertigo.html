@@ -147,9 +147,13 @@ Error message and password prompt
 
 <li>2D VR</li>
 
+<li>Allegory</li>
+
 <li>Arc Of Sphere</li>
 
 <li>Art</li>
+
+<li>Blink Camera Shutter</li>
 
 <li>Block Types</li>
 
@@ -173,6 +177,8 @@ Error message and password prompt
 
 <li>Hazards</li>
 
+<li>Hexagonal Camera Shutter</li>
+
 <li>Insanity</li>
 
 <li>Interactable Objects</li>
@@ -182,6 +188,8 @@ Error message and password prompt
 <li>Journal Logs</li>
 
 <li>Jumping</li>
+
+<li>Keyframe Moments</li>
 
 <li>Level and Enviroment</li>
 
@@ -5935,7 +5943,7 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20151022020028005" modified="20151022020304817" title="$:/DefaultTiddlers">
+<div created="20151022020028005" modified="20170617030039048" title="$:/DefaultTiddlers">
 <pre>[[GettingStarted]]
 [[Executive Summary]]
 [[Setting]]
@@ -5966,7 +5974,7 @@ Error message and password prompt
 <div modified="20151022021925325" title="$:/state/tab-1749438307">
 <pre>$:/core/ui/ControlPanel/Info</pre>
 </div>
-<div list="GettingStarted [[Executive Summary]] Setting Story Characters [[Level and Enviroment]] Gameplay Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
+<div list="GettingStarted [[Executive Summary]] Setting Story Allegory Characters Protagonist [[Protagonist's Art Style]] [[Level and Enviroment]] Gameplay [[Keyframe Moments]] [[virtual reality]] [[Blink Camera Shutter]] [[Hexagonal Camera Shutter]] Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div created="20151022034820290" modified="20151022034835138" title="$:/temp/advancedsearch">
@@ -5986,8 +5994,8 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20151022031513354" modified="20170422082027391" title="$:/temp/search">
-<pre>journal</pre>
+<div created="20151022031513354" modified="20170617025958737" title="$:/temp/search">
+<pre></pre>
 </div>
 <div author="JeremyRuston" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.9">
 <pre>{
@@ -6109,6 +6117,11 @@ The two major genres that work with 2D VR are top-downs and platformers, althoug
 
 I really want Team17 to make a 2D VR game with procedural destruction using arcs (instead of texels).</pre>
 </div>
+<div created="20170617025220557" modified="20170617025337909" title="Allegory">
+<pre>The first layer to [[Invertigo]]'s allegory is that of a person in an abusive relationship who is empowered to confront and break up with their partner.
+
+The second layer to the allegory is a story about AI rights, and the concept of robots collaborating with and/or killing their creator (and the injustices done against robots by humans).</pre>
+</div>
 <div created="20151022062041822" modified="20160315100550884" title="Arc Of Sphere">
 <pre>An Arc Of Sphere (AoS) is any arc that can traverse the surface of a unit sphere.
 
@@ -6157,6 +6170,9 @@ thus:
 u = .5 + atan2(centerY + r*aY*cos(theta) + r*bY*sin(theta),
                        centerX + r*aX*cos(theta) + r*bX*sin(theta))
 v = .5 - asin(centerZ + r*aZ*cos(theta) + r*bZ*sin(theta))</pre>
+</div>
+<div created="20170617033349903" modified="20170617033351517" title="Blink Camera Shutter">
+<pre>This is where the camera shutter mirrors the human eyelid.</pre>
 </div>
 <div created="20151022041921745" modified="20151022042230260" title="Block Types">
 <pre>Plastic�regular platforming terrain, no special properties.
@@ -6269,8 +6285,8 @@ On a [[True Ground]], the vertical and horizontal velocities will be equivalent 
 
 On a wall or ceiling, however, the horizontal magnitude will be different depending on whether or not the player is traveling left, right, or neither.</pre>
 </div>
-<div created="20151022024855978" modified="20160401070743513" title="Gameplay">
-<pre>Invertigo is a [[virtual reality]] game.
+<div created="20151022024855978" modified="20170617041146378" title="Gameplay">
+<pre>Invertigo is a 2D platformer-puzzler game with [[virtual reality]] support.
 
 The [[Protagonist]] must use puzzling, platforming, and [[Weapons]] to fight against the barrage of [[Traps]], [[Hazards]], [[Enemies]], [[Bosses]], and [[Puzzles]] before them.
 
@@ -6279,6 +6295,8 @@ There are a number of [[Neutral Creatures]] that help along the way.
 Additionally, the player must deal with a number of [[Block Types]] that restrict movement.
 
 There are a number of [[Interactable Objects]].
+
+The goal is to include a number of [[Keyframe Moments]], which typically create a player epiphany / eureka.
 
 Design decision #1: air strafing is possible, but has the range [-1 + Vector3.Dot(west, normal), 1 + Vector3.Dot(west, normal)].</pre>
 </div>
@@ -6387,6 +6405,17 @@ Did they swim?</pre>
 <div created="20151022025836181" modified="20151022025840189" title="Hazards">
 <pre>&quot;stalactites&quot; that can be shot</pre>
 </div>
+<div created="20170617030626234" modified="20170617033217948" title="Hexagonal Camera Shutter">
+<pre>This will mostly be used for hexagonal doorways (for loading and unloading graphics when the door opens and closes).
+
+Technical specifications:
+
+Imagine an &quot;equatorial&quot; circle going through the points above / right of / below / left of the camera. This circle is 90 degrees from the forward axis in all directions. Imagine six equidistant points along this circle. From these six points, draw semicircles going clockwise along the circle (i.e. at first they will coincide with the &quot;equatorial&quot; circle).
+
+As the camera shutter closes, these semicircles rotate towards the center of the circle (with the starting point along the &quot;equatorial&quot; circle fixed) until all semicircular arcs intersect in the center.
+
+At first, I thought these shutter objects needed to be through a shader after-effect, but they could be plane objects with cutout shaders for semicircles (black on one side, clear on the other).</pre>
+</div>
 <div created="20170319034114486" modified="20170319034114486" title="Insanity">
 <pre></pre>
 </div>
@@ -6425,6 +6454,43 @@ Conveyor Belts�carry different objects (e.g. barrels)</pre>
 While camera rolling is a huge part of movement in [[Invertigo]], it cannot be a part of normal jumping because it would induce more nausea than walking around the edges of a polygon. In the case of jumping, the player would need a ground (stationary object) to be able to make sense of what is happening, so jump cutting is preferable.
 
 Unlike most games, jumping is not triggered by pressing the space bar, but by releasing the spacebar. Pressing and holding the space bar will shift the camera's orientation so that it aligns with gravity.
+</pre>
+</div>
+<div created="20170617041257139" modified="20170617044625533" title="Keyframe Moments">
+<pre>[[The World is Round]]
+
+[[Elevator through the North Pole]]
+
+[[Concave Corner Was Convex]]
+
+[[Indestructible-from-the-Front Enemy Always Faces You]]
+
+[[Detours Might Be Faster Treadmill]]
+
+[[Hidden Rooms are Negative Spaces]]
+
+[[Wind Currents Reveal Secrets]]
+
+[[Water Currents Reveal Secrets]]
+
+[[Dropping a Key through the South Pole]]
+
+[[Sweeping Spike Traps Don't Always Retract]]
+
+[[Glass Can Break]]
+
+[[Glass Can Crack]]
+
+[[You Can't Walk on Plastic]]
+
+[[Water Currents Are Strong, Boots Are Stronger]]
+
+[[Jumping Up a Metal Wall with a Plastic Ceiling]]
+
+[[Pushable Blocks Unlock Previous Rooms]]
+
+[[Hacking a Journal Log when the Music Isn't Read-Only]]
+
 </pre>
 </div>
 <div created="20151022030936058" modified="20160401070718219" title="Level and Enviroment">
@@ -6516,7 +6582,7 @@ The protagonist is a long-haired gender-neutral character in [[Invertigo]]. Asid
 
 The protagonist is the most unique character in the game because they are the only character that is three-dimensional. The model is tessellated and the material is made from an infinite resolution .svg to give them a symbolic depth that is infinite as opposed to the two-dimensional levels and enemies.</pre>
 </div>
-<div created="20170319030132639" modified="20170319033617534" title="Protagonist's Art Style">
+<div created="20170319030132639" modified="20170617040753593" title="Protagonist's Art Style">
 <pre>[[Protagonist]] is the most unique character in [[Invertigo]] because they are the only character that is three-dimensional. Additionally, the material they are made from is a theoretically-infinite resolution .svg to give them a symbolic depth. Although I had originally considered tessellating the character, fewer polygons will make the game more enjoyable (plus lookism is dumb / appearance is irrelevant).
 
 Chest:
@@ -6532,7 +6598,10 @@ Neck:
 The [[Protagonist]]'s neck starts out tilted towards the floor. As the player progresses, their neck straightens (symbolically, becoming more confident in theirself).
 
 Scars:
-[[Protagonist]]'s right leg is painted with a large number of burgundy tallies. These scars/tattoos are a remnant of their past and a reminder of who they are. These tallies are usually seen when facing rightward (symbolically, into the past).</pre>
+[[Protagonist]]'s right leg is painted with a large number of burgundy tallies. These scars/tattoos are a remnant of their past and a reminder of who they are. These tallies are usually seen when facing rightward (symbolically, into the past).
+
+Color:
+[[Protagonist]]'s skin tone is grey-128 and their hair is black-255 (maybe brown, depending on the final level design). The skin tone and hair color are supposed to be ambiguous to feed into the robot AI [[Allegory]].</pre>
 </div>
 <div created="20151118163137463" modified="20151118164038256" title="Rolling Mode">
 <pre>While grounded in Rolling Mode, pressing rightward means move clockwise around the object while pressing left means move counterclockwise around the object.
@@ -6557,7 +6626,7 @@ There are multiple settings for Invertigo, in order of their appearance:
 6) Zero-gravity environments not linked to the centrifuge, player receives one-hit-kills (due to lack of oxygen).
 </pre>
 </div>
-<div created="20151022031321697" modified="20170606063700255" title="Sound and Music">
+<div created="20151022031321697" modified="20170617040638187" title="Sound and Music">
 <pre>Legacy: The music in [[Invertigo]] will typically be sparse noise amidst frequent silence. The music will alternate between unnerving and frantic, with moments of resolution towards the end.
 
 Current: The music in [[Invertigo]] will be 8bit for fight themes, 16 bit when danger is nearby, and electronic otherwise. 
@@ -6631,6 +6700,7 @@ Garbage
 Glitch
 Greedy
 Hack
+Heartbeat
 Hex
 Honey Pot (before &quot;impossible&quot; boss)
 Hook
@@ -6739,10 +6809,10 @@ Collisions are only defined in a sector from the ground protruded up one half th
 
 This happens regardless of whether or not the player is in the air or grounded (in contrast to [[Rolling Mode]]).</pre>
 </div>
-<div created="20151022022023733" modified="20160917082607243" title="Story">
+<div created="20151022022023733" modified="20170617025215020" title="Story">
 <pre>[[Invertigo]] follows the perspective of a long-haired gender-ambiguous prisoner being transported through space on a prison vessel. The [[Protagonist]] wakes up in a state of confusion in the middle of a ship-wide prison break and must travel through a series of levels that progress towards the core of the space ship, defeat the final boss (the [[Core Demon]]) and flee from the collapsing vessel.
 
-The story itself is an allegory for a person in an abusive relationship who is empowered to confront and break up with their partner.
+The story itself is an [[Allegory]].
 
 Throughout the game there are multiple [[Journal Logs]].</pre>
 </div>
@@ -6758,7 +6828,7 @@ The gun, similarly, will display ammo via a reverse Roy G. Biv ammo-thermometer,
 
 Dialogue, journal logs, and decision trees, if present, will be indicated using pop-ups that stop time. </pre>
 </div>
-<div created="20160323164233375" modified="20160401072229423" title="virtual reality">
+<div created="20160323164233375" modified="20170617033414471" title="virtual reality">
 <pre>[[2D VR]] will be used in such a way that the player can view any portion of the map by turning their head to another area of the sphere. They can even tilt their head to get a different perspective.
 
 Invertigo is disorienting for a reason, but there are several components that mitigate these factors. Namely:
@@ -6768,6 +6838,12 @@ Stargazer theory -- If the player is looking at an object that is functionally i
 Central Focus theory -- If the player is focusing on an object that is not rotating while everything else rotates, the player will be spared some nausea. This is useful during [[Rolling Mode]] when the camera turns while the player (barring animation) stays relatively constant.
 
 Jump cuts will be used in [[Rolling Mode]] to re-orient the camera with the horizon immediately rather than causing undue nausea.
+
+Jump cuts will have two camera shutter strategies:
+
+[[Blink Camera Shutter]]
+
+[[Hexagonal Camera Shutter]]
 
 Things that will likely cause some nausea:
 
