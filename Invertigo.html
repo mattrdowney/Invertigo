@@ -5974,7 +5974,7 @@ Error message and password prompt
 <div modified="20151022021925325" title="$:/state/tab-1749438307">
 <pre>$:/core/ui/ControlPanel/Info</pre>
 </div>
-<div list="[[virtual reality]] [[Journal Logs]] GettingStarted [[Executive Summary]] Setting Story Characters [[Level and Enviroment]] Gameplay Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
+<div list="GettingStarted [[Executive Summary]] Setting Story Characters [[Level and Enviroment]] Gameplay Weapons [[Keyframe Moments]] Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div created="20151022034820290" modified="20151022034835138" title="$:/temp/advancedsearch">
@@ -6213,8 +6213,8 @@ hidden, Versor�creates vortexes through which it may travel, can travel unimpe
 <div created="20151118163019373" modified="20160401072305386" title="Camera Control">
 <pre>There are two camera modes for [[Invertigo]]: [[Static Mode]] and [[Rolling Mode]]</pre>
 </div>
-<div created="20151022030135893" modified="20170606045426251" title="Characters">
-<pre>[[Protagonist]]
+<div created="20151022030135893" modified="20170725014358848" title="Characters">
+<pre>[[Protagonist]] - Hex
 
 [[Antagonist]]
 
@@ -6289,7 +6289,7 @@ On a [[True Ground]], the vertical and horizontal velocities will be equivalent 
 
 On a wall or ceiling, however, the horizontal magnitude will be different depending on whether or not the player is traveling left, right, or neither.</pre>
 </div>
-<div created="20151022024855978" modified="20170617041146378" title="Gameplay">
+<div created="20151022024855978" modified="20170725025445041" title="Gameplay">
 <pre>Invertigo is a 2D platformer-puzzler game with [[virtual reality]] support.
 
 The [[Protagonist]] must use puzzling, platforming, and [[Weapons]] to fight against the barrage of [[Traps]], [[Hazards]], [[Enemies]], [[Bosses]], and [[Puzzles]] before them.
@@ -6302,7 +6302,9 @@ There are a number of [[Interactable Objects]].
 
 The goal is to include a number of [[Keyframe Moments]], which typically create a player epiphany / eureka.
 
-Design decision #1: air strafing is possible, but has the range [-1 + Vector3.Dot(west, normal), 1 + Vector3.Dot(west, normal)].</pre>
+Design decision #1: air strafing is possible, but has the range [-1 + Vector3.Dot(west, normal), 1 + Vector3.Dot(west, normal)].
+
+Design decision #2: killing is not possible. Enemies are disabled with electricity (and can be re-enabled with electricity).</pre>
 </div>
 <div created="20170422082205592" modified="20170422093018644" title="Go It Alone">
 <pre>The path was long and grey,
@@ -6468,7 +6470,7 @@ While camera rolling is a huge part of movement in [[Invertigo]], it cannot be a
 Unlike most games, jumping is not triggered by pressing the space bar, but by releasing the spacebar. Pressing and holding the space bar will shift the camera's orientation so that it aligns with gravity.
 </pre>
 </div>
-<div created="20170617041257139" modified="20170617045404657" title="Keyframe Moments">
+<div created="20170617041257139" modified="20170725023035829" title="Keyframe Moments">
 <pre>[[The World is Round]]
 
 [[Elevator through the North Pole]]
@@ -6504,7 +6506,38 @@ Unlike most games, jumping is not triggered by pressing the space bar, but by re
 [[Hacking a Journal Log when the Music Isn't Read-Only]]
 
 [[Drifting in Zero-G with Six Bullets]]
-</pre>
+
+[[Hidden in Plain Sight Secret Room]]
+
+[[Corridors Have Gravity into the Page]]
+
+[[Use Corridor to Break Hidden Wall into the Page]]
+
+[[Trivial Spin Block Jump that Is Up-Down-Up-Down]] 
+
+[[Spin Block Jump that is Up-Up-Down-Down]]
+
+[[Shooting around Map to Hit Target]]
+
+[[Air Bubble plus Disintegrator Shield Jumping]]
+
+[[Run off Metal/Plastic Ceiling]]
+
+[[Jump an Unjumpable Gap with a Metallic Walls Lining the Pit]]
+
+[[Water Leaks Destroy Rust Blocks]]
+
+[[Run Up Wall instead of Jumping Gap Normally Treadmill]]
+
+[[Jump Down Corridor to Escape Explosion after Final Boss Fight]]
+
+[[Indestructable-from-the-Front Enemy Jumps but Flinches when Hit]]
+
+[[Shooting towards and away from Camera Breaks Walls]]
+
+[[Gears Overpower Sound of Wind Currents]]
+
+[[Metallic Walls Fight Water Currents]]</pre>
 </div>
 <div created="20151022030936058" modified="20160401070718219" title="Level and Enviroment">
 <pre>The levels in [[Invertigo]] are [[Spherical 2D]], which means that if the player were placed at the origin of a unit-sphere the level design would be the painting on the walls of the unit-sphere.
@@ -6639,7 +6672,7 @@ There are multiple settings for Invertigo, in order of their appearance:
 6) Zero-gravity environments not linked to the centrifuge, player receives one-hit-kills (due to lack of oxygen).
 </pre>
 </div>
-<div created="20151022031321697" modified="20170720114429151" title="Sound and Music">
+<div created="20151022031321697" modified="20170725022557173" title="Sound and Music">
 <pre>The music in [[Invertigo]] will try to be low-memory while including a large array of soundtracks. I'll try to put a post-processing filter onto the music based on the current danger level.
 
 Potential titles:
@@ -6680,11 +6713,12 @@ Decay
 Decompose
 Defect
 Defensive
-Deterministic
+Demotion
 Deny
 Dependency
 Deprecated
 Destruct
+Deterministic
 Die
 Difference
 Dirty
@@ -6905,8 +6939,28 @@ Jumping in [[Rolling Mode]] or close to the poles in [[Static Mode]].
 
 Travelling through the poles (however, this will be included at least once).</pre>
 </div>
-<div created="20160323170158603" modified="20160323170232452" title="Weapons">
-<pre>Weapons can be close-range or fire [[Projectiles]]</pre>
+<div created="20160323170158603" modified="20170725025236053" title="Weapons">
+<pre>Weapons can be close-range or fire [[Projectiles]]
+
+[[Electromagnetic Boots]]
+
+[[Gravity Strafers]]
+
+[[Disintegrator Shield]]
+
+[[Concussion Blaster]]
+
+[[Short-Circuit Repeater]]
+
+[[Affinity Hook]]
+
+[[Rebreather]]
+
+[[Dolphin Diver]]
+
+[[Tesla Coiler]]
+
+[[EMP Launcher]]</pre>
 </div>
 
 </div>
