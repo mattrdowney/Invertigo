@@ -5978,7 +5978,7 @@ Error message and password prompt
 <div modified="20151022021925325" title="$:/state/tab-1749438307">
 <pre>$:/core/ui/ControlPanel/Info</pre>
 </div>
-<div list="GettingStarted [[Executive Summary]] Setting Story Characters Protagonist [[Level and Enviroment]] [[Levels List]] Gameplay Weapons [[Gravity Strafers]] [[Keyframe Moments]] Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
+<div list="GettingStarted [[Executive Summary]] Setting Story Characters [[Level and Enviroment]] [[Levels List]] Gameplay Art [[Sound and Music]] [[User Interface]] [[Game Controls]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div created="20151022034820290" modified="20151022034835138" title="$:/temp/advancedsearch">
@@ -6293,7 +6293,7 @@ On a [[True Ground]], the vertical and horizontal velocities will be equivalent 
 
 On a wall or ceiling, however, the horizontal magnitude will be different depending on whether or not the player is traveling left, right, or neither.</pre>
 </div>
-<div created="20151022024855978" modified="20170725025445041" title="Gameplay">
+<div created="20151022024855978" modified="20171228112015154" title="Gameplay">
 <pre>Invertigo is a 2D platformer-puzzler game with [[virtual reality]] support.
 
 The [[Protagonist]] must use puzzling, platforming, and [[Weapons]] to fight against the barrage of [[Traps]], [[Hazards]], [[Enemies]], [[Bosses]], and [[Puzzles]] before them.
@@ -6308,7 +6308,9 @@ The goal is to include a number of [[Keyframe Moments]], which typically create 
 
 Design decision #1: air strafing is possible, but has the range [-1 + Vector3.Dot(west, normal), 1 + Vector3.Dot(west, normal)].
 
-Design decision #2: killing is not possible. Enemies are disabled with electricity (and can be re-enabled with electricity).</pre>
+Design decision #2: killing is not possible. Enemies are disabled with electricity (and can be re-enabled with electricity).
+
+There are 256 collectibles in Invertigo. When the player collects all 256, the soundtrack Overflow plays. When this happens, the player can go to the non-&quot;Read-Only&quot; terminal and enter &quot;firewall=0&quot; (more likely, something else since keyboard controls shouldn't be required).</pre>
 </div>
 <div created="20170422082205592" modified="20170422093018644" title="Go It Alone">
 <pre>The path was long and grey,
@@ -6557,7 +6559,7 @@ Since the game is in [[Spherical 2D]], level design becomes warped. The game tak
 
 [[Levels List]]</pre>
 </div>
-<div created="20171027131015605" modified="20171027135148503" title="Levels List">
+<div created="20171027131015605" modified="20171228112107723" title="Levels List">
 <pre>The first level:
 A circular room with a hexagonal door towards the camera. Above the door there is no symbol (a.k.a. 0), and there are prison cells 1-15 (denoted by the symbols: circle, line, triangle, square, pentagon, hexagon, etc, respectively) ascending rightward. This teaches the player that moving in a circle results in getting to the same point (if they're attentive). It also teaches the player to reevaluate the &quot;move right to complete game&quot; convention, since moving right and left ultimately leads to the same point, and left even takes ~6/10ths (note 6+10 = 16) the time right does (for speedrunners).
 
@@ -6571,8 +6573,10 @@ Nothing can be seen above or below the horizon.
 
 Consider: if the player revisits their prison cell late in the game a secret ambient track plays (possibly the only non-electronic track in game).
 
+Secrets: The first prison cell has metallic walls that can be climbed to reach the ceiling after the player unlocks magnetic boots. They can then reach the ceiling, exit the cell, and enter an air-duct. Notably, there should be different air-vent secrets to the left and right, and potentially sub-secrets in both air-ducts. For speed runs, a (hidden) plasma block could be added.
+
 The second level:
-Chaos everywhere, characters fighting one another, some of which (the entrenched turrets) will attack the player. (Note: I just decided to default the player to unkillable, minus--maybe (probably)--environmental hazards).</pre>
+There are allied turrets that attack three NPCs in front of the player, disabling them by hitting their weak point on their back. This introduces the player to the disabling mechanic without pushing them into the firefight immediately.</pre>
 </div>
 <div created="20151022041404135" modified="20151022041433485" title="Neutral Creatures">
 <pre>Gravity biomes�push the player upwards
@@ -6704,7 +6708,7 @@ There are multiple settings for Invertigo, in order of their appearance:
 6) Zero-gravity environments not linked to the centrifuge, player receives one-hit-kills (due to lack of oxygen).
 </pre>
 </div>
-<div created="20151022031321697" modified="20170728092628554" title="Sound and Music">
+<div created="20151022031321697" modified="20171228121845789" title="Sound and Music">
 <pre>The music in [[Invertigo]] will try to be low-memory while including a large array of soundtracks. I'll try to put a post-processing filter onto the music based on the current danger level.
 
 Potential titles:
@@ -6772,6 +6776,7 @@ Expose
 Facade
 Fatal
 Failure
+Fallback
 False
 Fault (hidden rooms)
 Finite
@@ -6798,7 +6803,7 @@ Inactive
 Incompatible
 Inequality
 If and Only If
-Infinite loop
+Infinite Loop
 Inheritance (defeating final boss - confrontational ending)
 Inject
 Insecure
@@ -6811,8 +6816,8 @@ Irreversible
 Job
 Jump
 Junk
-Kill
 Kernel
+Kill
 Lazy
 Leak
 Least Significant
@@ -6864,6 +6869,7 @@ Redundancy
 Reflection (ending - confrontational ending)
 Remainder
 Remote
+Rigid Body
 Rot
 Routine
 Run
@@ -6893,6 +6899,7 @@ Trivial
 Undefined
 Undo
 Unjustified
+Unsafe
 Vaporware (vaporwave, file in build but not in game)
 Violate
 Virus
